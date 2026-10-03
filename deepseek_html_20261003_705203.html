@@ -25,7 +25,8 @@ body::before{content:'';position:fixed;inset:0;z-index:-1;background:radial-grad
 .card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:16px;margin-bottom:14px}
 .card-t{font-size:14px;font-weight:800;margin-bottom:4px}
 .card-s{font-size:11px;color:var(--t2);font-weight:500;margin-bottom:12px}
-#loginSec{min-height:100vh;display:flex;flex-direction:column;justify-content:center;padding:24px;max-width:420px;margin:0 auto}
+#loginSec{min-height:100vh;display:none;flex-direction:column;justify-content:center;padding:24px;max-width:420px;margin:0 auto}
+#loginSec.active{display:flex}
 .login-logo{width:76px;height:76px;border-radius:22px;background:linear-gradient(135deg,#3b82f6,#6366f1);display:grid;place-items:center;font-size:38px;margin:0 auto 18px;box-shadow:0 12px 40px var(--pg)}
 #loginSec h1{font-size:24px;font-weight:900;text-align:center;letter-spacing:-.03em;margin-bottom:6px}
 #loginSec .sub{text-align:center;font-size:12px;color:var(--t2);margin-bottom:28px}
