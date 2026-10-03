@@ -719,7 +719,7 @@ function collectData(){
 function showSummary(){
   const d=collectData();
   const sales=Number(d.Total_Sales||0);
-  const tally=Number(d.Cash_Total||0)+Number(d.Online_Amount||0)+Number(d.OTP_Amount||0)+Number(d.Expenditure||0);
+  const tally=Number(d.Cash_Total||0)+Number(d.Online_Amount||0)+Number(d.OTP_Amount||0)+Number(d.Expenditure||0)+Number(d.Testing_Amount||0);
   const diff=tally-sales;
   const cls=Math.abs(diff)<0.5?'ok':(diff<0?'err':'warn');
   $('confirmBody').innerHTML=`
@@ -734,6 +734,7 @@ function showSummary(){
     <div class="sm-line"><span class="sl">Online</span><span class="sv">${money(d.Online_Amount)}</span></div>
     <div class="sm-line"><span class="sl">OTP</span><span class="sv">${money(d.OTP_Amount)}</span></div>
     <div class="sm-line"><span class="sl">Expenditure</span><span class="sv">${money(d.Expenditure)}</span></div>
+    <div class="sm-line"><span class="sl">Testing Amt</span><span class="sv">${money(d.Testing_Amount)}</span></div>
     <div class="alert ${cls}" style="margin-top:16px">${Math.abs(diff)<0.5?'✅ Tally Balanced':'⚠️ Difference: '+money(Math.abs(diff))}</div>`;
   $('confirmMask').classList.add('show');
 }
