@@ -605,16 +605,12 @@ async function onPumpChange(){
       <div class="f-row" style="margin-bottom:14px">
         <div class="f"><label>MS N1 Opening</label><input id="pOpen1" type="number" readonly value="${(c.Petrol_1&&c.Petrol_1.closing)||0}"></div>
         <div class="f"><label>MS N1 Closing</label><input id="pClose1" type="number" oninput="calc()"></div>
-        <div class="f"><label>MS N1 Testing</label><input id="pTest1" type="number" placeholder="0" oninput="calc()"></div>
         <div class="f"><label>MS N2 Opening</label><input id="pOpen2" type="number" readonly value="${(c.Petrol_2&&c.Petrol_2.closing)||0}"></div>
         <div class="f"><label>MS N2 Closing</label><input id="pClose2" type="number" oninput="calc()"></div>
-        <div class="f"><label>MS N2 Testing</label><input id="pTest2" type="number" placeholder="0" oninput="calc()"></div>
         <div class="f"><label>HSD N1 Opening</label><input id="dOpen1" type="number" readonly value="${(c.Diesel_1&&c.Diesel_1.closing)||0}"></div>
         <div class="f"><label>HSD N1 Closing</label><input id="dClose1" type="number" oninput="calc()"></div>
-        <div class="f"><label>HSD N1 Testing</label><input id="dTest1" type="number" placeholder="0" oninput="calc()"></div>
         <div class="f"><label>HSD N2 Opening</label><input id="dOpen2" type="number" readonly value="${(c.Diesel_2&&c.Diesel_2.closing)||0}"></div>
         <div class="f"><label>HSD N2 Closing</label><input id="dClose2" type="number" oninput="calc()"></div>
-        <div class="f"><label>HSD N2 Testing</label><input id="dTest2" type="number" placeholder="0" oninput="calc()"></div>
         <div class="f"><label>MS Rate ₹/L</label><input id="pRate" type="number" value="116.96" oninput="calc()"></div>
         <div class="f"><label>HSD Rate ₹/L</label><input id="dRate" type="number" value="105.01" oninput="calc()"></div>
       </div>`:`
@@ -638,7 +634,8 @@ async function onPumpChange(){
           <div class="f" style="margin-bottom:10px"><label>Online / UPI ₹</label><input id="online" type="number" value="0" oninput="calcPay()"></div>
           <div class="f" style="margin-bottom:10px"><label>OTP / Fleet ₹</label><input id="otp" type="number" value="0" oninput="calcPay()"></div>
           <div class="f" style="margin-bottom:10px"><label>Cash ₹</label><input id="cash" type="number" value="0" oninput="calcPay()"></div>
-          <div class="f" style="margin-bottom:10px"><label>Expenditure Type</label><input id="expType" placeholder="Tea / Repair"></div>
+          <div class="f" style="margin-bottom:10px"><label>Testing Amt ₹</label><input id="testingAmt" type="number" value="0" oninput="calcPay()"></div>
+          <div class="f" style="margin-bottom:10px"><label>Exp/Test Type</label><input id="expType" placeholder="Tea / Testing / Repair"></div>
           <div class="f" style="margin-bottom:0"><label>Expenditure ₹</label><input id="expenditure" type="number" value="0" oninput="calcPay()"></div>
         </div>
       </div>
@@ -682,9 +679,9 @@ function calc(){
 function calcPay(){
   const isCNG=pickedPump===3;
   const salesVal=isCNG?Math.max(0,num('cClose1')-num('cOpen1'))*num('cRate')+Math.max(0,num('cClose2')-num('cOpen2'))*num('cRate'):
-    Math.max(0,num('pClose1')-num('pOpen1')-num('pTest1'))*num('pRate')+Math.max(0,num('pClose2')-num('pOpen2')-num('pTest2'))*num('pRate')+Math.max(0,num('dClose1')-num('dOpen1')-num('dTest1'))*num('dRate')+Math.max(0,num('dClose2')-num('dOpen2')-num('dTest2'))*num('dRate');
-  const cash=num('cash'),online=num('online'),otp=num('otp'),exp=num('expenditure');
-  const col=cash+online+otp;const diff=col+exp-salesVal;
+    Math.max(0,num('pClose1')-num('pOpen1'))*num('pRate')+Math.max(0,num('pClose2')-num('pOpen2'))*num('pRate')+Math.max(0,num('dClose1')-num('dOpen1'))*num('dRate')+Math.max(0,num('dClose2')-num('dOpen2'))*num('dRate');
+  const cash=num('cash'),online=num('online'),otp=num('otp'),exp=num('expenditure'),testAmt=num('testingAmt');
+  const col=cash+online+otp;const diff=col+exp+testAmt-salesVal;
   const t=$('tally');if(!t)return;
   if(salesVal===0&&col===0){t.className='tally idle';$('tallyAmt').textContent='₹ 0.00';$('tallyMsg').textContent='Enter payments';}
   else if(Math.abs(diff)<0.5){t.className='tally ok';$('tallyAmt').textContent='₹ 0.00';$('tallyMsg').textContent='✅ Balanced';}
@@ -695,25 +692,26 @@ function collectData(){
   const isCNG=pickedPump===3;
   let pL=0,dL=0,cL=0,pA=0,dA=0,cA=0;
   if(!isCNG){
-    pL=Math.max(0,num('pClose1')-num('pOpen1')-num('pTest1'))+Math.max(0,num('pClose2')-num('pOpen2')-num('pTest2'));
-    dL=Math.max(0,num('dClose1')-num('dOpen1')-num('dTest1'))+Math.max(0,num('dClose2')-num('dOpen2')-num('dTest2'));
+    pL=Math.max(0,num('pClose1')-num('pOpen1'))+Math.max(0,num('pClose2')-num('pOpen2'));
+    dL=Math.max(0,num('dClose1')-num('dOpen1'))+Math.max(0,num('dClose2')-num('dOpen2'));
     pA=pL*num('pRate');dA=dL*num('dRate');
   } else {
     cL=Math.max(0,num('cClose1')-num('cOpen1'))+Math.max(0,num('cClose2')-num('cOpen2'));
     cA=cL*num('cRate');
   }
   const sales=pA+dA+cA;
-  const cash=num('cash'),online=num('online'),otp=num('otp'),exp=num('expenditure');
+  const cash=num('cash'),online=num('online'),otp=num('otp'),exp=num('expenditure'),testAmt=num('testingAmt');
   const col=cash+online+otp;
   return{Date:$('entryDate').value||today(),Shift:'S1',Staff_ID:pickedStaffId||me.Staff_ID,Staff_Name:pickedStaffId||me.Staff_ID,Pump_No:pickedPump,
     Petrol_Litres:pL,Petrol_Amount:pA,Diesel_Litres:dL,Diesel_Amount:dA,CNG_KG:cL,CNG_Amount:cA,Total_Sales:sales,
     Online_Amount:online,OTP_Amount:otp,Cash_Total:cash,Change_Amount:0,Expenditure:exp,Expenditure_Type:$('expType').value.trim(),Expenditure_Remarks:'',
-    Total_Collected:col,Difference:col+exp-sales,
+    Testing_Amount:testAmt,
+    Total_Collected:col,Difference:col+exp+testAmt-sales,
     Nozzle_Readings:[
-      {Nozzle_No:1,Fuel_Type:'Petrol',Opening_Reading:num('pOpen1')||0,Closing_Reading:num('pClose1')||0,Litres:Math.max(0,num('pClose1')-num('pOpen1')-num('pTest1')),Rate:num('pRate')||0,Amount:Math.max(0,num('pClose1')-num('pOpen1')-num('pTest1'))*(num('pRate')||0)},
-      {Nozzle_No:2,Fuel_Type:'Petrol',Opening_Reading:num('pOpen2')||0,Closing_Reading:num('pClose2')||0,Litres:Math.max(0,num('pClose2')-num('pOpen2')-num('pTest2')),Rate:num('pRate')||0,Amount:Math.max(0,num('pClose2')-num('pOpen2')-num('pTest2'))*(num('pRate')||0)},
-      {Nozzle_No:1,Fuel_Type:'Diesel',Opening_Reading:num('dOpen1')||0,Closing_Reading:num('dClose1')||0,Litres:Math.max(0,num('dClose1')-num('dOpen1')-num('dTest1')),Rate:num('dRate')||0,Amount:Math.max(0,num('dClose1')-num('dOpen1')-num('dTest1'))*(num('dRate')||0)},
-      {Nozzle_No:2,Fuel_Type:'Diesel',Opening_Reading:num('dOpen2')||0,Closing_Reading:num('dClose2')||0,Litres:Math.max(0,num('dClose2')-num('dOpen2')-num('dTest2')),Rate:num('dRate')||0,Amount:Math.max(0,num('dClose2')-num('dOpen2')-num('dTest2'))*(num('dRate')||0)},
+      {Nozzle_No:1,Fuel_Type:'Petrol',Opening_Reading:num('pOpen1')||0,Closing_Reading:num('pClose1')||0,Litres:Math.max(0,num('pClose1')-num('pOpen1')),Rate:num('pRate')||0,Amount:Math.max(0,num('pClose1')-num('pOpen1'))*(num('pRate')||0)},
+      {Nozzle_No:2,Fuel_Type:'Petrol',Opening_Reading:num('pOpen2')||0,Closing_Reading:num('pClose2')||0,Litres:Math.max(0,num('pClose2')-num('pOpen2')),Rate:num('pRate')||0,Amount:Math.max(0,num('pClose2')-num('pOpen2'))*(num('pRate')||0)},
+      {Nozzle_No:1,Fuel_Type:'Diesel',Opening_Reading:num('dOpen1')||0,Closing_Reading:num('dClose1')||0,Litres:Math.max(0,num('dClose1')-num('dOpen1')),Rate:num('dRate')||0,Amount:Math.max(0,num('dClose1')-num('dOpen1'))*(num('dRate')||0)},
+      {Nozzle_No:2,Fuel_Type:'Diesel',Opening_Reading:num('dOpen2')||0,Closing_Reading:num('dClose2')||0,Litres:Math.max(0,num('dClose2')-num('dOpen2')),Rate:num('dRate')||0,Amount:Math.max(0,num('dClose2')-num('dOpen2'))*(num('dRate')||0)},
       {Nozzle_No:1,Fuel_Type:'CNG',Opening_Reading:num('cOpen1')||0,Closing_Reading:num('cClose1')||0,Litres:Math.max(0,num('cClose1')-num('cOpen1')),Rate:num('cRate')||0,Amount:Math.max(0,num('cClose1')-num('cOpen1'))*(num('cRate')||0)},
       {Nozzle_No:2,Fuel_Type:'CNG',Opening_Reading:num('cOpen2')||0,Closing_Reading:num('cClose2')||0,Litres:Math.max(0,num('cClose2')-num('cOpen2')),Rate:num('cRate')||0,Amount:Math.max(0,num('cClose2')-num('cOpen2'))*(num('cRate')||0)}
     ],Cash_Details:[],Payments:[{Payment_Type:'Online',Amount:online},{Payment_Type:'OTP',Amount:otp},{Payment_Type:'Cash',Amount:cash}]};

@@ -214,10 +214,10 @@ td{padding:9px 8px;border-bottom:1px solid var(--line);font-variant-numeric:tabu
   <div class="hdr"><div class="hdr-back" onclick="show('pumpSec')">←</div><div class="hdr-txt"><h1 id="saleTitle">Pump</h1><p id="saleSub">—</p></div></div>
   <div class="wrap">
     <div class="steps"><div class="step-chip active">1. Readings</div><div class="step-chip">2. Payments</div><div class="step-chip">3. Confirm</div></div>
-    <div id="petrolCard" class="noz ms"><div class="noz-h"><div class="noz-n">MS N1 <span class="tag">PETROL</span></div><div class="noz-l"><span id="pLit1">0.00</span> L</div></div><div class="noz-grid-3"><div class="f"><label>Opening</label><input id="pOpen1" type="number" readonly></div><div class="f"><label>Closing</label><input id="pClose1" type="number" inputmode="decimal" oninput="calc()"></div><div class="f"><label>Testing</label><input id="pTest1" type="number" inputmode="decimal" oninput="calc()" placeholder="0"></div></div></div>
-    <div id="petrolCard2" class="noz ms"><div class="noz-h"><div class="noz-n">MS N2 <span class="tag">PETROL</span></div><div class="noz-l"><span id="pLit2">0.00</span> L</div></div><div class="noz-grid-3"><div class="f"><label>Opening</label><input id="pOpen2" type="number" readonly></div><div class="f"><label>Closing</label><input id="pClose2" type="number" inputmode="decimal" oninput="calc()"></div><div class="f"><label>Testing</label><input id="pTest2" type="number" inputmode="decimal" oninput="calc()" placeholder="0"></div></div></div>
-    <div id="dieselCard" class="noz hsd"><div class="noz-h"><div class="noz-n">HSD N1 <span class="tag">DIESEL</span></div><div class="noz-l"><span id="dLit1">0.00</span> L</div></div><div class="noz-grid-3"><div class="f"><label>Opening</label><input id="dOpen1" type="number" readonly></div><div class="f"><label>Closing</label><input id="dClose1" type="number" inputmode="decimal" oninput="calc()"></div><div class="f"><label>Testing</label><input id="dTest1" type="number" inputmode="decimal" oninput="calc()" placeholder="0"></div></div></div>
-    <div id="dieselCard2" class="noz hsd"><div class="noz-h"><div class="noz-n">HSD N2 <span class="tag">DIESEL</span></div><div class="noz-l"><span id="dLit2">0.00</span> L</div></div><div class="noz-grid-3"><div class="f"><label>Opening</label><input id="dOpen2" type="number" readonly></div><div class="f"><label>Closing</label><input id="dClose2" type="number" inputmode="decimal" oninput="calc()"></div><div class="f"><label>Testing</label><input id="dTest2" type="number" inputmode="decimal" oninput="calc()" placeholder="0"></div></div></div>
+    <div id="petrolCard" class="noz ms"><div class="noz-h"><div class="noz-n">MS N1 <span class="tag">PETROL</span></div><div class="noz-l"><span id="pLit1">0.00</span> L</div></div><div class="noz-grid"><div class="f"><label>Opening</label><input id="pOpen1" type="number" readonly></div><div class="f"><label>Closing</label><input id="pClose1" type="number" inputmode="decimal" oninput="calc()"></div></div></div>
+    <div id="petrolCard2" class="noz ms"><div class="noz-h"><div class="noz-n">MS N2 <span class="tag">PETROL</span></div><div class="noz-l"><span id="pLit2">0.00</span> L</div></div><div class="noz-grid"><div class="f"><label>Opening</label><input id="pOpen2" type="number" readonly></div><div class="f"><label>Closing</label><input id="pClose2" type="number" inputmode="decimal" oninput="calc()"></div></div></div>
+    <div id="dieselCard" class="noz hsd"><div class="noz-h"><div class="noz-n">HSD N1 <span class="tag">DIESEL</span></div><div class="noz-l"><span id="dLit1">0.00</span> L</div></div><div class="noz-grid"><div class="f"><label>Opening</label><input id="dOpen1" type="number" readonly></div><div class="f"><label>Closing</label><input id="dClose1" type="number" inputmode="decimal" oninput="calc()"></div></div></div>
+    <div id="dieselCard2" class="noz hsd"><div class="noz-h"><div class="noz-n">HSD N2 <span class="tag">DIESEL</span></div><div class="noz-l"><span id="dLit2">0.00</span> L</div></div><div class="noz-grid"><div class="f"><label>Opening</label><input id="dOpen2" type="number" readonly></div><div class="f"><label>Closing</label><input id="dClose2" type="number" inputmode="decimal" oninput="calc()"></div></div></div>
     <div id="cngCard" class="noz cng"><div class="noz-h"><div class="noz-n">CNG N1 <span class="tag">CNG</span></div><div class="noz-l"><span id="cLit1">0.00</span> KG</div></div><div class="noz-grid"><div class="f"><label>Opening</label><input id="cOpen1" type="number" readonly></div><div class="f"><label>Closing</label><input id="cClose1" type="number" inputmode="decimal" oninput="calc()"></div></div></div>
     <div id="cngCard2" class="noz cng"><div class="noz-h"><div class="noz-n">CNG N2 <span class="tag">CNG</span></div><div class="noz-l"><span id="cLit2">0.00</span> KG</div></div><div class="noz-grid"><div class="f"><label>Opening</label><input id="cOpen2" type="number" readonly></div><div class="f"><label>Closing</label><input id="cClose2" type="number" inputmode="decimal" oninput="calc()"></div></div></div>
     <div class="card">
@@ -252,9 +252,10 @@ td{padding:9px 8px;border-bottom:1px solid var(--line);font-variant-numeric:tabu
       <div class="f" style="margin-bottom:0"><label>Total Cash ₹</label><input id="cash" type="number" class="num" placeholder="0" oninput="calcPay()"></div>
     </div>
     <div class="card">
-      <div class="card-t">💸 Expenditure</div>
-      <div class="f"><label>Type</label><input id="expType" placeholder="Tea / Cleaning / Repair"></div>
-      <div class="f"><label>Amount ₹</label><input id="expenditure" type="number" class="num" placeholder="0" oninput="calcPay()"></div>
+      <div class="card-t">💸 Expenditure & Testing</div>
+      <div class="f"><label>Exp/Testing Type</label><input id="expType" placeholder="Tea / Cleaning / Testing"></div>
+      <div class="f"><label>Testing Amt ₹</label><input id="testingAmt" type="number" class="num" placeholder="0" oninput="calcPay()"></div>
+      <div class="f"><label>Expenditure ₹</label><input id="expenditure" type="number" class="num" placeholder="0" oninput="calcPay()"></div>
       <div class="f" style="margin-bottom:0"><label>Remarks</label><input id="expRemarks" placeholder="Optional"></div>
     </div>
     <div class="tally idle" id="tally"><span class="tl">Difference</span><span class="tv" id="tallyAmt">₹ 0.00</span><span class="tm" id="tallyMsg">Enter amounts</span></div>
@@ -565,13 +566,13 @@ function goPayment(){
   calcPay();show('paySec');
 }
 function calcPay(){
-  const cash=num('cash'),online=num('online'),otp=num('otp'),exp=num('expenditure');
-  const salesVal=Math.max(0,num('pClose1')-num('pOpen1')-num('pTest1'))*num('pRate')+Math.max(0,num('pClose2')-num('pOpen2')-num('pTest2'))*num('pRate')+Math.max(0,num('dClose1')-num('dOpen1')-num('dTest1'))*num('dRate')+Math.max(0,num('dClose2')-num('dOpen2')-num('dTest2'))*num('dRate')+Math.max(0,num('cClose1')-num('cOpen1'))*num('cRate')+Math.max(0,num('cClose2')-num('cOpen2'))*num('cRate');
+  const cash=num('cash'),online=num('online'),otp=num('otp'),exp=num('expenditure'),testAmt=num('testingAmt');
+  const salesVal=Math.max(0,num('pClose1')-num('pOpen1'))*num('pRate')+Math.max(0,num('pClose2')-num('pOpen2'))*num('pRate')+Math.max(0,num('dClose1')-num('dOpen1'))*num('dRate')+Math.max(0,num('dClose2')-num('dOpen2'))*num('dRate')+Math.max(0,num('cClose1')-num('cOpen1'))*num('cRate')+Math.max(0,num('cClose2')-num('cOpen2'))*num('cRate');
   const col=cash+online+otp;
-  const diff=col+exp-salesVal;
+  const diff=col+exp+testAmt-salesVal;
   $('pSumSales').textContent=money(salesVal);
   $('pSumCol').textContent=money(col);
-  $('pSumExp').textContent=money(exp);
+  $('pSumExp').textContent=money(exp+testAmt);
   $('pSumDiff').textContent=money(Math.abs(diff));
   const t=$('tally');
   if(salesVal===0&&col===0){t.className='tally idle';$('tallyAmt').textContent='₹ 0.00';$('tallyMsg').textContent='Enter amounts';}
@@ -586,24 +587,25 @@ function overrideOpening(){
   toast('Opening unlocked','info');
 }
 function collectData(){
-  const pL=Math.max(0,num('pClose1')-num('pOpen1')-num('pTest1'))+Math.max(0,num('pClose2')-num('pOpen2')-num('pTest2'));
-  const dL=Math.max(0,num('dClose1')-num('dOpen1')-num('dTest1'))+Math.max(0,num('dClose2')-num('dOpen2')-num('dTest2'));
+  const pL=Math.max(0,num('pClose1')-num('pOpen1'))+Math.max(0,num('pClose2')-num('pOpen2'));
+  const dL=Math.max(0,num('dClose1')-num('dOpen1'))+Math.max(0,num('dClose2')-num('dOpen2'));
   const cL=Math.max(0,num('cClose1')-num('cOpen1'))+Math.max(0,num('cClose2')-num('cOpen2'));
   const pA=pL*num('pRate'),dA=dL*num('dRate'),cA=cL*num('cRate');
   const sales=pA+dA+cA;
-  const cash=num('cash'),online=num('online'),otp=num('otp'),exp=num('expenditure');
+  const cash=num('cash'),online=num('online'),otp=num('otp'),exp=num('expenditure'),testAmt=num('testingAmt');
   const col=cash+online+otp;
   return{
     Date:$('entryDate').value||today(),Shift:'S1',Staff_ID:pickedStaffId,Staff_Name:pickedStaffId,Pump_No:pickedPump,
     Petrol_Litres:pL,Petrol_Amount:pA,Diesel_Litres:dL,Diesel_Amount:dA,CNG_KG:cL,CNG_Amount:cA,Total_Sales:sales,
     Online_Amount:online,OTP_Amount:otp,Cash_Total:cash,Change_Amount:0,Expenditure:exp,
+    Testing_Amount:testAmt,
     Expenditure_Type:$('expType').value.trim(),Expenditure_Remarks:$('expRemarks').value.trim(),
-    Total_Collected:col,Difference:col+exp-sales,
+    Total_Collected:col,Difference:col+exp+testAmt-sales,
     Nozzle_Readings:[
-      {Nozzle_No:1,Fuel_Type:'Petrol',Opening_Reading:num('pOpen1'),Closing_Reading:num('pClose1'),Litres:Math.max(0,num('pClose1')-num('pOpen1')-num('pTest1')),Rate:num('pRate'),Amount:Math.max(0,num('pClose1')-num('pOpen1')-num('pTest1'))*num('pRate')},
-      {Nozzle_No:2,Fuel_Type:'Petrol',Opening_Reading:num('pOpen2'),Closing_Reading:num('pClose2'),Litres:Math.max(0,num('pClose2')-num('pOpen2')-num('pTest2')),Rate:num('pRate'),Amount:Math.max(0,num('pClose2')-num('pOpen2')-num('pTest2'))*num('pRate')},
-      {Nozzle_No:1,Fuel_Type:'Diesel',Opening_Reading:num('dOpen1'),Closing_Reading:num('dClose1'),Litres:Math.max(0,num('dClose1')-num('dOpen1')-num('dTest1')),Rate:num('dRate'),Amount:Math.max(0,num('dClose1')-num('dOpen1')-num('dTest1'))*num('dRate')},
-      {Nozzle_No:2,Fuel_Type:'Diesel',Opening_Reading:num('dOpen2'),Closing_Reading:num('dClose2'),Litres:Math.max(0,num('dClose2')-num('dOpen2')-num('dTest2')),Rate:num('dRate'),Amount:Math.max(0,num('dClose2')-num('dOpen2')-num('dTest2'))*num('dRate')},
+      {Nozzle_No:1,Fuel_Type:'Petrol',Opening_Reading:num('pOpen1'),Closing_Reading:num('pClose1'),Litres:Math.max(0,num('pClose1')-num('pOpen1')),Rate:num('pRate'),Amount:Math.max(0,num('pClose1')-num('pOpen1'))*num('pRate')},
+      {Nozzle_No:2,Fuel_Type:'Petrol',Opening_Reading:num('pOpen2'),Closing_Reading:num('pClose2'),Litres:Math.max(0,num('pClose2')-num('pOpen2')),Rate:num('pRate'),Amount:Math.max(0,num('pClose2')-num('pOpen2'))*num('pRate')},
+      {Nozzle_No:1,Fuel_Type:'Diesel',Opening_Reading:num('dOpen1'),Closing_Reading:num('dClose1'),Litres:Math.max(0,num('dClose1')-num('dOpen1')),Rate:num('dRate'),Amount:Math.max(0,num('dClose1')-num('dOpen1'))*num('dRate')},
+      {Nozzle_No:2,Fuel_Type:'Diesel',Opening_Reading:num('dOpen2'),Closing_Reading:num('dClose2'),Litres:Math.max(0,num('dClose2')-num('dOpen2')),Rate:num('dRate'),Amount:Math.max(0,num('dClose2')-num('dOpen2'))*num('dRate')},
       {Nozzle_No:1,Fuel_Type:'CNG',Opening_Reading:num('cOpen1'),Closing_Reading:num('cClose1'),Litres:Math.max(0,num('cClose1')-num('cOpen1')),Rate:num('cRate'),Amount:Math.max(0,num('cClose1')-num('cOpen1'))*num('cRate')},
       {Nozzle_No:2,Fuel_Type:'CNG',Opening_Reading:num('cOpen2'),Closing_Reading:num('cClose2'),Litres:Math.max(0,num('cClose2')-num('cOpen2')),Rate:num('cRate'),Amount:Math.max(0,num('cClose2')-num('cOpen2'))*num('cRate')}
     ],
