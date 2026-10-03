@@ -428,20 +428,34 @@ async function sha256(t){const b=new TextEncoder().encode(t);const h=await crypt
 async function api(action,extra={}){try{const res=await fetch(API_URL,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify({action,currentUser:me,...extra})});return await res.json();}catch(e){return{ok:false,error:'Network: '+e.message};}}
 
 /* ═════ LOGIN ═════ */
-async function doLogin(){
-  const id=$('loginId').value.trim().toUpperCase();
-  const pin=$('loginPin').value.trim();
-  if(!id||!/^\d{4}$/.test(pin)){toast('Enter ID and 4-digit PIN','err');return;}
-  loading(true,'Signing in...');
+async function doLogin(bgId, bgPin){
+  const id=bgId || $('loginId').value.trim().toUpperCase();
+  const pin=bgPin || $('loginPin').value.trim();
+  if(!id||!/^\d{4}$/.test(pin)){if(!bgId)toast('Enter ID and 4-digit PIN','err');return;}
+  if(!bgId) loading(true,'Signing in...');
   const r=await api('loginUser',{staffId:id,pin});
-  loading(false);
-  if(!r.ok){toast(r.error||'Login failed','err');return;}
+  if(!bgId) loading(false);
+  if(!r.ok){if(!bgId)toast(r.error||'Login failed','err'); else {localStorage.removeItem('me');localStorage.removeItem('pin');show('loginSec');} return;}
   me=r.user; pickedStaffId=me.Staff_ID;
-  localStorage.setItem('lastLoginId',id);
-  vibrate([20,40,20]);
+  localStorage.setItem('me',JSON.stringify(me));
+  localStorage.setItem('pin',pin);
+  if(!bgId) vibrate([20,40,20]);
   setupHome();
-  show('homeSec');
+  if(!bgId) show('homeSec');
 }
+
+// Auto-login on load
+window.addEventListener('DOMContentLoaded',()=>{
+  const savedMe=localStorage.getItem('me');
+  const savedPin=localStorage.getItem('pin');
+  if(savedMe && savedPin){
+    try{
+      me=JSON.parse(savedMe); pickedStaffId=me.Staff_ID;
+      setupHome(); show('homeSec');
+      doLogin(me.Staff_ID, savedPin); // background verify
+    }catch(e){}
+  }
+});
 
 function setupHome(){
   $('hWelcome').textContent='Welcome, '+me.Staff_Name.split(' ')[0];
