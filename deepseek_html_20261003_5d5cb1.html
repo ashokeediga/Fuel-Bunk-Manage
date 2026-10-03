@@ -1,0 +1,1020 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Fuel Manager · Desktop</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{--pri:#2563eb;--pri2:#1d4ed8;--ok:#10b981;--bad:#ef4444;--warn:#f59e0b;--pur:#8b5cf6;--ind:#6366f1;
+  --bg:#f1f5f9;--card:#ffffff;--line:#e2e8f0;--t:#0f172a;--t2:#475569;--t3:#94a3b8;--sidebar:#0f172a}
+html,body{height:100%;font-family:'Inter',system-ui,sans-serif;background:var(--bg);color:var(--t)}
+body{display:flex;min-height:100vh}
+
+/* SIDEBAR */
+.aside{width:240px;background:var(--sidebar);color:#cbd5e1;display:flex;flex-direction:column;position:fixed;top:0;left:0;bottom:0;z-index:40}
+.aside-logo{padding:22px 20px;display:flex;align-items:center;gap:12px;border-bottom:1px solid rgba(255,255,255,.06)}
+.aside-logo .lg{width:38px;height:38px;border-radius:11px;background:linear-gradient(135deg,#3b82f6,#6366f1);display:grid;place-items:center;font-size:18px;box-shadow:0 4px 16px rgba(59,130,246,.4)}
+.aside-logo h1{font-size:14px;font-weight:800;color:#f1f5f9}
+.aside-logo p{font-size:10px;color:#64748b;font-weight:500}
+.aside-nav{flex:1;overflow-y:auto;padding:14px 10px}
+.nav-sect{padding:14px 10px 6px;font-size:10px;font-weight:700;color:#475569;text-transform:uppercase;letter-spacing:.1em}
+.nav-item{display:flex;align-items:center;gap:12px;padding:11px 14px;border-radius:10px;cursor:pointer;font-size:13px;font-weight:600;color:#cbd5e1;transition:.15s;margin-bottom:2px}
+.nav-item:hover{background:rgba(255,255,255,.05);color:#f1f5f9}
+.nav-item.active{background:var(--pri);color:#fff;box-shadow:0 4px 14px rgba(37,99,235,.4)}
+.nav-item .ni{font-size:16px;width:20px;text-align:center}
+.aside-user{padding:14px 16px;border-top:1px solid rgba(255,255,255,.06)}
+.aside-user .au-name{font-size:13px;font-weight:700;color:#f1f5f9}
+.aside-user .au-role{font-size:10.5px;color:#64748b;margin-top:2px}
+.aside-user .au-btn{margin-top:10px;width:100%;padding:9px;border-radius:9px;background:rgba(239,68,68,.15);color:#f87171;border:none;font-family:inherit;font-size:11.5px;font-weight:700;cursor:pointer}
+
+/* MAIN */
+.main{flex:1;margin-left:240px;min-height:100vh;display:flex;flex-direction:column}
+.topbar{background:#fff;border-bottom:1px solid var(--line);padding:14px 28px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:30}
+.topbar h2{font-size:18px;font-weight:800}
+.topbar .sub{font-size:11.5px;color:var(--t2);margin-top:2px}
+.topbar-right{display:flex;align-items:center;gap:12px}
+.badge-sync{padding:7px 12px;border-radius:9px;font-size:11px;font-weight:700;background:#ecfdf5;color:#059669;border:1px solid #a7f3d0}
+.badge-sync.err{background:#fef2f2;color:#dc2626;border-color:#fecaca}
+.content{padding:24px 28px;flex:1}
+.sec{display:none;animation:fd .25s}
+.sec.active{display:block}
+@keyframes fd{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:none}}
+
+/* LOGIN */
+#loginSec{min-height:100vh;display:grid;place-items:center;background:linear-gradient(135deg,#0f172a,#1e293b);padding:24px;position:fixed;inset:0;z-index:100}
+.login-box{background:#fff;padding:32px;border-radius:20px;box-shadow:0 24px 80px rgba(0,0,0,.4);width:min(420px,100%)}
+.login-box .lg{width:64px;height:64px;border-radius:18px;background:linear-gradient(135deg,#3b82f6,#6366f1);display:grid;place-items:center;font-size:30px;margin:0 auto 16px;box-shadow:0 8px 24px rgba(59,130,246,.4)}
+.login-box h1{font-size:22px;font-weight:900;text-align:center;letter-spacing:-.03em}
+.login-box p.sub{text-align:center;font-size:12px;color:var(--t2);margin-bottom:24px}
+
+/* CARDS */
+.card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:20px;margin-bottom:20px;box-shadow:0 1px 3px rgba(15,23,42,.04)}
+.card-hdr{display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;flex-wrap:wrap;gap:12px}
+.card-hdr h3{font-size:15px;font-weight:800}
+.card-hdr .h-sub{font-size:11px;color:var(--t2);margin-top:2px;font-weight:500}
+
+/* FIELDS */
+.f-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:14px}
+.f{display:flex;flex-direction:column;gap:6px}
+.f label{font-size:10.5px;font-weight:700;color:var(--t2);text-transform:uppercase;letter-spacing:.06em}
+.f input,.f select,.f textarea{border:1.5px solid var(--line);background:#f8fafc;border-radius:10px;padding:11px 13px;font-size:14px;font-weight:600;color:var(--t);font-family:inherit;outline:none;transition:.15s;-webkit-appearance:none;width:100%}
+.f input:focus,.f select:focus{border-color:var(--pri);background:#fff;box-shadow:0 0 0 4px rgba(37,99,235,.12)}
+.f input[readonly]{background:#f1f5f9;color:var(--t2)}
+.f input.num{text-align:right;font-variant-numeric:tabular-nums}
+
+/* BUTTONS */
+.btn{padding:11px 18px;border-radius:10px;border:none;font-family:inherit;font-size:13px;font-weight:800;cursor:pointer;transition:.15s;display:inline-flex;align-items:center;gap:6px}
+.btn-primary{background:var(--pri);color:#fff;box-shadow:0 4px 12px rgba(37,99,235,.25)}
+.btn-primary:hover{background:var(--pri2)}
+.btn-success{background:var(--ok);color:#fff;box-shadow:0 4px 12px rgba(16,185,129,.25)}
+.btn-success:hover{background:#059669}
+.btn-danger{background:var(--bad);color:#fff}
+.btn-warn{background:var(--warn);color:#fff}
+.btn-ghost{background:#fff;color:var(--t);border:1.5px solid var(--line)}
+.btn-ghost:hover{background:#f8fafc}
+.btn-sm{padding:7px 12px;font-size:12px;border-radius:8px}
+
+/* KPI */
+.kpi-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:14px;margin-bottom:20px}
+.kpi{background:#fff;border:1px solid var(--line);border-radius:14px;padding:16px;box-shadow:0 1px 3px rgba(15,23,42,.04)}
+.kpi .kl{font-size:10px;font-weight:700;color:var(--t2);text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px}
+.kpi .kv{font-size:20px;font-weight:800;font-variant-numeric:tabular-nums;letter-spacing:-.02em}
+.kpi.primary .kv{color:var(--pri)}.kpi.green .kv{color:var(--ok)}.kpi.orange .kv{color:var(--warn)}.kpi.red .kv{color:var(--bad)}.kpi.purple .kv{color:var(--pur)}
+
+/* TILES */
+.tile-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:16px}
+.tile{background:#fff;border:1.5px solid var(--line);border-radius:14px;padding:18px;cursor:pointer;transition:.2s;display:flex;gap:14px;align-items:center}
+.tile:hover{border-color:var(--pri);box-shadow:0 8px 24px rgba(37,99,235,.1);transform:translateY(-2px)}
+.tile .ti{width:46px;height:46px;border-radius:12px;display:grid;place-items:center;font-size:20px;flex-shrink:0}
+.tile .tt{font-size:14px;font-weight:800;color:var(--t)}
+.tile .ts{font-size:11px;color:var(--t2);margin-top:2px;font-weight:500}
+.tile.primary .ti{background:#dbeafe;color:var(--pri)}
+.tile.green .ti{background:#d1fae5;color:var(--ok)}
+.tile.orange .ti{background:#fef3c7;color:var(--warn)}
+.tile.purple .ti{background:#ede9fe;color:var(--pur)}
+.tile.red .ti{background:#fee2e2;color:var(--bad)}
+.tile.indigo .ti{background:#e0e7ff;color:var(--ind)}
+
+/* TABLES */
+.tbl-wrap{overflow-x:auto;border:1px solid var(--line);border-radius:12px;background:#fff}
+table{width:100%;border-collapse:collapse;font-size:13px}
+th{background:#f8fafc;color:var(--t2);font-size:10.5px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;padding:11px 12px;text-align:left;white-space:nowrap;border-bottom:1px solid var(--line)}
+td{padding:11px 12px;border-bottom:1px solid var(--line);font-variant-numeric:tabular-nums;white-space:nowrap}
+tr:last-child td{border-bottom:none}
+tbody tr:hover td{background:#f8fafc}
+.tbl-empty{padding:48px;text-align:center;color:var(--t3);font-size:13px;font-weight:600}
+
+/* BADGES */
+.b{display:inline-block;padding:3px 9px;border-radius:6px;font-size:11px;font-weight:700}
+.b.ok{background:#d1fae5;color:#047857}
+.b.bad{background:#fee2e2;color:#b91c1c}
+.b.warn{background:#fef3c7;color:#b45309}
+.b.info{background:#dbeafe;color:#1d4ed8}
+
+/* CHARTS */
+.charts-row{display:grid;grid-template-columns:2fr 1fr;gap:20px;margin-bottom:20px}
+.charts-row-2{display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-bottom:20px}
+.chart-h{height:260px;position:relative}
+
+/* TALLY */
+.tally{padding:16px;border-radius:12px;text-align:center;margin:14px 0}
+.tally .tl{font-size:10.5px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;display:block;margin-bottom:5px}
+.tally .tv{font-size:28px;font-weight:900;font-variant-numeric:tabular-nums;display:block;letter-spacing:-.02em}
+.tally .tm{font-size:12px;font-weight:700;margin-top:4px;display:block}
+.tally.idle{background:#f8fafc;border:1.5px solid var(--line);color:var(--t2)}
+.tally.ok{background:#ecfdf5;border:1.5px solid var(--ok);color:#047857}
+.tally.short{background:#fef2f2;border:1.5px solid var(--bad);color:#b91c1c}
+.tally.excess{background:#fffbeb;border:1.5px solid var(--warn);color:#b45309}
+
+/* DSR */
+.dsr-head{background:linear-gradient(135deg,#f8fafc,#f1f5f9);border:1px solid var(--line);border-radius:14px;padding:18px;margin-bottom:16px;text-align:center}
+.dsr-head h3{font-size:17px;font-weight:900;letter-spacing:.1em;color:var(--pri);margin-bottom:6px}
+.dsr-head .dh-sub{font-size:12.5px;color:var(--t2);font-weight:600}
+.dsr-head .dh-sub b{color:var(--t)}
+.dsr-tbl{font-size:12px}
+.dsr-tbl th{font-size:10px;padding:10px 8px;line-height:1.3;text-align:center}
+.dsr-tbl td{padding:9px 8px;text-align:right;font-size:12px}
+.dsr-tbl td.d{text-align:center;font-weight:800;color:var(--pri);background:#eff6ff}
+.dsr-tbl td.rct{background:#fef3c7;font-weight:700;color:#92400e;text-align:right}
+.dsr-tbl td.net{background:#dbeafe;font-weight:700;color:#1e40af}
+.dsr-tbl td.cum{background:#e0e7ff;font-weight:700;color:#4338ca}
+.dsr-tbl td.pos{color:#047857;font-weight:700}
+.dsr-tbl td.neg{color:#b91c1c;font-weight:700}
+.dsr-tbl tfoot td{background:#f1f5f9;font-weight:800;border-top:2px solid var(--pri);font-size:12.5px}
+
+/* TABS */
+.tabs{display:flex;gap:6px;overflow-x:auto;margin-bottom:16px;padding-bottom:4px}
+.tab{padding:9px 16px;border-radius:9px;background:#fff;border:1px solid var(--line);font-size:12.5px;font-weight:700;color:var(--t2);cursor:pointer;white-space:nowrap;transition:.15s}
+.tab:hover{border-color:var(--pri);color:var(--pri)}
+.tab.active{background:var(--pri);color:#fff;border-color:var(--pri)}
+
+/* MODAL */
+.mask{position:fixed;inset:0;background:rgba(15,23,42,.6);backdrop-filter:blur(4px);display:none;align-items:center;justify-content:center;z-index:200;padding:24px}
+.mask.show{display:flex}
+.modal{background:#fff;width:min(600px,100%);max-height:90vh;overflow-y:auto;border-radius:18px;padding:26px;box-shadow:0 24px 80px rgba(0,0,0,.3);animation:up .25s}
+@keyframes up{from{transform:translateY(20px);opacity:0}to{transform:none;opacity:1}}
+.modal h3{font-size:17px;font-weight:800;margin-bottom:18px;display:flex;justify-content:space-between;align-items:center}
+.modal .x{width:34px;height:34px;border-radius:9px;background:#f1f5f9;border:none;color:var(--t2);font-size:16px;cursor:pointer}
+
+/* ALERTS */
+.alert{padding:13px 16px;border-radius:10px;font-size:12.5px;font-weight:600;margin-bottom:14px;line-height:1.5}
+.alert.info{background:#eff6ff;border:1px solid #bfdbfe;color:#1e40af}
+.alert.warn{background:#fffbeb;border:1px solid #fde68a;color:#92400e}
+.alert.err{background:#fef2f2;border:1px solid #fecaca;color:#991b1b}
+.alert.ok{background:#ecfdf5;border:1px solid #a7f3d0;color:#047857}
+
+/* TOAST & LOADER */
+.toast{position:fixed;top:20px;right:20px;background:#fff;border:1.5px solid var(--line);border-radius:11px;padding:14px 20px;font-size:13.5px;font-weight:700;z-index:300;box-shadow:0 12px 40px rgba(0,0,0,.15);transform:translateX(400px);transition:transform .4s cubic-bezier(.34,1.56,.64,1);max-width:400px;display:flex;align-items:center;gap:10px}
+.toast.show{transform:translateX(0)}
+.toast.ok{border-color:var(--ok);color:#047857}
+.toast.err{border-color:var(--bad);color:#b91c1c}
+.toast.info{border-color:var(--pri);color:var(--pri)}
+.loader{position:fixed;inset:0;background:rgba(241,245,249,.85);backdrop-filter:blur(6px);z-index:250;display:none;align-items:center;justify-content:center;flex-direction:column;gap:16px}
+.loader.show{display:flex}
+.spinner{width:46px;height:46px;border:3px solid var(--line);border-top-color:var(--pri);border-radius:50%;animation:sp 1s linear infinite}
+@keyframes sp{to{transform:rotate(360deg)}}
+.loader p{font-size:13px;font-weight:700;color:var(--t2)}
+
+/* SUMMARY MODAL */
+.sm-line{display:flex;justify-content:space-between;padding:11px 0;border-bottom:1px solid var(--line);font-size:13.5px}
+.sm-line:last-child{border-bottom:none}
+.sm-line .sl{color:var(--t2);font-weight:600}
+.sm-line .sv{font-weight:800;font-variant-numeric:tabular-nums}
+.sm-line.hl{background:#eff6ff;margin:0 -12px;padding:11px 12px;border-radius:8px;border:none}
+.sm-line.hl .sl,.sm-line.hl .sv{color:var(--pri)}
+
+/* RESPONSIVE */
+@media(max-width:1024px){
+  .aside{transform:translateX(-100%);transition:.3s}
+  .aside.open{transform:none}
+  .main{margin-left:0}
+  .charts-row,.charts-row-2{grid-template-columns:1fr}
+}
+.hamburger{display:none;background:none;border:none;font-size:22px;cursor:pointer;color:var(--t);margin-right:10px}
+@media(max-width:1024px){.hamburger{display:inline-block}}
+
+/* PRINT */
+@media print{
+  .aside,.topbar,.btn,.tabs,.no-print{display:none!important}
+  .main{margin:0}
+  .content{padding:0}
+  body{background:#fff}
+  .card{box-shadow:none;border:none;padding:0}
+  .tbl-wrap{border:1px solid #ccc}
+  th{background:#eee!important;color:#000!important}
+  td{color:#000!important}
+  .dsr-tbl td{color:#000!important}
+  .dsr-tbl td.rct,.dsr-tbl td.net,.dsr-tbl td.cum{background:#f5f5f5!important;color:#000!important}
+}
+</style>
+</head>
+<body>
+
+<!-- LOGIN -->
+<div id="loginSec" class="sec active">
+  <div class="login-box">
+    <div class="lg">⛽</div>
+    <h1>Fuel Bunk Manager</h1>
+    <p class="sub">NLK Filling Station · HPCL Retail Outlet</p>
+    <div class="f"><label>User ID</label><input id="loginId" placeholder="OWN001 / MGR001 / EMP001" autocapitalize="characters"></div>
+    <div class="f" style="margin-top:12px"><label>4-Digit PIN</label><input id="loginPin" type="password" inputmode="numeric" maxlength="4" placeholder="••••"></div>
+    <button class="btn btn-primary" style="width:100%;margin-top:20px;padding:13px;font-size:14px" onclick="doLogin()">🔐 Sign In</button>
+    <div style="text-align:center;margin-top:16px;font-size:11px;color:var(--t3);font-weight:600">Owner · Manager · Employee</div>
+  </div>
+</div>
+
+<!-- SIDEBAR + MAIN -->
+<div id="appWrap" style="display:none;width:100%">
+  <aside class="aside" id="sidebar">
+    <div class="aside-logo">
+      <div class="lg">⛽</div>
+      <div><h1>Fuel Manager</h1><p>NLK · HPCL</p></div>
+    </div>
+    <nav class="aside-nav" id="nav">
+      <div class="nav-sect">Operations</div>
+      <div class="nav-item active" data-nav="home"><span class="ni">🏠</span>Home</div>
+      <div class="nav-item" data-nav="entry"><span class="ni">➕</span>New Entry</div>
+      <div class="nav-item" data-nav="entries"><span class="ni">📋</span>Entries</div>
+      <div class="nav-item" data-nav="stock" data-role="mgr"><span class="ni">🚛</span>Stock Purchase</div>
+      <div class="nav-sect">Analytics</div>
+      <div class="nav-item" data-nav="dashboard" data-role="owner"><span class="ni">📊</span>Dashboard</div>
+      <div class="nav-item" data-nav="dsr" data-role="owner"><span class="ni">📦</span>DSR Register</div>
+      <div class="nav-item" data-nav="reports" data-role="owner"><span class="ni">📈</span>Reports</div>
+      <div class="nav-sect">Administration</div>
+      <div class="nav-item" data-nav="staff" data-role="owner"><span class="ni">👥</span>Staff Master</div>
+      <div class="nav-item" data-nav="salary" data-role="owner"><span class="ni">💰</span>Salary</div>
+      <div class="nav-item" data-nav="otp" data-role="owner"><span class="ni">💳</span>OTP Settlement</div>
+    </nav>
+    <div class="aside-user">
+      <div class="au-name" id="sideName">—</div>
+      <div class="au-role" id="sideRole">—</div>
+      <button class="au-btn" onclick="doLogout()">🚪 Logout</button>
+    </div>
+  </aside>
+
+  <div class="main">
+    <div class="topbar">
+      <div style="display:flex;align-items:center;gap:6px">
+        <button class="hamburger" onclick="document.getElementById('sidebar').classList.toggle('open')">☰</button>
+        <div>
+          <h2 id="pageTitle">Home</h2>
+          <div class="sub" id="pageSub">Welcome to Fuel Bunk Manager</div>
+        </div>
+      </div>
+      <div class="topbar-right">
+        <div class="badge-sync" id="syncBadge">☁️ Connected</div>
+      </div>
+    </div>
+
+    <div class="content">
+
+      <!-- HOME -->
+      <div id="secHome" class="sec active">
+        <div class="kpi-grid" id="homeKpis"></div>
+        <div class="card">
+          <div class="card-hdr"><div><h3>Quick Actions</h3><div class="h-sub">Click a tile to get started</div></div></div>
+          <div class="tile-grid" id="homeTiles"></div>
+        </div>
+      </div>
+
+      <!-- ENTRY -->
+      <div id="secEntry" class="sec">
+        <div class="card">
+          <div class="card-hdr"><div><h3>New Sales Entry</h3><div class="h-sub">Select date and pump to begin</div></div></div>
+          <div class="f-row">
+            <div class="f"><label>Date</label><input id="entryDate" type="date" onchange="onEntryDateChange()"></div>
+            <div class="f"><label>Pump</label><select id="entryPump" onchange="onPumpChange()"><option value="">— Select Pump —</option><option value="1">Pump 1</option><option value="2">Pump 2</option><option value="3">CNG Pump</option></select></div>
+            <div class="f" id="empPickWrap" style="display:none"><label>Employee</label><select id="empPick" onchange="onEmpPick()"></select></div>
+          </div>
+        </div>
+        <div id="entryBody"></div>
+      </div>
+
+      <!-- ENTRIES -->
+      <div id="secEntries" class="sec">
+        <div class="card">
+          <div class="card-hdr"><div><h3>Saved Entries</h3><div class="h-sub">Recent shift records</div></div>
+            <div style="display:flex;gap:10px;align-items:center">
+              <input type="date" id="entriesDate" onchange="loadEntries()" style="border:1.5px solid var(--line);border-radius:9px;padding:8px 12px;font-size:13px;font-weight:600;font-family:inherit">
+            </div>
+          </div>
+          <div id="entriesOut"></div>
+        </div>
+      </div>
+
+      <!-- DASHBOARD -->
+      <div id="secDashboard" class="sec">
+        <div class="kpi-grid" id="dashKpis"></div>
+        <div class="charts-row">
+          <div class="card"><div class="card-hdr"><h3>📈 Sales Trend (7 days)</h3></div><div class="chart-h"><canvas id="cTrend"></canvas></div></div>
+          <div class="card"><div class="card-hdr"><h3>⛽ Fuel Split</h3></div><div class="chart-h"><canvas id="cFuel"></canvas></div></div>
+        </div>
+        <div class="charts-row-2">
+          <div class="card"><div class="card-hdr"><h3>🏭 Pump-wise Sales</h3></div><div class="chart-h"><canvas id="cPump"></canvas></div></div>
+          <div class="card"><div class="card-hdr"><h3>💳 Payment Split</h3></div><div class="chart-h"><canvas id="cPay"></canvas></div></div>
+        </div>
+        <div class="card"><div class="card-hdr"><h3>⚠️ Recent Differences</h3></div><div id="diffs"></div></div>
+      </div>
+
+      <!-- DSR -->
+      <div id="secDsr" class="sec">
+        <div class="card no-print">
+          <div class="card-hdr">
+            <div><h3>DSR — Stock / Sales Register</h3><div class="h-sub">Paper register format · Enter daily closing dips</div></div>
+            <div style="display:flex;gap:10px;flex-wrap:wrap">
+              <input type="month" id="dsrMonth" onchange="loadDSR()" style="border:1.5px solid var(--line);border-radius:9px;padding:8px 12px;font-size:13px;font-weight:700;font-family:inherit">
+              <select id="dsrFuel" onchange="loadDSR()" style="border:1.5px solid var(--line);border-radius:9px;padding:8px 12px;font-size:13px;font-weight:700;font-family:inherit">
+                <option value="Petrol">MS (Petrol)</option><option value="Diesel">HSD (Diesel)</option><option value="CNG">CNG</option>
+              </select>
+              <button class="btn btn-ghost btn-sm" onclick="window.print()">🖨️ Print</button>
+              <button class="btn btn-ghost btn-sm" onclick="exportDsr()">⬇️ CSV</button>
+            </div>
+          </div>
+          <div class="f-row">
+            <div class="f"><label>Tank Capacity</label><input id="dsrCap" type="number" onchange="saveCap()" placeholder="0"></div>
+            <div class="f"><label>Daily Pump Test</label><input id="dsrDip" type="number" onchange="saveDip()" placeholder="20"></div>
+            <div class="f"><label>Month Opening Stock</label><input id="dsrOpen" type="number" placeholder="0"></div>
+            <div class="f"><label>Opening Date</label><input id="dsrOpenDate" type="date"></div>
+            <div class="f"><label>&nbsp;</label><button class="btn btn-primary" onclick="saveOpening()">💾 Save Opening</button></div>
+          </div>
+        </div>
+        <div class="card no-print">
+          <div class="card-hdr"><div><h3>📝 Daily Closing Dip Entry</h3><div class="h-sub">Enter today's physical tank reading</div></div></div>
+          <div class="f-row">
+            <div class="f"><label>Date</label><input id="dipDate" type="date"></div>
+            <div class="f"><label>Closing Dip</label><input id="dipValue" type="number" placeholder="0" style="font-size:18px;font-weight:800"></div>
+            <div class="f"><label>&nbsp;</label><button class="btn btn-success" onclick="saveDipReading()">💾 Save Daily Dip</button></div>
+          </div>
+        </div>
+        <div id="dsrSummary"></div>
+        <div id="dsrOut"></div>
+      </div>
+
+      <!-- REPORTS -->
+      <div id="secReports" class="sec">
+        <div class="card no-print">
+          <div class="card-hdr"><div><h3>📈 Reports Center</h3><div class="h-sub">Filter and generate</div></div>
+            <button class="btn btn-ghost btn-sm" onclick="exportReport()">⬇️ CSV</button>
+          </div>
+          <div class="tabs" id="repTabs">
+            <div class="tab active" data-t="daily" onclick="pickRep('daily',this)">Daily</div>
+            <div class="tab" data-t="pump" onclick="pickRep('pump',this)">Pump-wise</div>
+            <div class="tab" data-t="employee" onclick="pickRep('employee',this)">Employee-wise</div>
+            <div class="tab" data-t="difference" onclick="pickRep('difference',this)">Shortage/Surplus</div>
+            <div class="tab" data-t="expenditure" onclick="pickRep('expenditure',this)">Expenditure</div>
+            <div class="tab" data-t="otp" onclick="pickRep('otp',this)">OTP</div>
+            <div class="tab" data-t="nozzle" onclick="pickRep('nozzle',this)">Nozzle-wise</div>
+            <div class="tab" data-t="stock" onclick="pickRep('stock',this)">Stock Purchase</div>
+          </div>
+          <div class="f-row">
+            <div class="f"><label>From Date</label><input id="repFrom" type="date"></div>
+            <div class="f"><label>To Date</label><input id="repTo" type="date"></div>
+            <div class="f"><label>Pump</label><select id="repPump"><option value="">All</option><option value="1">1</option><option value="2">2</option><option value="3">CNG</option></select></div>
+            <div class="f"><label>Staff</label><select id="repStaff"><option value="">All</option></select></div>
+            <div class="f"><label>&nbsp;</label><button class="btn btn-primary" onclick="runReport()">🔍 Generate</button></div>
+          </div>
+        </div>
+        <div id="repOut"></div>
+      </div>
+
+      <!-- STAFF -->
+      <div id="secStaff" class="sec">
+        <div class="card">
+          <div class="card-hdr"><div><h3>👥 Staff Master</h3><div class="h-sub">Add or edit employees</div></div></div>
+          <div class="f-row">
+            <div class="f"><label>Staff ID</label><input id="sId" placeholder="EMP003"></div>
+            <div class="f"><label>Name</label><input id="sName" placeholder="Full name"></div>
+            <div class="f"><label>Mobile</label><input id="sMobile" type="tel"></div>
+            <div class="f"><label>Login Role</label><select id="sRole"><option>Employee</option><option>Manager</option><option>Owner</option></select></div>
+            <div class="f"><label>Job Role</label><select id="sJobRole"><option>Pump Staff</option><option>Attender</option><option>Swipper</option><option>Manager</option><option>Owner</option><option>Other</option></select></div>
+            <div class="f"><label>Salary Type</label><select id="sSalaryType" onchange="updateSalLabel()"><option>Daily Fixed</option><option>Monthly Fixed</option></select></div>
+            <div class="f"><label id="sSalLabel">Daily Salary ₹</label><input id="sSalaryRate" type="number"></div>
+            <div class="f"><label>4-Digit PIN</label><input id="sPin" type="password" maxlength="4" inputmode="numeric"></div>
+            <div class="f"><label>Status</label><select id="sStatus"><option>Active</option><option>Inactive</option></select></div>
+          </div>
+          <div style="margin-top:16px;display:flex;gap:10px">
+            <button class="btn btn-success" onclick="saveStaff()">💾 Save Staff</button>
+            <button class="btn btn-ghost" onclick="clearStaff()">✖ Clear</button>
+          </div>
+        </div>
+        <div class="card"><div class="card-hdr"><h3>Staff List</h3></div><div id="staffOut"></div></div>
+      </div>
+
+      <!-- SALARY -->
+      <div id="secSalary" class="sec">
+        <div class="card no-print">
+          <div class="card-hdr"><div><h3>💰 Salary Report</h3><div class="h-sub">Monthly salary with shortage deduction</div></div>
+            <div style="display:flex;gap:10px">
+              <input type="month" id="salaryMonth" onchange="loadSalary()" style="border:1.5px solid var(--line);border-radius:9px;padding:8px 12px;font-size:13px;font-weight:700;font-family:inherit">
+              <select id="salFilter" onchange="renderSalary()" style="border:1.5px solid var(--line);border-radius:9px;padding:8px 12px;font-size:13px;font-weight:700;font-family:inherit"><option value="">All Staff</option></select>
+              <button class="btn btn-ghost btn-sm" onclick="exportSalary()">⬇️ CSV</button>
+            </div>
+          </div>
+        </div>
+        <div id="salarySum"></div>
+        <div id="salaryOut"></div>
+      </div>
+
+      <!-- STOCK -->
+      <div id="secStock" class="sec">
+        <div class="card">
+          <div class="card-hdr"><div><h3>🚛 Stock Purchase</h3><div class="h-sub">Tanker receipt entries</div></div></div>
+          <div class="f-row">
+            <div class="f"><label>Date</label><input id="spDate" type="date"></div>
+            <div class="f"><label>Fuel</label><select id="spFuel"><option>Petrol</option><option>Diesel</option><option>CNG</option></select></div>
+            <div class="f"><label>Quantity</label><input id="spQty" type="number" oninput="spCalc()"></div>
+            <div class="f"><label>Rate ₹</label><input id="spRate" type="number" oninput="spCalc()"></div>
+            <div class="f"><label>Total ₹</label><input id="spAmt" type="number" readonly></div>
+            <div class="f"><label>Supplier</label><input id="spSupplier" placeholder="HPCL"></div>
+            <div class="f"><label>Invoice No</label><input id="spInv"></div>
+          </div>
+          <div style="margin-top:16px"><button class="btn btn-success" onclick="saveStock()">💾 Save Purchase</button></div>
+        </div>
+        <div class="card"><div class="card-hdr"><h3>Recent Purchases</h3></div><div id="stockOut"></div></div>
+      </div>
+
+      <!-- OTP -->
+      <div id="secOtp" class="sec">
+        <div class="alert info">OTP payments pending with HPCL. Settle when credited to bank.</div>
+        <div class="card"><div class="card-hdr"><h3>💳 Pending OTP Settlements</h3></div><div id="otpOut"></div></div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<!-- CONFIRM MODAL -->
+<div class="mask" id="confirmMask">
+  <div class="modal">
+    <h3>📋 Confirm Entry <button class="x" onclick="closeConfirm()">×</button></h3>
+    <div id="confirmBody"></div>
+    <div style="margin-top:20px;display:flex;gap:10px;justify-content:flex-end">
+      <button class="btn btn-ghost" onclick="closeConfirm()">← Back</button>
+      <button class="btn btn-success" onclick="saveEntry()">✅ Confirm & Save</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"><span id="toastI">✅</span><span id="toastM">Saved</span></div>
+<div class="loader" id="loader"><div class="spinner"></div><p id="loaderTxt">Loading...</p></div>
+
+<script>
+/* ═════ CONFIG ═════ */
+const API_URL = "https://script.google.com/macros/s/AKfycby3RCm-KbT1_YUA3BCapzEiNxekRSbOjNKxoxQwFx_qgKufeTVCPyERQ8VHuU7GFuErtw/exec";
+
+let me=null, pickedStaffId=null, pickedPump=0, charts={}, repType='daily';
+const $=id=>document.getElementById(id);
+const num=id=>{const e=$(id);return e&&!isNaN(parseFloat(e.value))?parseFloat(e.value):0;};
+const fmt=n=>(Number(n)||0).toLocaleString('en-IN',{minimumFractionDigits:2,maximumFractionDigits:2});
+const money=n=>'₹ '+fmt(n);
+const today=()=>{const d=new Date();return new Date(d.getTime()-d.getTimezoneOffset()*60000).toISOString().slice(0,10);};
+const monthNow=()=>today().slice(0,7);
+
+function toast(msg,type='ok'){$('toastM').textContent=msg;$('toastI').textContent=type==='ok'?'✅':type==='err'?'⚠️':'ℹ️';$('toast').className='toast '+type+' show';clearTimeout(window.__tt);window.__tt=setTimeout(()=>$('toast').classList.remove('show'),2600);}
+function loading(on,txt){$('loaderTxt').textContent=txt||'Loading...';$('loader').classList.toggle('show',on);}
+async function sha256(t){const b=new TextEncoder().encode(t);const h=await crypto.subtle.digest('SHA-256',b);return Array.from(new Uint8Array(h)).map(x=>x.toString(16).padStart(2,'0')).join('');}
+async function api(action,extra={}){try{const res=await fetch(API_URL,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify({action,currentUser:me,...extra})});return await res.json();}catch(e){return{ok:false,error:'Network: '+e.message};}}
+
+function nav(id,el){
+  document.querySelectorAll('.sec').forEach(s=>s.classList.remove('active'));
+  const t=$('sec'+id.charAt(0).toUpperCase()+id.slice(1));
+  if(t)t.classList.add('active');
+  document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
+  if(el)el.classList.add('active');
+  const titles={home:['Home','Welcome to Fuel Bunk Manager'],entry:['New Entry','Record a sales entry'],entries:['Entries','All saved shift records'],dashboard:['Dashboard','Last 30 days overview'],dsr:['DSR Register','Daily Stock & Sales Register'],reports:['Reports','Analytics & exports'],staff:['Staff Master','Manage users'],salary:['Salary Report','Monthly salary & deductions'],stock:['Stock Purchase','Tanker receipts'],otp:['OTP Settlement','HPCL pending payments']};
+  const t2=titles[id]||['',''];
+  $('pageTitle').textContent=t2[0];$('pageSub').textContent=t2[1];
+  if(id==='dashboard')loadDashboard();
+  if(id==='dsr')loadDSR();
+  if(id==='entries')loadEntries();
+  if(id==='staff')loadStaffList();
+  if(id==='salary')loadSalary();
+  if(id==='stock')loadStockList();
+  if(id==='otp')loadOtp();
+  if(id==='home')loadHome();
+  if(id==='entry')initEntry();
+  $('sidebar').classList.remove('open');
+}
+
+/* ═════ LOGIN ═════ */
+async function doLogin(){
+  const id=$('loginId').value.trim().toUpperCase();
+  const pin=$('loginPin').value.trim();
+  if(!id||!/^\d{4}$/.test(pin)){toast('Enter ID and 4-digit PIN','err');return;}
+  loading(true,'Signing in...');
+  const r=await api('loginUser',{staffId:id,pin});
+  loading(false);
+  if(!r.ok){toast(r.error||'Login failed','err');return;}
+  me=r.user;pickedStaffId=me.Staff_ID;
+  localStorage.setItem('lastLoginId',id);
+  $('loginSec').classList.remove('active');
+  $('loginSec').style.display='none';
+  $('appWrap').style.display='flex';
+  $('sideName').textContent=me.Staff_Name;
+  $('sideRole').textContent=me.Role+' · '+me.Staff_ID;
+  // Show/hide nav by role
+  const isMgr=(me.Role==='Manager'||me.Role==='Owner');
+  const isOwn=me.Role==='Owner';
+  document.querySelectorAll('.nav-item').forEach(n=>{
+    const r=n.dataset.role;
+    if(!r)n.style.display='';
+    else if(r==='owner')n.style.display=isOwn?'':'none';
+    else if(r==='mgr')n.style.display=isMgr?'':'none';
+  });
+  if(isMgr)loadEmployees();
+  nav('home',document.querySelector('[data-nav="home"]'));
+}
+
+function doLogout(){if(!confirm('Sign out?'))return;me=null;pickedStaffId=null;$('loginPin').value='';$('loginSec').classList.add('active');$('loginSec').style.display='';$('appWrap').style.display='none';}
+
+/* ═════ HOME ═════ */
+async function loadHome(){
+  const params={staffId:me.Role==='Employee'?me.Staff_ID:pickedStaffId};
+  const r=await api('getShifts',params);
+  if(!r.ok)return;
+  const shifts=r.shifts||[];
+  const todayS=shifts.filter(s=>s.Date===today());
+  const todayTotal=todayS.reduce((a,s)=>a+Number(s.Total_Sales||0),0);
+  const monthTotal=shifts.filter(s=>String(s.Date).slice(0,7)===monthNow()).reduce((a,s)=>a+Number(s.Total_Sales||0),0);
+  const diff=shifts.reduce((a,s)=>a+Number(s.Difference||0),0);
+  $('homeKpis').innerHTML=`
+    <div class="kpi primary"><div class="kl">Today Sales</div><div class="kv">${money(todayTotal)}</div></div>
+    <div class="kpi green"><div class="kl">This Month</div><div class="kv">${money(monthTotal)}</div></div>
+    <div class="kpi ${diff<0?'red':'orange'}"><div class="kl">Total Difference</div><div class="kv">${money(Math.abs(diff))}</div></div>
+    <div class="kpi purple"><div class="kl">Total Entries</div><div class="kv">${shifts.length}</div></div>`;
+
+  const isMgr=(me.Role==='Manager'||me.Role==='Owner');
+  const isOwn=me.Role==='Owner';
+  let tiles=`
+    <div class="tile primary" onclick="nav('entry',document.querySelector('[data-nav=\\'entry\\']'))"><div class="ti">➕</div><div><div class="tt">New Entry</div><div class="ts">Record sales</div></div></div>
+    <div class="tile green" onclick="nav('entries',document.querySelector('[data-nav=\\'entries\\']'))"><div class="ti">📋</div><div><div class="tt">View Entries</div><div class="ts">Recent records</div></div></div>`;
+  if(isMgr)tiles+=`<div class="tile orange" onclick="nav('stock',document.querySelector('[data-nav=\\'stock\\']'))"><div class="ti">🚛</div><div><div class="tt">Stock Purchase</div><div class="ts">Tanker entry</div></div></div>`;
+  if(isOwn){
+    tiles+=`<div class="tile purple" onclick="nav('dashboard',document.querySelector('[data-nav=\\'dashboard\\']'))"><div class="ti">📊</div><div><div class="tt">Dashboard</div><div class="ts">Analytics</div></div></div>`;
+    tiles+=`<div class="tile indigo" onclick="nav('dsr',document.querySelector('[data-nav=\\'dsr\\']'))"><div class="ti">📦</div><div><div class="tt">DSR Register</div><div class="ts">Stock report</div></div></div>`;
+    tiles+=`<div class="tile orange" onclick="nav('reports',document.querySelector('[data-nav=\\'reports\\']'))"><div class="ti">📈</div><div><div class="tt">Reports</div><div class="ts">Export data</div></div></div>`;
+    tiles+=`<div class="tile indigo" onclick="nav('staff',document.querySelector('[data-nav=\\'staff\\']'))"><div class="ti">👥</div><div><div class="tt">Staff Master</div><div class="ts">Manage users</div></div></div>`;
+    tiles+=`<div class="tile green" onclick="nav('salary',document.querySelector('[data-nav=\\'salary\\']'))"><div class="ti">💰</div><div><div class="tt">Salary</div><div class="ts">Monthly pay</div></div></div>`;
+    tiles+=`<div class="tile purple" onclick="nav('otp',document.querySelector('[data-nav=\\'otp\\']'))"><div class="ti">💳</div><div><div class="tt">OTP</div><div class="ts">Settlement</div></div></div>`;
+  }
+  $('homeTiles').innerHTML=tiles;
+}
+
+/* ═════ ENTRY ═════ */
+async function initEntry(){
+  $('entryDate').max=today();$('entryDate').value=today();
+  $('entryDate').min=me.Role==='Employee'?today():'2000-01-01';
+  const isMgr=(me.Role==='Manager'||me.Role==='Owner');
+  $('empPickWrap').style.display=isMgr?'':'none';
+  if(isMgr)await loadEmployees();
+  $('entryBody').innerHTML='';
+  $('entryPump').value='';
+  pickedPump=0;
+}
+async function loadEmployees(){
+  const r=await api('getStaff',{role:'Employee',activeOnly:true});
+  const s=$('empPick');if(!s)return;
+  s.innerHTML='';
+  (r.staff||[]).forEach(x=>{const o=document.createElement('option');o.value=x.Staff_ID;o.textContent=x.Staff_ID+' · '+x.Staff_Name;s.appendChild(o);});
+  if(s.value)pickedStaffId=s.value;
+}
+function onEmpPick(){pickedStaffId=$('empPick').value;}
+function onEntryDateChange(){
+  const d=$('entryDate').value;
+  if(d>today()){toast('Future dates not allowed','err');$('entryDate').value=today();return;}
+  if(me.Role==='Employee'&&d<today()){toast('Employee cannot enter past dates','err');$('entryDate').value=today();}
+}
+async function onPumpChange(){
+  const p=Number($('entryPump').value);
+  if(!p){$('entryBody').innerHTML='';return;}
+  pickedPump=p;
+  const ed=$('entryDate').value||today();
+  loading(true,'Loading openings...');
+  const r=await api('getLastClosing',{pumpNo:p,date:ed});
+  loading(false);
+  window.nextOpening=r.nextOpening||{};
+  const c=r.closing||{};
+  const isCNG=p===3;
+  const openHTML=`
+    <div class="card">
+      <div class="card-hdr"><div><h3>Pump ${p}${isCNG?' (CNG)':''} — Nozzle Readings</h3><div class="h-sub">Date: ${ed} · Employee: ${pickedStaffId||me.Staff_ID}</div></div></div>
+      ${!isCNG?`
+      <div class="f-row" style="margin-bottom:14px">
+        <div class="f"><label>MS N1 Opening</label><input id="pOpen1" type="number" readonly value="${(c.Petrol_1&&c.Petrol_1.closing)||0}"></div>
+        <div class="f"><label>MS N1 Closing</label><input id="pClose1" type="number" oninput="calc()"></div>
+        <div class="f"><label>MS N1 Testing</label><input id="pTest1" type="number" placeholder="0" oninput="calc()"></div>
+        <div class="f"><label>MS N2 Opening</label><input id="pOpen2" type="number" readonly value="${(c.Petrol_2&&c.Petrol_2.closing)||0}"></div>
+        <div class="f"><label>MS N2 Closing</label><input id="pClose2" type="number" oninput="calc()"></div>
+        <div class="f"><label>MS N2 Testing</label><input id="pTest2" type="number" placeholder="0" oninput="calc()"></div>
+        <div class="f"><label>HSD N1 Opening</label><input id="dOpen1" type="number" readonly value="${(c.Diesel_1&&c.Diesel_1.closing)||0}"></div>
+        <div class="f"><label>HSD N1 Closing</label><input id="dClose1" type="number" oninput="calc()"></div>
+        <div class="f"><label>HSD N1 Testing</label><input id="dTest1" type="number" placeholder="0" oninput="calc()"></div>
+        <div class="f"><label>HSD N2 Opening</label><input id="dOpen2" type="number" readonly value="${(c.Diesel_2&&c.Diesel_2.closing)||0}"></div>
+        <div class="f"><label>HSD N2 Closing</label><input id="dClose2" type="number" oninput="calc()"></div>
+        <div class="f"><label>HSD N2 Testing</label><input id="dTest2" type="number" placeholder="0" oninput="calc()"></div>
+        <div class="f"><label>MS Rate ₹/L</label><input id="pRate" type="number" value="116.96" oninput="calc()"></div>
+        <div class="f"><label>HSD Rate ₹/L</label><input id="dRate" type="number" value="105.01" oninput="calc()"></div>
+      </div>`:`
+      <div class="f-row" style="margin-bottom:14px">
+        <div class="f"><label>CNG N1 Opening</label><input id="cOpen1" type="number" readonly value="${(c.CNG_1&&c.CNG_1.closing)||0}"></div>
+        <div class="f"><label>CNG N1 Closing</label><input id="cClose1" type="number" oninput="calc()"></div>
+        <div class="f"><label>CNG N2 Opening</label><input id="cOpen2" type="number" readonly value="${(c.CNG_2&&c.CNG_2.closing)||0}"></div>
+        <div class="f"><label>CNG N2 Closing</label><input id="cClose2" type="number" oninput="calc()"></div>
+        <div class="f"><label>CNG Rate ₹/KG</label><input id="cRate" type="number" value="0" oninput="calc()"></div>
+      </div>`}
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:14px">
+        <div class="card" style="margin:0;background:#f8fafc">
+          <div style="font-size:11px;font-weight:700;color:var(--t2);text-transform:uppercase;margin-bottom:10px">Sales Summary</div>
+          <div class="sm-line"><span class="sl">Petrol</span><span class="sv" id="sumP">₹ 0.00</span></div>
+          <div class="sm-line"><span class="sl">Diesel</span><span class="sv" id="sumD">₹ 0.00</span></div>
+          <div class="sm-line" id="sumCngRow" style="display:${isCNG?'flex':'none'}"><span class="sl">CNG</span><span class="sv" id="sumC">₹ 0.00</span></div>
+          <div class="sm-line hl"><span class="sl">Total Sales</span><span class="sv" id="totalSales">₹ 0.00</span></div>
+        </div>
+        <div class="card" style="margin:0;background:#f8fafc">
+          <div style="font-size:11px;font-weight:700;color:var(--t2);text-transform:uppercase;margin-bottom:10px">Payments</div>
+          <div class="f" style="margin-bottom:10px"><label>Online / UPI ₹</label><input id="online" type="number" value="0" oninput="calcPay()"></div>
+          <div class="f" style="margin-bottom:10px"><label>OTP / Fleet ₹</label><input id="otp" type="number" value="0" oninput="calcPay()"></div>
+          <div class="f" style="margin-bottom:10px"><label>Cash ₹</label><input id="cash" type="number" value="0" oninput="calcPay()"></div>
+          <div class="f" style="margin-bottom:10px"><label>Expenditure Type</label><input id="expType" placeholder="Tea / Repair"></div>
+          <div class="f" style="margin-bottom:0"><label>Expenditure ₹</label><input id="expenditure" type="number" value="0" oninput="calcPay()"></div>
+        </div>
+      </div>
+      <div id="validateAlert" style="margin-top:14px"></div>
+      <div class="tally idle" id="tally" style="margin-top:14px"><span class="tl">Difference</span><span class="tv" id="tallyAmt">₹ 0.00</span><span class="tm" id="tallyMsg">Enter payments</span></div>
+      <div style="display:flex;gap:10px;margin-top:16px;justify-content:flex-end">
+        <button class="btn btn-ghost" onclick="overrideOpening()">🔓 Override Opening</button>
+        <button class="btn btn-primary" onclick="showSummary()">📋 Review & Save</button>
+      </div>
+    </div>`;
+  $('entryBody').innerHTML=openHTML;
+  calc();calcPay();
+}
+function overrideOpening(){const pin=prompt('Manager/Owner PIN:');if(!pin)return;document.querySelectorAll('#entryBody input[readonly]').forEach(el=>{el.readOnly=false;el.style.background='#fef3c7';});toast('Opening unlocked','info');}
+function calc(){
+  const isCNG=pickedPump===3;
+  let pL=0,dL=0,cL=0,pA=0,dA=0,cA=0;
+  if(!isCNG){
+    pL=Math.max(0,num('pClose1')-num('pOpen1')-num('pTest1'))+Math.max(0,num('pClose2')-num('pOpen2')-num('pTest2'));
+    dL=Math.max(0,num('dClose1')-num('dOpen1')-num('dTest1'))+Math.max(0,num('dClose2')-num('dOpen2')-num('dTest2'));
+    pA=pL*num('pRate');dA=dL*num('dRate');
+    $('sumP').textContent=money(pA);$('sumD').textContent=money(dA);
+  } else {
+    cL=Math.max(0,num('cClose1')-num('cOpen1'))+Math.max(0,num('cClose2')-num('cOpen2'));
+    cA=cL*num('cRate');$('sumC').textContent=money(cA);
+  }
+  $('totalSales').textContent=money(pA+dA+cA);
+  const errs=[];
+  if(!isCNG){
+    if(num('pClose1')>0&&num('pClose1')<num('pOpen1'))errs.push('❌ Petrol N1: Close<Open');
+    if(num('pClose2')>0&&num('pClose2')<num('pOpen2'))errs.push('❌ Petrol N2: Close<Open');
+    if(num('dClose1')>0&&num('dClose1')<num('dOpen1'))errs.push('❌ Diesel N1: Close<Open');
+    if(num('dClose2')>0&&num('dClose2')<num('dOpen2'))errs.push('❌ Diesel N2: Close<Open');
+  } else {
+    if(num('cClose1')>0&&num('cClose1')<num('cOpen1'))errs.push('❌ CNG N1: Close<Open');
+    if(num('cClose2')>0&&num('cClose2')<num('cOpen2'))errs.push('❌ CNG N2: Close<Open');
+  }
+  const va=$('validateAlert');if(va)va.innerHTML=errs.length?'<div class="alert err">'+errs.join('<br>')+'</div>':'';
+  calcPay();
+}
+function calcPay(){
+  const isCNG=pickedPump===3;
+  const salesVal=isCNG?Math.max(0,num('cClose1')-num('cOpen1'))*num('cRate')+Math.max(0,num('cClose2')-num('cOpen2'))*num('cRate'):
+    Math.max(0,num('pClose1')-num('pOpen1')-num('pTest1'))*num('pRate')+Math.max(0,num('pClose2')-num('pOpen2')-num('pTest2'))*num('pRate')+Math.max(0,num('dClose1')-num('dOpen1')-num('dTest1'))*num('dRate')+Math.max(0,num('dClose2')-num('dOpen2')-num('dTest2'))*num('dRate');
+  const cash=num('cash'),online=num('online'),otp=num('otp'),exp=num('expenditure');
+  const col=cash+online+otp;const diff=col+exp-salesVal;
+  const t=$('tally');if(!t)return;
+  if(salesVal===0&&col===0){t.className='tally idle';$('tallyAmt').textContent='₹ 0.00';$('tallyMsg').textContent='Enter payments';}
+  else if(Math.abs(diff)<0.5){t.className='tally ok';$('tallyAmt').textContent='₹ 0.00';$('tallyMsg').textContent='✅ Balanced';}
+  else if(diff<0){t.className='tally short';$('tallyAmt').textContent=money(Math.abs(diff));$('tallyMsg').textContent='⚠️ Short Cash';}
+  else{t.className='tally excess';$('tallyAmt').textContent=money(diff);$('tallyMsg').textContent='ℹ️ Excess Cash';}
+}
+function collectData(){
+  const isCNG=pickedPump===3;
+  let pL=0,dL=0,cL=0,pA=0,dA=0,cA=0;
+  if(!isCNG){
+    pL=Math.max(0,num('pClose1')-num('pOpen1')-num('pTest1'))+Math.max(0,num('pClose2')-num('pOpen2')-num('pTest2'));
+    dL=Math.max(0,num('dClose1')-num('dOpen1')-num('dTest1'))+Math.max(0,num('dClose2')-num('dOpen2')-num('dTest2'));
+    pA=pL*num('pRate');dA=dL*num('dRate');
+  } else {
+    cL=Math.max(0,num('cClose1')-num('cOpen1'))+Math.max(0,num('cClose2')-num('cOpen2'));
+    cA=cL*num('cRate');
+  }
+  const sales=pA+dA+cA;
+  const cash=num('cash'),online=num('online'),otp=num('otp'),exp=num('expenditure');
+  const col=cash+online+otp;
+  return{Date:$('entryDate').value||today(),Shift:'S1',Staff_ID:pickedStaffId||me.Staff_ID,Staff_Name:pickedStaffId||me.Staff_ID,Pump_No:pickedPump,
+    Petrol_Litres:pL,Petrol_Amount:pA,Diesel_Litres:dL,Diesel_Amount:dA,CNG_KG:cL,CNG_Amount:cA,Total_Sales:sales,
+    Online_Amount:online,OTP_Amount:otp,Cash_Total:cash,Change_Amount:0,Expenditure:exp,Expenditure_Type:$('expType').value.trim(),Expenditure_Remarks:'',
+    Total_Collected:col,Difference:col+exp-sales,
+    Nozzle_Readings:[
+      {Nozzle_No:1,Fuel_Type:'Petrol',Opening_Reading:num('pOpen1')||0,Closing_Reading:num('pClose1')||0,Litres:Math.max(0,num('pClose1')-num('pOpen1')-num('pTest1')),Rate:num('pRate')||0,Amount:Math.max(0,num('pClose1')-num('pOpen1')-num('pTest1'))*(num('pRate')||0)},
+      {Nozzle_No:2,Fuel_Type:'Petrol',Opening_Reading:num('pOpen2')||0,Closing_Reading:num('pClose2')||0,Litres:Math.max(0,num('pClose2')-num('pOpen2')-num('pTest2')),Rate:num('pRate')||0,Amount:Math.max(0,num('pClose2')-num('pOpen2')-num('pTest2'))*(num('pRate')||0)},
+      {Nozzle_No:1,Fuel_Type:'Diesel',Opening_Reading:num('dOpen1')||0,Closing_Reading:num('dClose1')||0,Litres:Math.max(0,num('dClose1')-num('dOpen1')-num('dTest1')),Rate:num('dRate')||0,Amount:Math.max(0,num('dClose1')-num('dOpen1')-num('dTest1'))*(num('dRate')||0)},
+      {Nozzle_No:2,Fuel_Type:'Diesel',Opening_Reading:num('dOpen2')||0,Closing_Reading:num('dClose2')||0,Litres:Math.max(0,num('dClose2')-num('dOpen2')-num('dTest2')),Rate:num('dRate')||0,Amount:Math.max(0,num('dClose2')-num('dOpen2')-num('dTest2'))*(num('dRate')||0)},
+      {Nozzle_No:1,Fuel_Type:'CNG',Opening_Reading:num('cOpen1')||0,Closing_Reading:num('cClose1')||0,Litres:Math.max(0,num('cClose1')-num('cOpen1')),Rate:num('cRate')||0,Amount:Math.max(0,num('cClose1')-num('cOpen1'))*(num('cRate')||0)},
+      {Nozzle_No:2,Fuel_Type:'CNG',Opening_Reading:num('cOpen2')||0,Closing_Reading:num('cClose2')||0,Litres:Math.max(0,num('cClose2')-num('cOpen2')),Rate:num('cRate')||0,Amount:Math.max(0,num('cClose2')-num('cOpen2'))*(num('cRate')||0)}
+    ],Cash_Details:[],Payments:[{Payment_Type:'Online',Amount:online},{Payment_Type:'OTP',Amount:otp},{Payment_Type:'Cash',Amount:cash}]};
+}
+function showSummary(){
+  const d=collectData();
+  const sales=Number(d.Total_Sales||0);
+  const tally=Number(d.Cash_Total||0)+Number(d.Online_Amount||0)+Number(d.OTP_Amount||0)+Number(d.Expenditure||0);
+  const diff=tally-sales;
+  const cls=Math.abs(diff)<0.5?'ok':(diff<0?'err':'warn');
+  $('confirmBody').innerHTML=`
+    <div class="sm-line"><span class="sl">Date</span><span class="sv">${d.Date}</span></div>
+    <div class="sm-line"><span class="sl">Pump</span><span class="sv">Pump ${d.Pump_No}</span></div>
+    <div class="sm-line"><span class="sl">Employee</span><span class="sv">${d.Staff_ID}</span></div>
+    <div class="sm-line"><span class="sl">Petrol</span><span class="sv">${money(d.Petrol_Amount)}</span></div>
+    <div class="sm-line"><span class="sl">Diesel</span><span class="sv">${money(d.Diesel_Amount)}</span></div>
+    ${d.CNG_Amount>0?`<div class="sm-line"><span class="sl">CNG</span><span class="sv">${money(d.CNG_Amount)}</span></div>`:''}
+    <div class="sm-line hl"><span class="sl">Total Sales</span><span class="sv">${money(sales)}</span></div>
+    <div class="sm-line"><span class="sl">Cash</span><span class="sv">${money(d.Cash_Total)}</span></div>
+    <div class="sm-line"><span class="sl">Online</span><span class="sv">${money(d.Online_Amount)}</span></div>
+    <div class="sm-line"><span class="sl">OTP</span><span class="sv">${money(d.OTP_Amount)}</span></div>
+    <div class="sm-line"><span class="sl">Expenditure</span><span class="sv">${money(d.Expenditure)}</span></div>
+    <div class="alert ${cls}" style="margin-top:16px">${Math.abs(diff)<0.5?'✅ Tally Balanced':'⚠️ Difference: '+money(Math.abs(diff))}</div>`;
+  $('confirmMask').classList.add('show');
+}
+function closeConfirm(){$('confirmMask').classList.remove('show');}
+async function saveEntry(){
+  closeConfirm();loading(true,'Saving...');
+  const data=collectData();
+  const r=await api('saveShift',{data});loading(false);
+  if(!r.ok){toast(r.error||'Save failed','err');return;}
+  toast('✅ Entry saved');nav('home',document.querySelector('[data-nav="home"]'));
+}
+
+/* ═════ ENTRIES ═════ */
+async function loadEntries(){
+  loading(true,'Loading...');
+  const params={staffId:me.Role==='Employee'?me.Staff_ID:pickedStaffId};
+  if($('entriesDate')&&$('entriesDate').value)params.date=$('entriesDate').value;
+  const r=await api('getShifts',params);loading(false);
+  if(!r.ok){$('entriesOut').innerHTML='<div class="tbl-empty">Failed</div>';return;}
+  const shifts=r.shifts||[];
+  if(!shifts.length){$('entriesOut').innerHTML='<div class="tbl-empty">No entries</div>';return;}
+  let h='<div class="tbl-wrap"><table><thead><tr><th>Date</th><th>Pump</th><th>Staff</th><th>Petrol L</th><th>Diesel L</th><th>Total Sales</th><th>Collected</th><th>Difference</th></tr></thead><tbody>';
+  shifts.forEach(s=>{const d=Number(s.Difference||0);const bc=Math.abs(d)<0.5?'ok':(d<0?'bad':'warn');
+    h+=`<tr><td>${s.Date}</td><td>P${s.Pump_No}</td><td>${s.Staff_Name||s.Staff_ID}</td><td>${fmt(s.Petrol_Litres||0)}</td><td>${fmt(s.Diesel_Litres||0)}</td><td><b>${money(s.Total_Sales)}</b></td><td>${money(s.Total_Collected)}</td><td><span class="b ${bc}">${money(Math.abs(d))}</span></td></tr>`;});
+  h+='</tbody></table></div>';$('entriesOut').innerHTML=h;
+}
+
+/* ═════ DASHBOARD ═════ */
+async function loadDashboard(){
+  loading(true,'Loading dashboard...');
+  const r=await api('getDashboardData',{});loading(false);
+  if(!r.ok){toast('Dashboard failed','err');return;}
+  const d=r.data||{};const t=d.totals||{},td=d.today||{};
+  $('dashKpis').innerHTML=`
+    <div class="kpi primary"><div class="kl">Today</div><div class="kv">${money(td.Total_Sales||0)}</div></div>
+    <div class="kpi green"><div class="kl">30-day Sales</div><div class="kv">${money(t.Total_Sales||0)}</div></div>
+    <div class="kpi orange"><div class="kl">Cash in Hand</div><div class="kv">${money(t.Cash_Total||0)}</div></div>
+    <div class="kpi purple"><div class="kl">Online+OTP</div><div class="kv">${money((t.Online_Amount||0)+(t.OTP_Amount||0))}</div></div>
+    <div class="kpi red"><div class="kl">Difference</div><div class="kv">${money(Math.abs(t.Difference||0))}</div></div>
+    <div class="kpi primary"><div class="kl">Petrol Sold</div><div class="kv">${(t.Petrol_Litres||0).toFixed(0)} L</div></div>
+    <div class="kpi green"><div class="kl">Diesel Sold</div><div class="kv">${(t.Diesel_Litres||0).toFixed(0)} L</div></div>
+    <div class="kpi purple"><div class="kl">CNG Sold</div><div class="kv">${(t.CNG_KG||0).toFixed(0)} KG</div></div>`;
+  if(charts.trend)charts.trend.destroy();
+  charts.trend=new Chart($('cTrend'),{type:'line',data:{labels:(d.trend||[]).map(x=>x.date.slice(5)),datasets:[{data:(d.trend||[]).map(x=>x.sales),borderColor:'#2563eb',backgroundColor:'rgba(37,99,235,.12)',fill:true,tension:.35,pointRadius:4,pointBackgroundColor:'#2563eb'}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}}}});
+  if(charts.fuel)charts.fuel.destroy();
+  charts.fuel=new Chart($('cFuel'),{type:'doughnut',data:{labels:['Petrol','Diesel','CNG'],datasets:[{data:[t.Petrol_Amount||0,t.Diesel_Amount||0,t.CNG_Amount||0],backgroundColor:['#2563eb','#10b981','#8b5cf6']}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'bottom'}}}});
+  if(charts.pump)charts.pump.destroy();
+  const bp=d.byPump||{};
+  charts.pump=new Chart($('cPump'),{type:'bar',data:{labels:Object.keys(bp).sort().map(k=>'Pump '+k),datasets:[{data:Object.keys(bp).sort().map(k=>bp[k].sales||0),backgroundColor:'#10b981'}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}}}});
+  if(charts.pay)charts.pay.destroy();
+  charts.pay=new Chart($('cPay'),{type:'doughnut',data:{labels:['Cash','Online','OTP'],datasets:[{data:[t.Cash_Total||0,t.Online_Amount||0,t.OTP_Amount||0],backgroundColor:['#2563eb','#8b5cf6','#f59e0b']}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'bottom'}}}});
+  const rd=(d.recentDiffs||[]).slice(0,10);
+  if(!rd.length){$('diffs').innerHTML='<div class="tbl-empty">No issues 🎉</div>';}
+  else{let h='<div class="tbl-wrap"><table><thead><tr><th>Date</th><th>Pump</th><th>Difference</th></tr></thead><tbody>';
+    rd.forEach(x=>{const bc=Math.abs(x.diff)<0.5?'ok':(x.diff<0?'bad':'warn');h+=`<tr><td>${x.date}</td><td>Pump ${x.pump}</td><td><span class="b ${bc}">${money(Math.abs(x.diff))}</span></td></tr>`;});
+    h+='</tbody></table></div>';$('diffs').innerHTML=h;}
+}
+
+/* ═════ DSR ═════ */
+async function loadDSR(){
+  if(!$('dsrMonth').value)$('dsrMonth').value=monthNow();
+  if(!$('dsrOpenDate').value)$('dsrOpenDate').value=monthNow()+'-01';
+  if(!$('dipDate').value)$('dipDate').value=today();
+  const month=$('dsrMonth').value,fuel=$('dsrFuel').value;
+  loading(true,'Loading DSR...');
+  const r=await api('getDSRRegister',{month,fuel});loading(false);
+  if(!r.ok){toast('DSR failed','err');return;}
+  const d=r.data||{},unit=d.unit||'L';
+  $('dsrDip').value=d.defaultPumpTest||0;
+  $('dsrCap').value=d.tankCapacity||0;
+  $('dsrOpen').value=(d.openingForMonth!==null&&d.openingForMonth!==undefined)?d.openingForMonth:'';
+  $('dsrOpenDate').value=d.monthStart;
+  const s=d.summary||{};
+  $('dsrSummary').innerHTML=`
+    <div class="kpi-grid">
+      <div class="kpi primary"><div class="kl">Opening Stock</div><div class="kv">${fmt(s.opening||0)} ${unit}</div></div>
+      <div class="kpi green"><div class="kl">Total Receipts</div><div class="kv">${fmt(s.receipt||0)} ${unit}</div></div>
+      <div class="kpi orange"><div class="kl">Net Sales (Meter)</div><div class="kv">${fmt(s.netSales||0)} ${unit}</div></div>
+      <div class="kpi ${s.variation<0?'red':'green'}"><div class="kl">Total Variation</div><div class="kv">${s.variation>0?'+':''}${fmt(s.variation||0)} ${unit}</div></div>
+    </div>`;
+  const productLabel=fuel==='Petrol'?'MS (Petrol)':fuel==='Diesel'?'HSD (Diesel)':'CNG';
+  const cap=d.tankCapacity?Number(d.tankCapacity).toLocaleString('en-IN')+' '+unit:'—';
+  const [yy,mm]=month.split('-');
+  const mname=new Date(Number(yy),Number(mm)-1,1).toLocaleString('en-IN',{month:'long',year:'numeric'});
+  let h=`<div class="dsr-head"><h3>STOCK / SALES DETAILS</h3><div class="dh-sub"><b>Product:</b> ${productLabel} &nbsp;·&nbsp; <b>Tank Capacity:</b> ${cap} &nbsp;·&nbsp; <b>Month:</b> ${mname}</div></div>`;
+  h+='<div class="tbl-wrap"><table class="dsr-tbl"><thead><tr><th>Date</th><th>Opening<br>Stock</th><th>Receipt</th><th>Total<br>Stock</th><th>Sales by<br>Meter</th><th>Pump<br>Test</th><th>Net Sales<br>by Meter</th><th>Cumu-<br>lative</th><th>Sales<br>by Dip</th><th>Variation<br>Daily</th><th>Variation<br>Cumulative</th></tr></thead><tbody>';
+  const fv=v=>(v===null||v===undefined||v==='')?'—':fmt(v);
+  const sv=v=>(v===null||v===undefined)?'—':(v>0?'+':'')+fmt(v);
+  let totRc=0,totMeter=0,totTest=0,totNet=0,totDip=0,totVar=0;
+  (d.rows||[]).forEach(r=>{
+    h+=`<tr><td class="d">${r.date.slice(8)}</td><td>${fv(r.opening)}</td><td class="rct">${fv(r.receipt)}</td><td>${fv(r.totalStock)}</td><td>${fv(r.salesByMeter)}</td><td style="text-align:center;color:var(--t3)">${r.pumpTest}</td><td class="net">${fv(r.netSales)}</td><td class="cum">${fv(r.cumulativeSales)}</td><td>${fv(r.salesByDip)}</td><td class="${r.variationDaily>0?'pos':r.variationDaily<0?'neg':''}">${sv(r.variationDaily)}</td><td class="${r.variationCumulative>0?'pos':r.variationCumulative<0?'neg':''}">${sv(r.variationCumulative)}</td></tr>`;
+    totRc+=r.receipt||0;totMeter+=r.salesByMeter||0;totTest+=r.pumpTest||0;totNet+=r.netSales||0;totDip+=r.salesByDip||0;totVar=r.variationCumulative||totVar;
+  });
+  h+=`</tbody><tfoot><tr><td style="text-align:center">TOTAL</td><td>—</td><td class="rct">${fmt(totRc)}</td><td>—</td><td>${fmt(totMeter)}</td><td style="text-align:center">${fmt(totTest)}</td><td class="net">${fmt(totNet)}</td><td>—</td><td>${fmt(totDip)}</td><td>—</td><td class="${totVar<0?'neg':'pos'}">${totVar>0?'+':''}${fmt(totVar)}</td></tr></tfoot></table></div>`;
+  $('dsrOut').innerHTML=h;
+}
+async function saveDipReading(){
+  const date=$('dipDate').value,fuel=$('dsrFuel').value,closingDip=Number($('dipValue').value||0);
+  if(!date){toast('Select date','err');return;}
+  loading(true,'Saving...');
+  const r=await api('saveDSRDipReading',{date,fuel,closingDip});loading(false);
+  if(!r.ok){toast(r.error,'err');return;}
+  toast('✅ Dip saved');$('dipValue').value='';loadDSR();
+}
+async function saveOpening(){
+  const date=$('dsrOpenDate').value,fuel=$('dsrFuel').value,opening=Number($('dsrOpen').value||0);
+  if(!date){toast('Select date','err');return;}
+  loading(true,'Saving...');
+  const r=await api('saveDSROpening',{date,fuel,opening});loading(false);
+  if(!r.ok){toast(r.error,'err');return;}
+  toast('✅ Opening saved');loadDSR();
+}
+async function saveDip(){const fuel=$('dsrFuel').value,dip=Number($('dsrDip').value||0);await api('saveDSRDip',{fuel,dip});loadDSR();}
+async function saveCap(){const fuel=$('dsrFuel').value,cap=Number($('dsrCap').value||0);await api('saveSetting',{key:'DSR_Tank_Capacity_'+fuel,value:cap});}
+function exportDsr(){
+  const t=document.querySelector('#dsrOut table');if(!t){toast('Load DSR','err');return;}
+  let csv='';t.querySelectorAll('tr').forEach(tr=>{csv+=Array.from(tr.querySelectorAll('th,td')).map(td=>'"'+td.innerText.replace(/"/g,'""').replace(/\n/g,' ')+'"').join(',')+'\n';});
+  const blob=new Blob(['\uFEFF'+csv],{type:'text/csv'});const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='DSR_'+$('dsrFuel').value+'_'+$('dsrMonth').value+'.csv';a.click();
+}
+
+/* ═════ REPORTS ═════ */
+async function loadRepStaff(){
+  const r=await api('getStaff',{activeOnly:true});
+  const sel=$('repStaff');sel.innerHTML='<option value="">All</option>';
+  (r.staff||[]).forEach(x=>{const o=document.createElement('option');o.value=x.Staff_ID;o.textContent=x.Staff_Name;sel.appendChild(o);});
+}
+function pickRep(t,el){repType=t;document.querySelectorAll('#repTabs .tab').forEach(x=>x.classList.remove('active'));el.classList.add('active');$('repOut').innerHTML='';}
+async function runReport(){
+  const from=$('repFrom').value,to=$('repTo').value;
+  if(!from||!to){toast('Select dates','err');return;}
+  loading(true,'Generating...');
+  const r=await api('getReportData',{from,to,type:repType,pump:$('repPump').value,staff:$('repStaff').value});loading(false);
+  if(!r.ok){toast(r.error,'err');return;}
+  const rows=r.rows||[];
+  if(!rows.length){$('repOut').innerHTML='<div class="card"><div class="tbl-empty">No data</div></div>';return;}
+  const cols=Object.keys(rows[0]);
+  let h='<div class="card"><div class="tbl-wrap"><table><thead><tr>';cols.forEach(c=>h+='<th>'+c+'</th>');h+='</tr></thead><tbody>';
+  rows.forEach(r=>{h+='<tr>';cols.forEach(c=>{let v=r[c];if(typeof v==='number')v=fmt(v);h+='<td>'+v+'</td>';});h+='</tr>';});
+  h+='</tbody></table></div></div>';
+  $('repOut').innerHTML=h;
+}
+function exportReport(){
+  const t=document.querySelector('#repOut table');if(!t){toast('Generate first','err');return;}
+  let csv='';t.querySelectorAll('tr').forEach(tr=>{csv+=Array.from(tr.querySelectorAll('th,td')).map(td=>'"'+td.innerText.replace(/"/g,'""')+'"').join(',')+'\n';});
+  const blob=new Blob(['\uFEFF'+csv],{type:'text/csv'});const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='Report_'+repType+'_'+today()+'.csv';a.click();
+}
+
+/* ═════ STAFF ═════ */
+function updateSalLabel(){$('sSalLabel').textContent=$('sSalaryType').value==='Monthly Fixed'?'Monthly Salary ₹':'Daily Salary ₹';}
+function clearStaff(){['sId','sName','sMobile','sPin','sSalaryRate'].forEach(id=>$(id).value='');$('sRole').value='Employee';}
+async function loadStaffList(){
+  loading(true);
+  const r=await api('getStaff',{activeOnly:false});loading(false);
+  if(!r.ok)return;
+  const list=r.staff||[];window.staffCache=list;
+  if(!list.length){$('staffOut').innerHTML='<div class="tbl-empty">No staff</div>';return;}
+  let h='<div class="tbl-wrap"><table><thead><tr><th>ID</th><th>Name</th><th>Mobile</th><th>Access Role</th><th>Job Role</th><th>Salary</th><th>Status</th><th></th></tr></thead><tbody>';
+  list.forEach((x,i)=>{
+    const sal=x.Salary_Type==='Monthly Fixed'?money(x.Salary_Rate)+'/month':money(x.Salary_Rate)+'/day';
+    h+=`<tr><td>${x.Staff_ID}</td><td><b>${x.Staff_Name}</b></td><td>${x.Mobile||'—'}</td><td>${x.Role}</td><td>${x.Job_Role||'—'}</td><td>${sal}</td><td><span class="b ${x.Status==='Active'?'ok':'bad'}">${x.Status}</span></td><td><button class="btn btn-ghost btn-sm" onclick="editStaff(${i})">Edit</button></td></tr>`;
+  });
+  h+='</tbody></table></div>';$('staffOut').innerHTML=h;
+}
+function editStaff(i){
+  const x=window.staffCache[i];if(!x)return;
+  $('sId').value=x.Staff_ID;$('sName').value=x.Staff_Name;$('sMobile').value=x.Mobile||'';
+  $('sRole').value=x.Role;$('sJobRole').value=x.Job_Role||'Pump Staff';
+  $('sSalaryType').value=x.Salary_Type||'Daily Fixed';$('sSalaryRate').value=x.Salary_Rate||0;
+  $('sStatus').value=x.Status;updateSalLabel();toast('Editing '+x.Staff_ID,'info');
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+async function saveStaff(){
+  const id=$('sId').value.trim().toUpperCase(),name=$('sName').value.trim(),pin=$('sPin').value.trim();
+  if(!id||!name){toast('ID and Name required','err');return;}
+  if(pin&&!/^\d{4}$/.test(pin)){toast('PIN must be 4 digits','err');return;}
+  const payload={staffId:id,staffName:name,mobile:$('sMobile').value,role:$('sRole').value,jobRole:$('sJobRole').value,salaryType:$('sSalaryType').value,salaryRate:Number($('sSalaryRate').value||0),status:$('sStatus').value};
+  if(pin)payload.pinHash=await sha256(pin);
+  loading(true);
+  const r=await api('saveStaff',payload);loading(false);
+  if(!r.ok){toast(r.error,'err');return;}
+  toast('✅ Saved');clearStaff();loadStaffList();
+}
+
+/* ═════ SALARY ═════ */
+async function loadSalary(){
+  if(!$('salaryMonth').value)$('salaryMonth').value=monthNow();
+  loading(true);
+  const r=await api('getSalaryReport',{month:$('salaryMonth').value});loading(false);
+  if(!r.ok){toast(r.error,'err');return;}
+  window.salData=r.data;
+  const sel=$('salFilter');sel.innerHTML='<option value="">All Staff</option>'+(r.data.rows||[]).map(x=>`<option value="${x.staffId}">${x.name} (${x.staffId})</option>`).join('');
+  renderSalary();
+}
+function renderSalary(){
+  const d=window.salData;if(!d)return;
+  const f=$('salFilter').value;
+  const rows=(d.rows||[]).filter(x=>!f||x.staffId===f);
+  const totalNet=rows.filter(x=>x.status==='Active').reduce((a,x)=>a+Number(x.netSalary||0),0);
+  const totalGross=rows.filter(x=>x.status==='Active').reduce((a,x)=>a+Number(x.grossSalary||0),0);
+  $('salarySum').innerHTML=`
+    <div class="kpi-grid">
+      <div class="kpi primary"><div class="kl">Staff</div><div class="kv">${rows.length}</div></div>
+      <div class="kpi green"><div class="kl">Gross Salary</div><div class="kv">${money(totalGross)}</div></div>
+      <div class="kpi orange"><div class="kl">Shortage</div><div class="kv">${money(d.totalShortage||0)}</div></div>
+      <div class="kpi red"><div class="kl">Pending Deduct</div><div class="kv">${money(d.totalPendingDeduction||0)}</div></div>
+      <div class="kpi purple"><div class="kl">Net Payable</div><div class="kv">${money(totalNet)}</div></div>
+    </div>`;
+  if(!rows.length){$('salaryOut').innerHTML='<div class="card"><div class="tbl-empty">No data</div></div>';return;}
+  let h='<div class="card"><div class="tbl-wrap"><table><thead><tr><th>Staff</th><th>Job Role</th><th>Type</th><th>Rate</th><th>Days</th><th>Gross</th><th>Shortage</th><th>Approved</th><th>Pending</th><th>Net Salary</th><th></th></tr></thead><tbody>';
+  rows.forEach(x=>{
+    const rate=x.salaryType==='Monthly Fixed'?money(x.rate)+'/m':money(x.rate)+'/d';
+    const act=x.pendingDeduction>0?`<button class="btn btn-warn btn-sm" onclick="approveDeduct('${x.staffId}',${x.pendingDeduction})">Approve</button>`:'—';
+    h+=`<tr><td><b>${x.name}</b><br><span style="font-size:11px;color:var(--t3)">${x.staffId}</span></td><td>${x.jobRole||'—'}</td><td>${x.salaryType==='Monthly Fixed'?'Monthly':'Daily'}</td><td>${rate}</td><td>${x.daysWorked}</td><td>${money(x.grossSalary)}</td><td>${money(x.shortage)}</td><td>${money(x.approvedDeduction)}</td><td>${money(x.pendingDeduction)}</td><td><b>${money(x.netSalary)}</b></td><td>${act}</td></tr>`;
+  });
+  h+='</tbody></table></div></div>';$('salaryOut').innerHTML=h;
+}
+async function approveDeduct(staffId,pending){
+  const amt=prompt('Approve deduction amount (max '+pending+'):',pending.toFixed(0));
+  if(amt===null)return;
+  const reason=prompt('Reason:');if(!reason)return;
+  const r=await api('approveSalaryDeduction',{month:$('salaryMonth').value,staffId,amount:Number(amt),reason});
+  if(!r.ok){toast(r.error,'err');return;}
+  toast('✅ Approved');loadSalary();
+}
+function exportSalary(){
+  const d=window.salData;if(!d){toast('Load first','err');return;}
+  let csv='StaffID,Name,JobRole,Type,Rate,Days,Gross,Shortage,Approved,Pending,Net,Status\n';
+  (d.rows||[]).forEach(x=>{csv+=`${x.staffId},${x.name},${x.jobRole||''},${x.salaryType},${x.rate},${x.daysWorked},${x.grossSalary},${x.shortage},${x.approvedDeduction},${x.pendingDeduction},${x.netSalary},${x.status}\n`;});
+  const blob=new Blob(['\uFEFF'+csv],{type:'text/csv'});const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='Salary_'+d.month+'.csv';a.click();
+}
+
+/* ═════ STOCK ═════ */
+function spCalc(){$('spAmt').value=(num('spQty')*num('spRate')).toFixed(2);}
+async function saveStock(){
+  const data={Purchase_Date:$('spDate').value,Fuel_Type:$('spFuel').value,Quantity_KG:num('spQty'),Rate:num('spRate'),Total_Amount:num('spAmt'),Supplier:$('spSupplier').value,Invoice_No:$('spInv').value};
+  if(!data.Purchase_Date||data.Quantity_KG<=0){toast('Date and Qty required','err');return;}
+  loading(true);
+  const r=await api('saveStockPurchase',{data});loading(false);
+  if(!r.ok){toast(r.error,'err');return;}
+  toast('✅ Saved');['spQty','spRate','spAmt','spInv','spSupplier'].forEach(id=>$(id).value='');loadStockList();
+}
+async function loadStockList(){
+  const r=await api('getStockPurchases',{});
+  if(!r.ok){$('stockOut').innerHTML='<div class="tbl-empty">Failed</div>';return;}
+  const rows=(r.rows||[]).slice().reverse();
+  if(!rows.length){$('stockOut').innerHTML='<div class="tbl-empty">No purchases</div>';return;}
+  let h='<div class="tbl-wrap"><table><thead><tr><th>Date</th><th>Fuel</th><th>Quantity</th><th>Rate ₹</th><th>Total ₹</th><th>Supplier</th><th>Invoice</th></tr></thead><tbody>';
+  rows.forEach(x=>{h+=`<tr><td>${x.Purchase_Date}</td><td>${x.Fuel_Type}</td><td>${fmt(x.Quantity_KG)}</td><td>${money(x.Rate)}</td><td><b>${money(x.Total_Amount)}</b></td><td>${x.Supplier||'—'}</td><td>${x.Invoice_No||'—'}</td></tr>`;});
+  h+='</tbody></table></div>';$('stockOut').innerHTML=h;
+}
+
+/* ═════ OTP ═════ */
+async function loadOtp(){
+  loading(true);
+  const r=await api('getOTPPending',{});loading(false);
+  if(!r.ok){$('otpOut').innerHTML='<div class="tbl-empty">Failed</div>';return;}
+  const rows=r.rows||[];
+  if(!rows.length){$('otpOut').innerHTML='<div class="tbl-empty">All settled 🎉</div>';return;}
+  let h='<div class="tbl-wrap"><table><thead><tr><th>Date</th><th>Pump</th><th>Staff</th><th>OTP ₹</th><th>Status</th><th></th></tr></thead><tbody>';
+  rows.forEach(x=>{h+=`<tr><td>${x.date}</td><td>Pump ${x.pump}</td><td>${x.staff}</td><td><b>${money(x.otp)}</b></td><td><span class="b warn">${x.status}</span></td><td><button class="btn btn-success btn-sm" onclick="settleOtp('${x.id}',${x.otp})">Settle</button></td></tr>`;});
+  h+='</tbody></table></div>';$('otpOut').innerHTML=h;
+}
+async function settleOtp(id,otp){
+  const amt=prompt('Settled amount (max '+otp+'):',otp.toFixed(0));
+  if(amt===null)return;
+  const date=prompt('Settlement date (YYYY-MM-DD):',today());if(!date)return;
+  const r=await api('settleOTP',{id,amount:Number(amt),date});
+  if(!r.ok){toast(r.error,'err');return;}
+  toast('✅ Settled');loadOtp();
+}
+
+/* ═════ INIT ═════ */
+window.onload=()=>{
+  const last=localStorage.getItem('lastLoginId');
+  if(last)$('loginId').value=last;
+  $('loginId').addEventListener('change',e=>localStorage.setItem('lastLoginId',e.target.value.trim().toUpperCase()));
+  ['loginId','loginPin'].forEach(id=>$(id).addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();doLogin();}}));
+  document.querySelectorAll('.nav-item').forEach(n=>n.addEventListener('click',()=>nav(n.dataset.nav,n)));
+};
+</script>
+</body>
+</html>
