@@ -603,21 +603,21 @@ async function onPumpChange(){
       <div class="card-hdr"><div><h3>Pump ${p}${isCNG?' (CNG)':''} — Nozzle Readings</h3><div class="h-sub">Date: ${ed} · Employee: ${pickedStaffId||me.Staff_ID}</div></div></div>
       ${!isCNG?`
       <div class="f-row" style="margin-bottom:14px">
-        <div class="f"><label>MS N1 Opening</label><input id="pOpen1" type="number" readonly value="${(c.Petrol_1&&c.Petrol_1.closing)||0}"></div>
+        <div class="f"><label>MS N1 Opening</label><input id="pOpen1" type="number" value="${(c.Petrol_1&&c.Petrol_1.closing)||0}" oninput="calc()"></div>
         <div class="f"><label>MS N1 Closing</label><input id="pClose1" type="number" oninput="calc()"></div>
-        <div class="f"><label>MS N2 Opening</label><input id="pOpen2" type="number" readonly value="${(c.Petrol_2&&c.Petrol_2.closing)||0}"></div>
+        <div class="f"><label>MS N2 Opening</label><input id="pOpen2" type="number" value="${(c.Petrol_2&&c.Petrol_2.closing)||0}" oninput="calc()"></div>
         <div class="f"><label>MS N2 Closing</label><input id="pClose2" type="number" oninput="calc()"></div>
-        <div class="f"><label>HSD N1 Opening</label><input id="dOpen1" type="number" readonly value="${(c.Diesel_1&&c.Diesel_1.closing)||0}"></div>
+        <div class="f"><label>HSD N1 Opening</label><input id="dOpen1" type="number" value="${(c.Diesel_1&&c.Diesel_1.closing)||0}" oninput="calc()"></div>
         <div class="f"><label>HSD N1 Closing</label><input id="dClose1" type="number" oninput="calc()"></div>
-        <div class="f"><label>HSD N2 Opening</label><input id="dOpen2" type="number" readonly value="${(c.Diesel_2&&c.Diesel_2.closing)||0}"></div>
+        <div class="f"><label>HSD N2 Opening</label><input id="dOpen2" type="number" value="${(c.Diesel_2&&c.Diesel_2.closing)||0}" oninput="calc()"></div>
         <div class="f"><label>HSD N2 Closing</label><input id="dClose2" type="number" oninput="calc()"></div>
         <div class="f"><label>MS Rate ₹/L</label><input id="pRate" type="number" value="116.96" oninput="calc()"></div>
         <div class="f"><label>HSD Rate ₹/L</label><input id="dRate" type="number" value="105.01" oninput="calc()"></div>
       </div>`:`
       <div class="f-row" style="margin-bottom:14px">
-        <div class="f"><label>CNG N1 Opening</label><input id="cOpen1" type="number" readonly value="${(c.CNG_1&&c.CNG_1.closing)||0}"></div>
+        <div class="f"><label>CNG N1 Opening</label><input id="cOpen1" type="number" value="${(c.CNG_1&&c.CNG_1.closing)||0}" oninput="calc()"></div>
         <div class="f"><label>CNG N1 Closing</label><input id="cClose1" type="number" oninput="calc()"></div>
-        <div class="f"><label>CNG N2 Opening</label><input id="cOpen2" type="number" readonly value="${(c.CNG_2&&c.CNG_2.closing)||0}"></div>
+        <div class="f"><label>CNG N2 Opening</label><input id="cOpen2" type="number" value="${(c.CNG_2&&c.CNG_2.closing)||0}" oninput="calc()"></div>
         <div class="f"><label>CNG N2 Closing</label><input id="cClose2" type="number" oninput="calc()"></div>
         <div class="f"><label>CNG Rate ₹/KG</label><input id="cRate" type="number" value="0" oninput="calc()"></div>
       </div>`}
