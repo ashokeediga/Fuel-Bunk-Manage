@@ -176,7 +176,7 @@ td{padding:9px 8px;border-bottom:1px solid var(--line);font-variant-numeric:tabu
   </div>
   <div class="wrap">
     <div id="mgrPickBox" class="card" style="display:none">
-      <div class="f" style="margin-bottom:0"><label>👤 Employee</label><select id="empPick" onchange="onEmpPick()"></select></div>
+      <div class="f" style="margin-bottom:0"><label>👤 Employee</label><select id="empPickHome" style="display:none"></select></div>
     </div>
     <div class="home-hello"><h2 id="helloName">Hello 👋</h2><p id="helloDate">—</p></div>
     <div class="kpi-grid" id="homeKpis"></div>
@@ -201,12 +201,15 @@ td{padding:9px 8px;border-bottom:1px solid var(--line);font-variant-numeric:tabu
   <div class="wrap">
     <div class="card"><div class="f" style="margin-bottom:0"><label>📅 Date</label><input id="entryDate" type="date" onchange="onEntryDateChange()"></div></div>
     <div id="entryAlert"></div>
+    <div id="entryEmpBox" class="card" style="display:none">
+      <div class="f" style="margin-bottom:0"><label>👤 Employee</label><select id="empPick" onchange="onEmpPick()"></select></div>
+    </div>
     <div class="pump-grid">
       <div class="pump-btn" onclick="pickPump(1)" data-p="1"><div class="pn">01</div><div class="pl">Pump 1</div></div>
       <div class="pump-btn" onclick="pickPump(2)" data-p="2"><div class="pn">02</div><div class="pl">Pump 2</div></div>
       <div class="pump-btn" onclick="pickPump(3)" data-p="3"><div class="pn">03</div><div class="pl">CNG</div></div>
     </div>
-    <div class="alert info">👤 Employee: <b id="pickEmp">—</b></div>
+    <div id="empStaticAlert" class="alert info">👤 Employee: <b id="pickEmp">—</b></div>
   </div>
 </div>
 
@@ -466,7 +469,7 @@ function setupHome(){
   $('helloDate').textContent=d.toLocaleDateString('en-IN',{weekday:'long',day:'numeric',month:'long',year:'numeric'});
   const isMgr=(me.Role==='Manager'||me.Role==='Owner');
   const isOwn=me.Role==='Owner';
-  $('mgrPickBox').style.display=isMgr?'block':'none';
+  $('mgrPickBox').style.display='none';/* employee dropdown moved to entry page */
   $('tileDash').style.display=isOwn?'flex':'none';
   $('tileDSR').style.display=isOwn?'flex':'none';
   $('tileReports').style.display=isOwn?'flex':'none';
@@ -481,9 +484,9 @@ async function loadEmployees(){
   const r=await api('getStaff',{role:'Employee',activeOnly:true});
   const s=$('empPick');s.innerHTML='';
   (r.staff||[]).forEach(x=>{const o=document.createElement('option');o.value=x.Staff_ID;o.textContent=x.Staff_ID+' · '+x.Staff_Name;s.appendChild(o);});
-  if(s.value)pickedStaffId=s.value;
+  if(s.value){pickedStaffId=s.value;$('pickEmp').textContent=pickedStaffId;}
 }
-function onEmpPick(){pickedStaffId=$('empPick').value;}
+function onEmpPick(){pickedStaffId=$('empPick').value;$('pickEmp').textContent=pickedStaffId;}
 async function loadHomeKpis(){
   const r=await api('getShifts',{staffId:me.Role==='Employee'?me.Staff_ID:pickedStaffId});
   if(!r.ok)return;
@@ -502,11 +505,19 @@ function doLogout(){if(!confirm('Sign out?'))return;me=null;pickedStaffId=null;$
 
 /* ═════ ENTRY ═════ */
 function startEntry(){
-  if(me.Role!=='Employee'&&!pickedStaffId){toast('Select employee','err');return;}
   if(me.Role==='Employee')pickedStaffId=me.Staff_ID;
+  const isMgr=me.Role==='Owner'||me.Role==='Manager';
+  if(isMgr){
+    loadEmployees();
+    $('entryEmpBox').style.display='block';
+    if($('empStaticAlert'))$('empStaticAlert').style.display='none';
+  }else{
+    $('entryEmpBox').style.display='none';
+    if($('empStaticAlert'))$('empStaticAlert').style.display='block';
+  }
   $('entryDate').max=today();$('entryDate').value=today();
   $('entryDate').min=me.Role==='Employee'?today():'2000-01-01';
-  $('pickEmp').textContent=pickedStaffId;
+  $('pickEmp').textContent=pickedStaffId||'—';
   $('entryAlert').innerHTML='';
   document.querySelectorAll('.pump-btn').forEach(b=>b.classList.remove('active'));
   show('pumpSec');
@@ -517,6 +528,7 @@ function onEntryDateChange(){
   if(me.Role==='Employee'&&d<today()){toast('Employee cannot enter past dates','err');$('entryDate').value=today();return;}
 }
 async function pickPump(p){
+  if(me.Role!=='Employee'&&!pickedStaffId){toast('Select employee first','err');return;}
   pickedPump=p;
   document.querySelectorAll('.pump-btn').forEach(b=>b.classList.toggle('active',Number(b.dataset.p)===p));
   vibrate(15);
