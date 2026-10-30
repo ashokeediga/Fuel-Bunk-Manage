@@ -538,8 +538,17 @@ td{padding:9px 8px;border-bottom:1px solid var(--line);font-variant-numeric:tabu
 
 <script>
 /* ═════ CONFIG ═════ */
-const CLOUDFLARE_API_URL = (location.hostname.endsWith('workers.dev') || location.hostname.endsWith('pages.dev')) ? '' : 'https://fuel-bunk-api.hp-nlkpump.workers.dev';
-function getApiUrl(){ return localStorage.getItem('CUSTOM_API_URL') || CLOUDFLARE_API_URL; }
+function getApiUrl(){
+  const custom = localStorage.getItem('CUSTOM_API_URL');
+  if(custom && (custom.includes('google.com') || custom.includes('macros/s'))){
+    localStorage.removeItem('CUSTOM_API_URL');
+  }
+  if(custom && custom.startsWith('http')) return custom.replace(/\/api\/?$/, '').replace(/\/?$/, '') + '/api';
+  if(location.protocol === 'file:' || location.hostname.includes('github.io')){
+    return 'https://fuel-bunk-api.hp-nlkpump.workers.dev/api';
+  }
+  return '/api';
+}
 const API_URL = getApiUrl();
 
 

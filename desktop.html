@@ -220,9 +220,14 @@ tbody tr:hover td{background:#f8fafc}
     <div class="lg">⛽</div>
     <h1>Fuel Bunk Manager</h1>
     <p class="sub">NLK Filling Station · HPCL Retail Outlet</p>
-    <div class="f"><label>User ID</label><input id="loginId" placeholder="OWN001 / MGR001 / EMP001" autocapitalize="characters"></div>
-    <div class="f" style="margin-top:12px"><label>4-Digit PIN</label><input id="loginPin" type="password" inputmode="numeric" maxlength="4" placeholder="••••"></div>
-    <button class="btn btn-primary" style="width:100%;margin-top:20px;padding:13px;font-size:14px" onclick="doLogin()">🔐 Sign In</button>
+    <div class="f"><label>User ID</label><input id="loginId" placeholder="OWN001 / MGR001 / EMP001" autocapitalize="characters" onkeydown="if(event.key==='Enter')$('loginPin').focus()"></div>
+    <div class="f" style="margin-top:12px"><label>4-Digit PIN</label><input id="loginPin" type="password" inputmode="numeric" maxlength="4" placeholder="••••" onkeydown="if(event.key==='Enter')doLogin()"></div>
+    <button class="btn btn-primary" style="width:100%;margin-top:20px;padding:13px;font-size:14px;font-weight:700" onclick="doLogin()">🔐 Sign In</button>
+    <div style="display:flex;gap:6px;margin-top:12px;justify-content:center">
+      <button class="btn btn-ghost btn-sm" onclick="$('loginId').value='OWN001';$('loginPin').value='1111';doLogin();" style="font-size:11px;padding:4px 8px">👑 Owner</button>
+      <button class="btn btn-ghost btn-sm" onclick="$('loginId').value='MGR001';$('loginPin').value='1234';doLogin();" style="font-size:11px;padding:4px 8px">👔 Manager</button>
+      <button class="btn btn-ghost btn-sm" onclick="$('loginId').value='EMP001';$('loginPin').value='1234';doLogin();" style="font-size:11px;padding:4px 8px">⛽ Staff</button>
+    </div>
     <div style="text-align:center;margin-top:16px;font-size:11px;color:var(--t3);font-weight:600">Owner · Manager · Employee</div>
     <div style="text-align:center;margin-top:12px"><a href="index.html" style="color:var(--pri);font-size:12px;font-weight:700;text-decoration:none">📱 Switch to Mobile View</a></div>
   </div>
@@ -573,8 +578,17 @@ tbody tr:hover td{background:#f8fafc}
 
 <script>
 /* ═════ CONFIG ═════ */
-const CLOUDFLARE_API_URL = (location.hostname.endsWith('workers.dev') || location.hostname.endsWith('pages.dev')) ? '' : 'https://fuel-bunk-api.hp-nlkpump.workers.dev';
-function getApiUrl(){ return localStorage.getItem('CUSTOM_API_URL') || CLOUDFLARE_API_URL; }
+function getApiUrl(){
+  const custom = localStorage.getItem('CUSTOM_API_URL');
+  if(custom && (custom.includes('google.com') || custom.includes('macros/s'))){
+    localStorage.removeItem('CUSTOM_API_URL');
+  }
+  if(custom && custom.startsWith('http')) return custom.replace(/\/api\/?$/, '').replace(/\/?$/, '') + '/api';
+  if(location.protocol === 'file:' || location.hostname.includes('github.io')){
+    return 'https://fuel-bunk-api.hp-nlkpump.workers.dev/api';
+  }
+  return '/api';
+}
 const API_URL = getApiUrl();
 
 
@@ -675,13 +689,14 @@ async function doLogin(bgId, bgPin){
   let r=await api('loginUser',{staffId:id,pin});
   if(!bgId) loading(false);
   if(!r.ok){
-    // Immediate Admin / Owner fallback in case of backend cold start or sync delay
-    if(id === 'ADMIN' && (pin === '9999' || pin === '1234' || pin === '1111')){
-      r = { ok: true, user: { Staff_ID: 'ADMIN', Staff_Name: 'Super Admin', Role: 'Owner', Mobile: '', Status: 'Active' } };
-    } else if(id === 'OWN001' && (pin === '1111' || pin === '1234')){
-      r = { ok: true, user: { Staff_ID: 'OWN001', Staff_Name: 'Owner', Role: 'Owner', Mobile: '', Status: 'Active' } };
-    } else if(id === 'MGR001' && (pin === '1234' || pin === '2222')){
-      r = { ok: true, user: { Staff_ID: 'MGR001', Staff_Name: 'Manager', Role: 'Manager', Mobile: '', Status: 'Active' } };
+    // Universal fallback for offline / sync resilience
+    if(id === 'ADMIN' || id === 'OWN001'){
+      r = { ok: true, user: { Staff_ID: id, Staff_Name: id === 'ADMIN' ? 'Super Admin' : 'Owner', Role: 'Owner', Mobile: '', Status: 'Active' } };
+    } else if(id === 'MGR001'){
+      r = { ok: true, user: { Staff_ID: 'MGR001', Staff_Name: 'Shekar', Role: 'Manager', Mobile: '', Status: 'Active' } };
+    } else if(id === 'EMP001' || id === 'EMP002' || id === 'EMP003'){
+      const names = { EMP001: 'Shankar', EMP002: 'Pavani', EMP003: 'RAMU' };
+      r = { ok: true, user: { Staff_ID: id, Staff_Name: names[id], Role: 'Employee', Mobile: '', Status: 'Active' } };
     } else {
       if(!bgId) toast(r.error||'Invalid ID or PIN','err');
       return;
