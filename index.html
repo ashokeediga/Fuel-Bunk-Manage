@@ -589,8 +589,8 @@ function setupHome(){
   $('helloName').textContent='Hello, '+me.Staff_Name+' 👋';
   const d=new Date();
   $('helloDate').textContent=d.toLocaleDateString('en-IN',{weekday:'long',day:'numeric',month:'long',year:'numeric'});
-  const isMgr=(me.Role==='Manager'||me.Role==='Owner');
-  const isOwn=me.Role==='Owner';
+  const isMgr=isUserAdmin();
+  const isOwn=isUserAdmin();
   $('mgrPickBox').style.display='none';/* employee dropdown moved to entry page */
   $('tileDash').style.display=isOwn?'flex':'none';
   $('tileDSR').style.display=isOwn?'flex':'none';
@@ -969,7 +969,7 @@ async function loadEntries(){
   if(!r.ok){$('entriesOut').innerHTML='<div class="card">Failed to load entries</div>';return;}
   const shifts=r.shifts||[];
   if(!shifts.length){$('entriesOut').innerHTML='<div class="card tbl-empty">No entries found</div>';return;}
-  const isOwn=(me.Role==='Owner'||me.Staff_ID==='ADMIN');
+  const isOwn=isUserAdmin();
   let h='';
   shifts.forEach(s=>{
     const d=Number(s.Difference||0);

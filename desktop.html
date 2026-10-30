@@ -538,8 +538,8 @@ async function doLogin(bgId, bgPin){
   $('sideName').textContent=me.Staff_Name;
   $('sideRole').textContent=me.Role+' · '+me.Staff_ID;
   // Show/hide nav by role
-  const isMgr=(me.Role==='Manager'||me.Role==='Owner');
-  const isOwn=me.Role==='Owner';
+  const isMgr=isUserAdmin();
+  const isOwn=isUserAdmin();
   document.querySelectorAll('.nav-item').forEach(n=>{
     const r=n.dataset.role;
     if(!r)n.style.display='';
@@ -562,8 +562,8 @@ window.addEventListener('DOMContentLoaded',()=>{
       $('appWrap').style.display='flex';
       $('sideName').textContent=me.Staff_Name;
       $('sideRole').textContent=me.Role+' · '+me.Staff_ID;
-      const isMgr=(me.Role==='Manager'||me.Role==='Owner');
-      const isOwn=me.Role==='Owner';
+      const isMgr=isUserAdmin();
+      const isOwn=isUserAdmin();
       document.querySelectorAll('.nav-item').forEach(n=>{
         const r=n.dataset.role;
         if(!r)n.style.display='';
@@ -595,8 +595,8 @@ async function loadHome(){
     <div class="kpi ${diff<0?'red':'orange'}"><div class="kl">Total Difference</div><div class="kv">${money(Math.abs(diff))}</div></div>
     <div class="kpi purple"><div class="kl">Total Entries</div><div class="kv">${shifts.length}</div></div>`;
 
-  const isMgr=(me.Role==='Manager'||me.Role==='Owner');
-  const isOwn=me.Role==='Owner';
+  const isMgr=isUserAdmin();
+  const isOwn=isUserAdmin();
   let tiles=`
     <div class="tile primary" onclick="nav('entry',document.querySelector('[data-nav=\\'entry\\']'))"><div class="ti">➕</div><div><div class="tt">New Entry</div><div class="ts">Record sales</div></div></div>
     <div class="tile green" onclick="nav('entries',document.querySelector('[data-nav=\\'entries\\']'))"><div class="ti">📋</div><div><div class="tt">View Entries</div><div class="ts">Recent records</div></div></div>`;
@@ -618,7 +618,7 @@ async function initEntry(){
   $('entryDate').max=today();
   $('entryDate').value=isEmp?yesterday():today();
   $('entryDate').min=isEmp?yesterday():'2000-01-01';
-  const isMgr=(me.Role==='Manager'||me.Role==='Owner');
+  const isMgr=isUserAdmin();
   $('empPickWrap').style.display=isMgr?'':'none';
   if(isMgr)await loadEmployees();
   $('entryBody').innerHTML='';
@@ -800,21 +800,79 @@ async function saveEntry(){
 }
 
 /* ═════ ENTRIES ═════ */
+let entriesViewMode = (window.innerWidth <= 850) ? 'cards' : 'table';
+
+function setEntriesView(mode){
+  entriesViewMode = mode;
+  loadEntries();
+}
+
 async function loadEntries(){
   loading(true,'Loading...');
   const params={};
   if(me.Role==='Employee') params.staffId=me.Staff_ID;
   if($('entriesDate')&&$('entriesDate').value)params.date=$('entriesDate').value;
   const r=await api('getShifts',params);loading(false);
-  if(!r.ok){$('entriesOut').innerHTML='<div class="tbl-empty">Failed</div>';return;}
+  if(!r.ok){$('entriesOut').innerHTML='<div class="tbl-empty">Failed to load entries</div>';return;}
   const shifts=r.shifts||[];
-  if(!shifts.length){$('entriesOut').innerHTML='<div class="tbl-empty">No entries</div>';return;}
-  const isOwn=(me.Role==='Owner'||me.Staff_ID==='ADMIN');
-  let h='<div class="tbl-wrap"><table><thead><tr><th>Date</th><th>Pump</th><th>Staff</th><th>Petrol L</th><th>Diesel L</th><th>Total Sales</th><th>Collected</th><th>Difference</th>'+(isOwn?'<th>Actions</th>':'')+'</tr></thead><tbody>';
-  shifts.forEach(s=>{const d=Number(s.Difference||0);const bc=Math.abs(d)<0.5?'ok':(d<0?'bad':'warn');
-    const dt = String(s.Date||'').slice(0,10);
-    h+=`<tr><td><b>${dt}</b></td><td>P${s.Pump_No}</td><td>${s.Staff_Name||s.Staff_ID}</td><td>${fmt(s.Petrol_Litres||0)}</td><td>${fmt(s.Diesel_Litres||0)}</td><td><b>${money(s.Total_Sales)}</b></td><td>${money(s.Total_Collected)}</td><td><span class="b ${bc}">${money(Math.abs(d))}</span></td>`+(isOwn?`<td><div style="display:flex;gap:6px"><button class="btn btn-primary btn-sm" onclick="openFullEditShift('${s.Shift_ID}')" title="Full Edit">✏️ Edit Shift</button><button class="btn btn-ghost btn-sm" onclick="changeShiftDate('${s.Shift_ID}','${dt}')" title="Edit Date Only">📅 Date</button></div></td>`:'')+`</tr>`;});
-  h+='</tbody></table></div>';$('entriesOut').innerHTML=h;
+  if(!shifts.length){$('entriesOut').innerHTML='<div class="tbl-empty">No entries found</div>';return;}
+  const isOwn = isUserAdmin();
+
+  let headerBar = `
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;flex-wrap:wrap;gap:10px;background:#f8fafc;padding:10px 14px;border-radius:10px;border:1px solid var(--line)">
+      <div style="font-weight:700;font-size:13px;color:var(--t)">Total: <b>${shifts.length}</b> records ${isOwn ? '<span style="background:#22c55e;color:#fff;font-size:11px;padding:2px 8px;border-radius:10px;margin-left:6px">Admin Access Active</span>' : ''}</div>
+      <div style="display:flex;gap:6px">
+        <button class="btn ${entriesViewMode==='cards'?'btn-primary':'btn-ghost'} btn-sm" onclick="setEntriesView('cards')">📋 Cards View</button>
+        <button class="btn ${entriesViewMode==='table'?'btn-primary':'btn-ghost'} btn-sm" onclick="setEntriesView('table')">📊 Table View</button>
+      </div>
+    </div>
+  `;
+
+  if(entriesViewMode === 'cards'){
+    let h = headerBar + '<div style="display:grid;grid-template-columns:repeat(auto-fill, minmax(320px, 1fr));gap:12px">';
+    shifts.forEach(s => {
+      const d = Number(s.Difference || 0);
+      const bc = Math.abs(d) < 0.5 ? 'ok' : (d < 0 ? 'bad' : 'warn');
+      const dt = String(s.Date || '').slice(0, 10);
+      h += `
+        <div class="card" style="margin:0;padding:16px;border-left:4px solid var(--pri);position:relative">
+          <div style="display:flex;justify-content:space-between;align-items:flex-start">
+            <div>
+              <div style="font-weight:800;font-size:15px;color:var(--t)">📅 <b>${dt}</b> · Pump ${s.Pump_No}</div>
+              <div style="font-size:12px;color:var(--t2);margin-top:4px">👤 Staff: <b>${s.Staff_Name || s.Staff_ID}</b></div>
+            </div>
+            <div style="text-align:right">
+              <div style="font-weight:900;font-size:16px;color:#2563eb">${money(s.Total_Sales)}</div>
+              <div style="margin-top:3px"><span class="b ${bc}">${money(Math.abs(d))}</span></div>
+            </div>
+          </div>
+          <div style="display:flex;justify-content:space-between;font-size:12px;color:var(--t2);margin:10px 0;padding:8px 0;border-top:1px dashed var(--line);border-bottom:1px dashed var(--line)">
+            <span>MS: <b>${fmt(s.Petrol_Litres||0)} L</b></span>
+            <span>HSD: <b>${fmt(s.Diesel_Litres||0)} L</b></span>
+            <span>Collected: <b>${money(s.Total_Collected)}</b></span>
+          </div>
+          ${isOwn ? `
+          <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:10px">
+            <button class="btn btn-primary btn-sm" onclick="openFullEditShift('${s.Shift_ID}')" style="padding:6px 14px;font-weight:700">✏️ Edit Shift</button>
+            <button class="btn btn-ghost btn-sm" onclick="changeShiftDate('${s.Shift_ID}','${dt}')" style="padding:6px 12px">📅 Change Date</button>
+          </div>` : ''}
+        </div>
+      `;
+    });
+    h += '</div>';
+    $('entriesOut').innerHTML = h;
+  } else {
+    // Table View
+    let h = headerBar + '<div class="tbl-wrap"><table><thead><tr><th>Date</th><th>Pump</th><th>Staff</th><th>Petrol L</th><th>Diesel L</th><th>Total Sales</th><th>Collected</th><th>Difference</th>'+(isOwn?'<th style="text-align:center">Actions</th>':'')+'</tr></thead><tbody>';
+    shifts.forEach(s => {
+      const d = Number(s.Difference || 0);
+      const bc = Math.abs(d) < 0.5 ? 'ok' : (d < 0 ? 'bad' : 'warn');
+      const dt = String(s.Date || '').slice(0, 10);
+      h += `<tr><td><b>${dt}</b></td><td>P${s.Pump_No}</td><td>${s.Staff_Name||s.Staff_ID}</td><td>${fmt(s.Petrol_Litres||0)}</td><td>${fmt(s.Diesel_Litres||0)}</td><td><b>${money(s.Total_Sales)}</b></td><td>${money(s.Total_Collected)}</td><td><span class="b ${bc}">${money(Math.abs(d))}</span></td>` + (isOwn ? `<td style="text-align:center"><div style="display:flex;gap:6px;justify-content:center"><button class="btn btn-primary btn-sm" onclick="openFullEditShift('${s.Shift_ID}')" title="Full Edit">✏️ Edit Shift</button><button class="btn btn-ghost btn-sm" onclick="changeShiftDate('${s.Shift_ID}','${dt}')" title="Edit Date Only">📅 Date</button></div></td>` : '') + `</tr>`;
+    });
+    h += '</tbody></table></div>';
+    $('entriesOut').innerHTML = h;
+  }
 }
 
 let __edShift=null, __edStaffList=[];
@@ -1355,6 +1413,694 @@ window.onload=()=>{
   ['loginId','loginPin'].forEach(id=>$(id).addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();doLogin();}}));
   document.querySelectorAll('.nav-item').forEach(n=>n.addEventListener('click',()=>nav(n.dataset.nav,n)));
 };
+
+
+/* ==============================================================
+   RAPID BOOK ENTRY DASHBOARD (BULK PAPER REGISTER / EXCEL IMPORT)
+   ============================================================== */
+let bookRows = [];
+let bookStaffList = [];
+
+async function initBookEntry(){
+  const isMgr = isUserAdmin();
+  if(!isMgr){
+    toast('Access restricted to Admin/Managers', 'err');
+    nav('home', document.querySelector('[data-nav="home"]'));
+    return;
+  }
+  await loadBookStaff();
+  renderBookHead();
+  if(bookRows.length === 0){
+    await addBookRow(yesterday());
+  } else {
+    renderBookBody();
+  }
+  updateBookFooterSummary();
+}
+
+async function loadBookStaff(){
+  const s = $('bookStaff');
+  if(!s) return;
+  if(bookStaffList.length === 0){
+    try {
+      const r = await api('getStaff', { activeOnly: false });
+      bookStaffList = r.staff || [];
+    } catch(e) {
+      console.warn('Failed to load staff for book', e);
+    }
+  }
+  s.innerHTML = '';
+  bookStaffList.forEach(st => {
+    const o = document.createElement('option');
+    o.value = st.Staff_ID;
+    o.textContent = `${st.Staff_ID} - ${st.Staff_Name} (${st.Role})`;
+    if(st.Staff_ID === me.Staff_ID || (st.Role === 'Owner' && !s.value)) o.selected = true;
+    s.appendChild(o);
+  });
+}
+
+function onBookPumpChange(){
+  const p = Number($('bookPump').value);
+  const isCNG = p === 3;
+  $('bookMsRateWrap').style.display = isCNG ? 'none' : '';
+  $('bookHsdRateWrap').style.display = isCNG ? 'none' : '';
+  $('bookCngRateWrap').style.display = isCNG ? '' : 'none';
+  
+  if(bookRows.length > 0){
+    if(!confirm('Changing Pump will reset the current unsaved book rows. Continue?')){
+      return;
+    }
+    bookRows = [];
+  }
+  renderBookHead();
+  addBookRow(yesterday());
+}
+
+function renderBookHead(){
+  const p = Number($('bookPump').value || 1);
+  const isCNG = p === 3;
+  let h = '';
+  if(!isCNG){
+    h = `
+      <tr>
+        <th rowspan="2" style="width:36px">#</th>
+        <th rowspan="2" style="width:110px">Date</th>
+        <th colspan="2" class="th-grp-fuel">MS Nozzle 1</th>
+        <th colspan="2" class="th-grp-fuel">MS Nozzle 2</th>
+        <th colspan="2" class="th-grp-fuel">HSD Nozzle 1</th>
+        <th colspan="2" class="th-grp-fuel">HSD Nozzle 2</th>
+        <th colspan="3" class="th-grp-calc">Calculated Sales</th>
+        <th colspan="4" class="th-grp-pay">Collections & Expenses</th>
+        <th colspan="2" class="th-grp-diff">Verification</th>
+        <th rowspan="2" style="width:100px">Action</th>
+      </tr>
+      <tr>
+        <th class="th-grp-fuel">Open</th><th class="th-grp-fuel">Close</th>
+        <th class="th-grp-fuel">Open</th><th class="th-grp-fuel">Close</th>
+        <th class="th-grp-fuel">Open</th><th class="th-grp-fuel">Close</th>
+        <th class="th-grp-fuel">Open</th><th class="th-grp-fuel">Close</th>
+        <th class="th-grp-calc">MS Ltr</th><th class="th-grp-calc">HSD Ltr</th><th class="th-grp-calc">Total ₹</th>
+        <th class="th-grp-pay">Cash</th><th class="th-grp-pay">Online</th><th class="th-grp-pay">OTP</th><th class="th-grp-pay">Expense</th>
+        <th class="th-grp-diff">Collected ₹</th><th class="th-grp-diff">Diff ₹</th>
+      </tr>
+    `;
+  } else {
+    h = `
+      <tr>
+        <th rowspan="2" style="width:36px">#</th>
+        <th rowspan="2" style="width:110px">Date</th>
+        <th colspan="2" class="th-grp-fuel">CNG Nozzle 1</th>
+        <th colspan="2" class="th-grp-fuel">CNG Nozzle 2</th>
+        <th colspan="2" class="th-grp-calc">Calculated Sales</th>
+        <th colspan="4" class="th-grp-pay">Collections & Expenses</th>
+        <th colspan="2" class="th-grp-diff">Verification</th>
+        <th rowspan="2" style="width:100px">Action</th>
+      </tr>
+      <tr>
+        <th class="th-grp-fuel">Open</th><th class="th-grp-fuel">Close</th>
+        <th class="th-grp-fuel">Open</th><th class="th-grp-fuel">Close</th>
+        <th class="th-grp-calc">CNG KG</th><th class="th-grp-calc">Total ₹</th>
+        <th class="th-grp-pay">Cash</th><th class="th-grp-pay">Online</th><th class="th-grp-pay">OTP</th><th class="th-grp-pay">Expense</th>
+        <th class="th-grp-diff">Collected ₹</th><th class="th-grp-diff">Diff ₹</th>
+      </tr>
+    `;
+  }
+  $('bookGridHead').innerHTML = h;
+}
+
+function nextDateStr(dStr){
+  if(!dStr) return today();
+  const parts = dStr.split('-');
+  const dt = new Date(Number(parts[0]), Number(parts[1])-1, Number(parts[2]));
+  dt.setDate(dt.getDate() + 1);
+  const y = dt.getFullYear();
+  const m = String(dt.getMonth() + 1).padStart(2, '0');
+  const d = String(dt.getDate()).padStart(2, '0');
+  return `${y}-${m}-${d}`;
+}
+
+async function addBookRow(customDate){
+  const p = Number($('bookPump').value || 1);
+  const isCNG = p === 3;
+  const count = bookRows.length;
+  
+  let rowDate = customDate;
+  let pOpen1 = 0, pOpen2 = 0, dOpen1 = 0, dOpen2 = 0, cOpen1 = 0, cOpen2 = 0;
+
+  if(count > 0){
+    const prev = bookRows[count - 1];
+    rowDate = customDate || nextDateStr(prev.date);
+    pOpen1 = prev.pClose1 || prev.pOpen1;
+    pOpen2 = prev.pClose2 || prev.pOpen2;
+    dOpen1 = prev.dClose1 || prev.dOpen1;
+    dOpen2 = prev.dClose2 || prev.dOpen2;
+    cOpen1 = prev.cClose1 || prev.cOpen1;
+    cOpen2 = prev.cClose2 || prev.cOpen2;
+  } else {
+    rowDate = customDate || yesterday();
+    // Try to load last closing from system
+    try {
+      const r = await api('getLastClosing', { pumpNo: p, date: rowDate });
+      const c = r.closing || {};
+      if(!isCNG){
+        pOpen1 = (c.Petrol_1 && c.Petrol_1.closing) || 0;
+        pOpen2 = (c.Petrol_2 && c.Petrol_2.closing) || 0;
+        dOpen1 = (c.Diesel_1 && c.Diesel_1.closing) || 0;
+        dOpen2 = (c.Diesel_2 && c.Diesel_2.closing) || 0;
+      } else {
+        cOpen1 = (c.CNG_1 && c.CNG_1.closing) || 0;
+        cOpen2 = (c.CNG_2 && c.CNG_2.closing) || 0;
+      }
+    } catch(e){}
+  }
+
+  const newRow = {
+    id: 'row_' + Date.now() + '_' + Math.random().toString(36).substr(2, 4),
+    date: rowDate,
+    pOpen1, pClose1: pOpen1,
+    pOpen2, pClose2: pOpen2,
+    dOpen1, dClose1: dOpen1,
+    dOpen2, dClose2: dOpen2,
+    cOpen1, cClose1: cOpen1,
+    cOpen2, cClose2: cOpen2,
+    pLitres: 0, dLitres: 0, cKg: 0,
+    totalSales: 0,
+    cash: 0, online: 0, otp: 0, exp: 0,
+    totalCollected: 0,
+    diff: 0,
+    status: 'pending' // 'pending' | 'saved'
+  };
+
+  bookRows.push(newRow);
+  renderBookBody();
+  calcBookRow(bookRows.length - 1);
+  updateBookFooterSummary();
+
+  // Focus on the first closing input of the new row
+  setTimeout(() => {
+    const targetCol = isCNG ? 'cClose1' : 'pClose1';
+    const targetInput = document.querySelector(`input[data-row="${bookRows.length - 1}"][data-col="${targetCol}"]`);
+    if(targetInput){
+      targetInput.focus();
+      targetInput.select();
+    }
+  }, 60);
+}
+
+function renderBookBody(){
+  const p = Number($('bookPump').value || 1);
+  const isCNG = p === 3;
+  const tbody = $('bookGridBody');
+  if(!tbody) return;
+
+  let html = '';
+  bookRows.forEach((r, idx) => {
+    const isFirst = (idx === 0);
+    const isSaved = (r.status === 'saved');
+    const rowClass = isSaved ? 'bk-saved' : '';
+
+    if(!isCNG){
+      html += `
+        <tr class="${rowClass}" id="bkRow_${idx}">
+          <td style="font-weight:700;color:var(--t2);text-align:center">${idx + 1}</td>
+          <td><input type="date" class="bk-in bk-in-dt" data-row="${idx}" data-col="date" value="${r.date}" onchange="onBookCellInput(this)" onkeydown="handleBookKeyDown(event, this)"></td>
+          
+          <td><input type="number" step="0.01" class="bk-in ${!isFirst ? 'bk-in-ro' : ''}" data-row="${idx}" data-col="pOpen1" value="${r.pOpen1}" ${!isFirst ? 'readonly' : ''} oninput="onBookCellInput(this)" onkeydown="handleBookKeyDown(event, this)"></td>
+          <td><input type="number" step="0.01" class="bk-in" data-row="${idx}" data-col="pClose1" value="${r.pClose1 || ''}" placeholder="0.00" oninput="onBookCellInput(this)" onkeydown="handleBookKeyDown(event, this)"></td>
+          
+          <td><input type="number" step="0.01" class="bk-in ${!isFirst ? 'bk-in-ro' : ''}" data-row="${idx}" data-col="pOpen2" value="${r.pOpen2}" ${!isFirst ? 'readonly' : ''} oninput="onBookCellInput(this)" onkeydown="handleBookKeyDown(event, this)"></td>
+          <td><input type="number" step="0.01" class="bk-in" data-row="${idx}" data-col="pClose2" value="${r.pClose2 || ''}" placeholder="0.00" oninput="onBookCellInput(this)" onkeydown="handleBookKeyDown(event, this)"></td>
+          
+          <td><input type="number" step="0.01" class="bk-in ${!isFirst ? 'bk-in-ro' : ''}" data-row="${idx}" data-col="dOpen1" value="${r.dOpen1}" ${!isFirst ? 'readonly' : ''} oninput="onBookCellInput(this)" onkeydown="handleBookKeyDown(event, this)"></td>
+          <td><input type="number" step="0.01" class="bk-in" data-row="${idx}" data-col="dClose1" value="${r.dClose1 || ''}" placeholder="0.00" oninput="onBookCellInput(this)" onkeydown="handleBookKeyDown(event, this)"></td>
+          
+          <td><input type="number" step="0.01" class="bk-in ${!isFirst ? 'bk-in-ro' : ''}" data-row="${idx}" data-col="dOpen2" value="${r.dOpen2}" ${!isFirst ? 'readonly' : ''} oninput="onBookCellInput(this)" onkeydown="handleBookKeyDown(event, this)"></td>
+          <td><input type="number" step="0.01" class="bk-in" data-row="${idx}" data-col="dClose2" value="${r.dClose2 || ''}" placeholder="0.00" oninput="onBookCellInput(this)" onkeydown="handleBookKeyDown(event, this)"></td>
+          
+          <td id="bk_pL_${idx}" style="font-weight:700;color:#1e3a8a">${fmt(r.pLitres || 0)}</td>
+          <td id="bk_dL_${idx}" style="font-weight:700;color:#065f46">${fmt(r.dLitres || 0)}</td>
+          <td id="bk_sales_${idx}" style="font-weight:800;color:#2563eb">₹ ${fmt(r.totalSales || 0)}</td>
+          
+          <td><input type="number" step="1" class="bk-in" data-row="${idx}" data-col="cash" value="${r.cash || ''}" placeholder="0" oninput="onBookCellInput(this)" onkeydown="handleBookKeyDown(event, this)"></td>
+          <td><input type="number" step="1" class="bk-in" data-row="${idx}" data-col="online" value="${r.online || ''}" placeholder="0" oninput="onBookCellInput(this)" onkeydown="handleBookKeyDown(event, this)"></td>
+          <td><input type="number" step="1" class="bk-in" data-row="${idx}" data-col="otp" value="${r.otp || ''}" placeholder="0" oninput="onBookCellInput(this)" onkeydown="handleBookKeyDown(event, this)"></td>
+          <td><input type="number" step="1" class="bk-in" data-row="${idx}" data-col="exp" value="${r.exp || ''}" placeholder="0" oninput="onBookCellInput(this)" onkeydown="handleBookKeyDown(event, this)"></td>
+          
+          <td id="bk_col_${idx}" style="font-weight:800;color:#15803d">₹ ${fmt(r.totalCollected || 0)}</td>
+          <td id="bk_diff_${idx}">${renderDiffBadge(r.diff)}</td>
+          
+          <td style="text-align:center">
+            <div style="display:flex;gap:4px;justify-content:center;align-items:center">
+              ${isSaved ? '<span class="bk-status saved">✅ Saved</span>' : `<button class="btn btn-primary btn-sm" onclick="saveBookRow(${idx})" style="padding:4px 8px;font-size:11px" title="Save this day">💾 Save</button>`}
+              <button class="btn btn-ghost btn-sm" onclick="deleteBookRow(${idx})" style="padding:4px 6px;font-size:11px;color:#ef4444" title="Delete row">🗑️</button>
+            </div>
+          </td>
+        </tr>
+      `;
+    } else {
+      // CNG layout
+      html += `
+        <tr class="${rowClass}" id="bkRow_${idx}">
+          <td style="font-weight:700;color:var(--t2);text-align:center">${idx + 1}</td>
+          <td><input type="date" class="bk-in bk-in-dt" data-row="${idx}" data-col="date" value="${r.date}" onchange="onBookCellInput(this)" onkeydown="handleBookKeyDown(event, this)"></td>
+          
+          <td><input type="number" step="0.01" class="bk-in ${!isFirst ? 'bk-in-ro' : ''}" data-row="${idx}" data-col="cOpen1" value="${r.cOpen1}" ${!isFirst ? 'readonly' : ''} oninput="onBookCellInput(this)" onkeydown="handleBookKeyDown(event, this)"></td>
+          <td><input type="number" step="0.01" class="bk-in" data-row="${idx}" data-col="cClose1" value="${r.cClose1 || ''}" placeholder="0.00" oninput="onBookCellInput(this)" onkeydown="handleBookKeyDown(event, this)"></td>
+          
+          <td><input type="number" step="0.01" class="bk-in ${!isFirst ? 'bk-in-ro' : ''}" data-row="${idx}" data-col="cOpen2" value="${r.cOpen2}" ${!isFirst ? 'readonly' : ''} oninput="onBookCellInput(this)" onkeydown="handleBookKeyDown(event, this)"></td>
+          <td><input type="number" step="0.01" class="bk-in" data-row="${idx}" data-col="cClose2" value="${r.cClose2 || ''}" placeholder="0.00" oninput="onBookCellInput(this)" onkeydown="handleBookKeyDown(event, this)"></td>
+          
+          <td id="bk_cL_${idx}" style="font-weight:700;color:#7c3aed">${fmt(r.cKg || 0)}</td>
+          <td id="bk_sales_${idx}" style="font-weight:800;color:#2563eb">₹ ${fmt(r.totalSales || 0)}</td>
+          
+          <td><input type="number" step="1" class="bk-in" data-row="${idx}" data-col="cash" value="${r.cash || ''}" placeholder="0" oninput="onBookCellInput(this)" onkeydown="handleBookKeyDown(event, this)"></td>
+          <td><input type="number" step="1" class="bk-in" data-row="${idx}" data-col="online" value="${r.online || ''}" placeholder="0" oninput="onBookCellInput(this)" onkeydown="handleBookKeyDown(event, this)"></td>
+          <td><input type="number" step="1" class="bk-in" data-row="${idx}" data-col="otp" value="${r.otp || ''}" placeholder="0" oninput="onBookCellInput(this)" onkeydown="handleBookKeyDown(event, this)"></td>
+          <td><input type="number" step="1" class="bk-in" data-row="${idx}" data-col="exp" value="${r.exp || ''}" placeholder="0" oninput="onBookCellInput(this)" onkeydown="handleBookKeyDown(event, this)"></td>
+          
+          <td id="bk_col_${idx}" style="font-weight:800;color:#15803d">₹ ${fmt(r.totalCollected || 0)}</td>
+          <td id="bk_diff_${idx}">${renderDiffBadge(r.diff)}</td>
+          
+          <td style="text-align:center">
+            <div style="display:flex;gap:4px;justify-content:center;align-items:center">
+              ${isSaved ? '<span class="bk-status saved">✅ Saved</span>' : `<button class="btn btn-primary btn-sm" onclick="saveBookRow(${idx})" style="padding:4px 8px;font-size:11px" title="Save this day">💾 Save</button>`}
+              <button class="btn btn-ghost btn-sm" onclick="deleteBookRow(${idx})" style="padding:4px 6px;font-size:11px;color:#ef4444" title="Delete row">🗑️</button>
+            </div>
+          </td>
+        </tr>
+      `;
+    }
+  });
+
+  tbody.innerHTML = html;
+}
+
+function renderDiffBadge(diff){
+  const d = Number(diff || 0);
+  if(Math.abs(d) < 0.5){
+    return `<span class="bk-badge-ok">₹ 0.00</span>`;
+  } else if(d < 0){
+    return `<span class="bk-badge-err">-₹ ${fmt(Math.abs(d))}</span>`;
+  } else {
+    return `<span class="bk-badge-warn">+₹ ${fmt(d)}</span>`;
+  }
+}
+
+function onBookCellInput(el){
+  const rowIdx = Number(el.dataset.row);
+  const col = el.dataset.col;
+  const val = (col === 'date') ? el.value : (Number(el.value) || 0);
+
+  if(!bookRows[rowIdx]) return;
+  bookRows[rowIdx][col] = val;
+
+  // Propagate closing to next row's opening
+  if(['pClose1','pClose2','dClose1','dClose2','cClose1','cClose2'].includes(col)){
+    const nextIdx = rowIdx + 1;
+    if(nextIdx < bookRows.length){
+      const openCol = col.replace('Close', 'Open');
+      bookRows[nextIdx][openCol] = val;
+      const nextOpenInput = document.querySelector(`input[data-row="${nextIdx}"][data-col="${openCol}"]`);
+      if(nextOpenInput) nextOpenInput.value = val;
+      calcBookRow(nextIdx);
+    }
+  }
+
+  calcBookRow(rowIdx);
+  updateBookFooterSummary();
+}
+
+function calcBookRow(rowIdx){
+  const r = bookRows[rowIdx];
+  if(!r) return;
+
+  const p = Number($('bookPump').value || 1);
+  const isCNG = p === 3;
+  const msRate = Number($('bookMsRate').value) || 116.96;
+  const hsdRate = Number($('bookHsdRate').value) || 105.01;
+  const cngRate = Number($('bookCngRate').value) || 90.00;
+  const testL = Number($('bookTestL').value) || 0;
+
+  if(!isCNG){
+    const pL1 = Math.max(0, (r.pClose1 || 0) - (r.pOpen1 || 0));
+    const pL2 = Math.max(0, (r.pClose2 || 0) - (r.pOpen2 || 0));
+    const dL1 = Math.max(0, (r.dClose1 || 0) - (r.dOpen1 || 0));
+    const dL2 = Math.max(0, (r.dClose2 || 0) - (r.dOpen2 || 0));
+
+    r.pLitres = Math.max(0, pL1 + pL2 - (testL > 0 ? testL/2 : 0));
+    r.dLitres = Math.max(0, dL1 + dL2 - (testL > 0 ? testL/2 : 0));
+    
+    const pAmt = r.pLitres * msRate;
+    const dAmt = r.dLitres * hsdRate;
+    r.totalSales = pAmt + dAmt;
+
+    const elPL = $(`bk_pL_${rowIdx}`);
+    const elDL = $(`bk_dL_${rowIdx}`);
+    if(elPL) elPL.textContent = fmt(r.pLitres);
+    if(elDL) elDL.textContent = fmt(r.dLitres);
+  } else {
+    const cL1 = Math.max(0, (r.cClose1 || 0) - (r.cOpen1 || 0));
+    const cL2 = Math.max(0, (r.cClose2 || 0) - (r.cOpen2 || 0));
+    r.cKg = Math.max(0, cL1 + cL2);
+    r.totalSales = r.cKg * cngRate;
+
+    const elCL = $(`bk_cL_${rowIdx}`);
+    if(elCL) elCL.textContent = fmt(r.cKg);
+  }
+
+  const cash = Number(r.cash) || 0;
+  const online = Number(r.online) || 0;
+  const otp = Number(r.otp) || 0;
+  const exp = Number(r.exp) || 0;
+
+  r.totalCollected = cash + online + otp + exp;
+  r.diff = r.totalCollected - r.totalSales;
+
+  const elSales = $(`bk_sales_${rowIdx}`);
+  const elCol = $(`bk_col_${rowIdx}`);
+  const elDiff = $(`bk_diff_${rowIdx}`);
+
+  if(elSales) elSales.textContent = '₹ ' + fmt(r.totalSales);
+  if(elCol) elCol.textContent = '₹ ' + fmt(r.totalCollected);
+  if(elDiff) elDiff.innerHTML = renderDiffBadge(r.diff);
+}
+
+function recalcAllBookRows(){
+  bookRows.forEach((r, idx) => calcBookRow(idx));
+  updateBookFooterSummary();
+}
+
+function updateBookFooterSummary(){
+  const p = Number($('bookPump').value || 1);
+  const isCNG = p === 3;
+
+  let totalRows = bookRows.length;
+  let totalP = 0, totalD = 0, totalC = 0, totalSales = 0, totalCol = 0, totalDiff = 0;
+
+  bookRows.forEach(r => {
+    totalP += (r.pLitres || 0);
+    totalD += (r.dLitres || 0);
+    totalC += (r.cKg || 0);
+    totalSales += (r.totalSales || 0);
+    totalCol += (r.totalCollected || 0);
+  });
+  totalDiff = totalCol - totalSales;
+
+  if($('bkSumRows')) $('bkSumRows').textContent = totalRows;
+  if($('bkSumFuel1')){
+    $('bkSumFuel1').innerHTML = isCNG ? 
+      `<span class="bk-sum-lbl">Total CNG Sold</span><span class="bk-sum-val">${fmt(totalC)} KG</span>` :
+      `<span class="bk-sum-lbl">Total MS Litres</span><span class="bk-sum-val">${fmt(totalP)} L</span>`;
+  }
+  if($('bkSumFuel2')){
+    $('bkSumFuel2').style.display = isCNG ? 'none' : '';
+    $('bkSumFuel2').innerHTML = `<span class="bk-sum-lbl">Total HSD Litres</span><span class="bk-sum-val">${fmt(totalD)} L</span>`;
+  }
+  if($('bkSumSales')) $('bkSumSales').textContent = '₹ ' + fmt(totalSales);
+  if($('bkSumCol')) $('bkSumCol').textContent = '₹ ' + fmt(totalCol);
+  if($('bkSumDiff')) $('bkSumDiff').innerHTML = renderDiffBadge(totalDiff);
+}
+
+function handleBookKeyDown(e, el){
+  const rowIdx = Number(el.dataset.row);
+  const col = el.dataset.col;
+  const p = Number($('bookPump').value || 1);
+  const isCNG = p === 3;
+
+  // Ordered column sequence for keyboard navigation
+  const fuelCols = (rowIdx === 0) ?
+    ['date','pOpen1','pClose1','pOpen2','pClose2','dOpen1','dClose1','dOpen2','dClose2','cash','online','otp','exp'] :
+    ['pClose1','pClose2','dClose1','dClose2','cash','online','otp','exp'];
+
+  const cngCols = (rowIdx === 0) ?
+    ['date','cOpen1','cClose1','cOpen2','cClose2','cash','online','otp','exp'] :
+    ['cClose1','cClose2','cash','online','otp','exp'];
+
+  const colSeq = isCNG ? cngCols : fuelCols;
+
+  if(e.key === 'Enter'){
+    e.preventDefault();
+    const currPos = colSeq.indexOf(col);
+    if(currPos !== -1 && currPos < colSeq.length - 1){
+      // Move to next column in current row
+      const nextCol = colSeq[currPos + 1];
+      const nextInput = document.querySelector(`input[data-row="${rowIdx}"][data-col="${nextCol}"]`);
+      if(nextInput){
+        nextInput.focus();
+        nextInput.select();
+      }
+    } else if(currPos === colSeq.length - 1){
+      // Last field in row (exp)
+      if(rowIdx === bookRows.length - 1){
+        // Add new day row and focus its first closing input
+        addBookRow();
+      } else {
+        // Next row already exists, focus its first closing input
+        const firstCol = isCNG ? 'cClose1' : 'pClose1';
+        const nextRowInput = document.querySelector(`input[data-row="${rowIdx + 1}"][data-col="${firstCol}"]`);
+        if(nextRowInput){
+          nextRowInput.focus();
+          nextRowInput.select();
+        }
+      }
+    }
+  } else if(e.key === 'ArrowDown'){
+    if(rowIdx < bookRows.length - 1){
+      e.preventDefault();
+      const downInput = document.querySelector(`input[data-row="${rowIdx + 1}"][data-col="${col}"]`);
+      if(downInput){ downInput.focus(); downInput.select(); }
+    }
+  } else if(e.key === 'ArrowUp'){
+    if(rowIdx > 0){
+      e.preventDefault();
+      const upInput = document.querySelector(`input[data-row="${rowIdx - 1}"][data-col="${col}"]`);
+      if(upInput){ upInput.focus(); upInput.select(); }
+    }
+  }
+}
+
+function deleteBookRow(idx){
+  if(!confirm(`Delete row ${idx + 1}?`)) return;
+  bookRows.splice(idx, 1);
+  if(bookRows.length === 0){
+    addBookRow(yesterday());
+  } else {
+    // Re-link openings
+    for(let i = 1; i < bookRows.length; i++){
+      const prev = bookRows[i - 1];
+      bookRows[i].pOpen1 = prev.pClose1;
+      bookRows[i].pOpen2 = prev.pClose2;
+      bookRows[i].dOpen1 = prev.dClose1;
+      bookRows[i].dOpen2 = prev.dClose2;
+      bookRows[i].cOpen1 = prev.cClose1;
+      bookRows[i].cOpen2 = prev.cClose2;
+      calcBookRow(i);
+    }
+    renderBookBody();
+    updateBookFooterSummary();
+  }
+}
+
+function clearBookRows(){
+  if(!confirm('Clear all entered rows in the table?')) return;
+  bookRows = [];
+  addBookRow(yesterday());
+}
+
+async function saveBookRow(idx){
+  const r = bookRows[idx];
+  if(!r) return;
+  const p = Number($('bookPump').value || 1);
+  const isCNG = p === 3;
+  const staffId = $('bookStaff').value || me.Staff_ID;
+  const msRate = Number($('bookMsRate').value) || 116.96;
+  const hsdRate = Number($('bookHsdRate').value) || 105.01;
+  const cngRate = Number($('bookCngRate').value) || 90.00;
+
+  const rowTr = $(`bkRow_${idx}`);
+  if(rowTr) rowTr.style.opacity = '0.5';
+
+  const nozzleReadings = !isCNG ? [
+    { Nozzle_No: 1, Fuel_Type: 'Petrol', Opening_Reading: r.pOpen1, Closing_Reading: r.pClose1, Litres: Math.max(0, r.pClose1 - r.pOpen1), Rate: msRate, Amount: Math.max(0, r.pClose1 - r.pOpen1) * msRate },
+    { Nozzle_No: 2, Fuel_Type: 'Petrol', Opening_Reading: r.pOpen2, Closing_Reading: r.pClose2, Litres: Math.max(0, r.pClose2 - r.pOpen2), Rate: msRate, Amount: Math.max(0, r.pClose2 - r.pOpen2) * msRate },
+    { Nozzle_No: 1, Fuel_Type: 'Diesel', Opening_Reading: r.dOpen1, Closing_Reading: r.dClose1, Litres: Math.max(0, r.dClose1 - r.dOpen1), Rate: hsdRate, Amount: Math.max(0, r.dClose1 - r.dOpen1) * hsdRate },
+    { Nozzle_No: 2, Fuel_Type: 'Diesel', Opening_Reading: r.dOpen2, Closing_Reading: r.dClose2, Litres: Math.max(0, r.dClose2 - r.dOpen2), Rate: hsdRate, Amount: Math.max(0, r.dClose2 - r.dOpen2) * hsdRate }
+  ] : [
+    { Nozzle_No: 1, Fuel_Type: 'CNG', Opening_Reading: r.cOpen1, Closing_Reading: r.cClose1, Litres: Math.max(0, r.cClose1 - r.cOpen1), Rate: cngRate, Amount: Math.max(0, r.cClose1 - r.cOpen1) * cngRate },
+    { Nozzle_No: 2, Fuel_Type: 'CNG', Opening_Reading: r.cOpen2, Closing_Reading: r.cClose2, Litres: Math.max(0, r.cClose2 - r.cOpen2), Rate: cngRate, Amount: Math.max(0, r.cClose2 - r.cOpen2) * cngRate }
+  ];
+
+  const payload = {
+    Date: r.date,
+    Shift: 'S1',
+    Staff_ID: staffId,
+    Staff_Name: staffId,
+    Pump_No: p,
+    Petrol_Litres: r.pLitres || 0,
+    Petrol_Amount: (r.pLitres || 0) * msRate,
+    Diesel_Litres: r.dLitres || 0,
+    Diesel_Amount: (r.dLitres || 0) * hsdRate,
+    CNG_KG: r.cKg || 0,
+    CNG_Amount: (r.cKg || 0) * cngRate,
+    Total_Sales: r.totalSales,
+    Online_Amount: r.online || 0,
+    OTP_Amount: r.otp || 0,
+    Cash_Total: r.cash || 0,
+    Change_Amount: 0,
+    Expenditure: r.exp || 0,
+    Expenditure_Type: 'Bulk Book Entry',
+    Expenditure_Remarks: 'Entered via Rapid Book Entry Dashboard',
+    Testing_Amount: 0,
+    Total_Collected: (r.cash || 0) + (r.online || 0) + (r.otp || 0),
+    Difference: r.diff,
+    Nozzle_Readings: nozzleReadings,
+    Cash_Details: [],
+    Payments: [
+      { Payment_Type: 'Online', Amount: r.online || 0 },
+      { Payment_Type: 'OTP', Amount: r.otp || 0 },
+      { Payment_Type: 'Cash', Amount: r.cash || 0 }
+    ]
+  };
+
+  try {
+    const res = await api('saveShift', { data: payload });
+    if(rowTr) rowTr.style.opacity = '1';
+    if(res.ok){
+      r.status = 'saved';
+      renderBookBody();
+      toast(`✅ Row ${idx + 1} (${r.date}) saved successfully`);
+    } else {
+      toast(`Row ${idx + 1} failed: ${res.error || 'Error'}`, 'err');
+    }
+  } catch(e){
+    if(rowTr) rowTr.style.opacity = '1';
+    toast(`Row ${idx + 1} save error: ${e.message}`, 'err');
+  }
+}
+
+async function saveAllBookRows(){
+  const unsaved = bookRows.map((r, idx) => ({ r, idx })).filter(x => x.r.status !== 'saved');
+  if(!unsaved.length){
+    toast('All rows are already saved!', 'ok');
+    return;
+  }
+  if(!confirm(`Save all ${unsaved.length} unsaved book entries to Fuel Bunk Database?`)) return;
+
+  loading(true, `Saving 1 of ${unsaved.length} entries...`);
+  let successCount = 0;
+
+  for(let i = 0; i < unsaved.length; i++){
+    const { idx } = unsaved[i];
+    loading(true, `Saving entry ${i + 1} of ${unsaved.length} (Row ${idx + 1})...`);
+    await saveBookRow(idx);
+    if(bookRows[idx].status === 'saved') successCount++;
+  }
+
+  loading(false);
+  toast(`🎉 Saved ${successCount} entries to Database successfully!`);
+}
+
+function exportBookCSV(){
+  if(!bookRows.length){
+    toast('No rows to export', 'warn');
+    return;
+  }
+  const p = Number($('bookPump').value || 1);
+  const isCNG = p === 3;
+  let csv = '';
+
+  if(!isCNG){
+    csv = 'Date,Pump,MS1_Open,MS1_Close,MS2_Open,MS2_Close,HSD1_Open,HSD1_Close,HSD2_Open,HSD2_Close,MS_Litres,HSD_Litres,Total_Sales,Cash,Online,OTP,Expenditure,Total_Collected,Difference\n';
+    bookRows.forEach(r => {
+      csv += `${r.date},${p},${r.pOpen1},${r.pClose1},${r.pOpen2},${r.pClose2},${r.dOpen1},${r.dClose1},${r.dOpen2},${r.dClose2},${r.pLitres},${r.dLitres},${r.totalSales},${r.cash},${r.online},${r.otp},${r.exp},${r.totalCollected},${r.diff}\n`;
+    });
+  } else {
+    csv = 'Date,Pump,CNG1_Open,CNG1_Close,CNG2_Open,CNG2_Close,CNG_KG,Total_Sales,Cash,Online,OTP,Expenditure,Total_Collected,Difference\n';
+    bookRows.forEach(r => {
+      csv += `${r.date},${p},${r.cOpen1},${r.cClose1},${r.cOpen2},${r.cClose2},${r.cKg},${r.totalSales},${r.cash},${r.online},${r.otp},${r.exp},${r.totalCollected},${r.diff}\n`;
+    });
+  }
+
+  const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `Bunk_Book_Entries_Pump${p}_${today()}.csv`;
+  a.click();
+}
+
+function importBookCSV(e){
+  const file = e.target.files && e.target.files[0];
+  if(!file) return;
+
+  const reader = new FileReader();
+  reader.onload = function(evt){
+    const text = evt.target.result;
+    const lines = text.split(/\r?\n/).filter(x => x.trim().length > 0);
+    if(lines.length < 2){ toast('CSV file is empty or invalid', 'err'); return; }
+
+    const header = lines[0].split(',').map(x => x.trim());
+    const isCNG = header.includes('CNG_KG') || header.includes('CNG1_Close');
+    if(isCNG){
+      $('bookPump').value = '3';
+      onBookPumpChange();
+    }
+
+    bookRows = [];
+    for(let i = 1; i < lines.length; i++){
+      const cols = lines[i].split(',').map(x => x.trim());
+      if(!cols[0]) continue;
+
+      if(!isCNG){
+        const row = {
+          id: 'row_' + Date.now() + '_' + i,
+          date: cols[0],
+          pOpen1: Number(cols[2]) || 0,
+          pClose1: Number(cols[3]) || 0,
+          pOpen2: Number(cols[4]) || 0,
+          pClose2: Number(cols[5]) || 0,
+          dOpen1: Number(cols[6]) || 0,
+          dClose1: Number(cols[7]) || 0,
+          dOpen2: Number(cols[8]) || 0,
+          dClose2: Number(cols[9]) || 0,
+          pLitres: Number(cols[10]) || 0,
+          dLitres: Number(cols[11]) || 0,
+          totalSales: Number(cols[12]) || 0,
+          cash: Number(cols[13]) || 0,
+          online: Number(cols[14]) || 0,
+          otp: Number(cols[15]) || 0,
+          exp: Number(cols[16]) || 0,
+          status: 'pending'
+        };
+        bookRows.push(row);
+      } else {
+        const row = {
+          id: 'row_' + Date.now() + '_' + i,
+          date: cols[0],
+          cOpen1: Number(cols[2]) || 0,
+          cClose1: Number(cols[3]) || 0,
+          cOpen2: Number(cols[4]) || 0,
+          cClose2: Number(cols[5]) || 0,
+          cKg: Number(cols[6]) || 0,
+          totalSales: Number(cols[7]) || 0,
+          cash: Number(cols[8]) || 0,
+          online: Number(cols[9]) || 0,
+          otp: Number(cols[10]) || 0,
+          exp: Number(cols[11]) || 0,
+          status: 'pending'
+        };
+        bookRows.push(row);
+      }
+    }
+
+    renderBookBody();
+    recalcAllBookRows();
+    toast(`📥 Imported ${bookRows.length} rows from CSV!`);
+    e.target.value = '';
+  };
+  reader.readAsText(file);
+}
+
 </script>
 </body>
 </html>
