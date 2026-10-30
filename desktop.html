@@ -573,8 +573,7 @@ tbody tr:hover td{background:#f8fafc}
 
 <script>
 /* ═════ CONFIG ═════ */
-const CLOUDFLARE_API_URL = "https://fuel-bunk-api.hp-nlkpump.workers.dev";
-const DEFAULT_GAS_URL = "https://script.google.com/macros/s/AKfycby3RCm-KbT1_YUA3BCapzEiNxekRSbOjNKxoxQwFx_qgKufeTVCPyERQ8VHuU7GFuErtw/exec";
+const CLOUDFLARE_API_URL = (location.hostname.endsWith('workers.dev') || location.hostname.endsWith('pages.dev')) ? '' : 'https://fuel-bunk-api.hp-nlkpump.workers.dev';
 function getApiUrl(){ return localStorage.getItem('CUSTOM_API_URL') || CLOUDFLARE_API_URL; }
 const API_URL = getApiUrl();
 
