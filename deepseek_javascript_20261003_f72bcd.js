@@ -349,8 +349,11 @@ function saveShift_(p) {
   if (!['Employee','Manager','Owner'].includes(user.Role)) throw new Error('Invalid role');
 
   const todayKey = normalizeDate_(new Date());
-  if (date < todayKey && !['Manager','Owner'].includes(user.Role)) {
-    throw new Error('Previous Date entry is allowed only for Manager or Owner');
+  const yest = new Date();
+  yest.setDate(yest.getDate() - 1);
+  const yesterdayKey = normalizeDate_(yest);
+  if (date < yesterdayKey && !['Manager','Owner'].includes(user.Role)) {
+    throw new Error('Employee can only enter today or yesterday sales');
   }
 
   const staff = findStaff_(staffId);
@@ -1091,4 +1094,73 @@ function getDSRRegister_(p) {
 function getDSRData_(p) {
   requireRole_(p, ['Owner']);
   return getDSRRegister_(p);
+}
+
+/**
+ * Utility to shift records back by 1 day if they were entered with today's date instead of yesterday's sales date.
+ * Example in Apps Script editor:
+ *   shiftDateForShift_('SH-XXXXXXXX', '2026-10-29');
+ * Or shift all records entered on a specific date (e.g. fromDate: '2026-10-30' -> targetDate: '2026-10-29'):
+ *   shiftAllRecordsOnDate_('2026-10-30', '2026-10-29');
+ */
+function shiftDateForShift_(shiftId, targetDate) {
+  const ss = ss_();
+  const dateStr = normalizeDate_(targetDate);
+  const sheets = [SHEETS.SHIFTS, SHEETS.NOZZLE, SHEETS.CASH, SHEETS.PAYMENTS, SHEETS.EXPENDITURE];
+  let updatedCount = 0;
+  sheets.forEach(name => {
+    const sh = ss.getSheetByName(name);
+    if (!sh) return;
+    const data = sh.getDataRange().getValues();
+    if (data.length <= 1) return;
+    const headers = data[0];
+    const shiftIdx = headers.indexOf('Shift_ID');
+    const dateIdx = headers.indexOf('Date');
+    if (shiftIdx === -1 || dateIdx === -1) return;
+    for (let i = 1; i < data.length; i++) {
+      if (String(data[i][shiftIdx]) === String(shiftId)) {
+        sh.getRange(i + 1, dateIdx + 1).setValue(dateStr);
+        updatedCount++;
+      }
+    }
+  });
+  const otpSh = ss.getSheetByName(SHEETS.OTP);
+  if (otpSh) {
+    const data = otpSh.getDataRange().getValues();
+    const headers = data[0];
+    const shiftIdx = headers.indexOf('Shift_ID');
+    const dateIdx = headers.indexOf('Sales_Date');
+    if (shiftIdx !== -1 && dateIdx !== -1) {
+      for (let i = 1; i < data.length; i++) {
+        if (String(data[i][shiftIdx]) === String(shiftId)) {
+          otpSh.getRange(i + 1, dateIdx + 1).setValue(dateStr);
+          updatedCount++;
+        }
+      }
+    }
+  }
+  Logger.log('Shift ' + shiftId + ' date changed to ' + dateStr);
+  return {ok: true, updatedCount};
+}
+
+function shiftAllRecordsOnDate_(fromDate, targetDate) {
+  const ss = ss_();
+  const fromStr = normalizeDate_(fromDate);
+  const toStr = normalizeDate_(targetDate);
+  const sh = ss.getSheetByName(SHEETS.SHIFTS);
+  if (!sh) return;
+  const data = sh.getDataRange().getValues();
+  if (data.length <= 1) return;
+  const headers = data[0];
+  const shiftIdx = headers.indexOf('Shift_ID');
+  const dateIdx = headers.indexOf('Date');
+  const shiftsToShift = [];
+  for (let i = 1; i < data.length; i++) {
+    if (normalizeDate_(data[i][dateIdx]) === fromStr) {
+      shiftsToShift.push(String(data[i][shiftIdx]));
+    }
+  }
+  Logger.log('Found ' + shiftsToShift.length + ' shifts on ' + fromStr + ' to move to ' + toStr);
+  shiftsToShift.forEach(id => shiftDateForShift_(id, toStr));
+  return {ok: true, shifted: shiftsToShift.length};
 }

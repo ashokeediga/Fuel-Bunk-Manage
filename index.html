@@ -150,9 +150,20 @@ td{padding:9px 8px;border-bottom:1px solid var(--line);font-variant-numeric:tabu
 .alert.ok{background:rgba(16,185,129,.1);border:1px solid rgba(16,185,129,.3);color:#34d399}
 .home-hello{margin-bottom:18px}.home-hello h2{font-size:22px;font-weight:900;letter-spacing:-.03em}
 .home-hello p{font-size:12px;color:var(--t2);margin-top:2px}
+/* SWITCH TOGGLE */
+.switch{position:relative;display:inline-block;width:44px;height:24px;margin:0}
+.switch input{opacity:0;width:0;height:0}
+.slider{position:absolute;cursor:pointer;top:0;left:0;right:0;bottom:0;background-color:#64748b;transition:.3s;border-radius:24px}
+.slider:before{position:absolute;content:"";height:18px;width:18px;left:3px;bottom:3px;background-color:#fff;transition:.3s;border-radius:50%;box-shadow:0 2px 4px rgba(0,0,0,.3)}
+.switch input:checked+.slider{background-color:#f59e0b}
+.switch input:checked+.slider:before{transform:translateX(20px)}
+.split-info{font-size:11px;color:#34d399;margin-top:6px;padding:6px 10px;background:rgba(16,185,129,.08);border:1px solid rgba(16,185,129,.2);border-radius:8px;line-height:1.4}
 </style>
 </head>
 <body>
+<div id="desktopBanner" style="display:none;background:#1e293b;border-bottom:1px solid #334155;color:#e2e8f0;padding:10px 16px;text-align:center;font-size:12.5px;font-weight:600">
+  💻 డెస్క్‌టాప్ వెర్షన్ అందుబాటులో ఉంది: <a href="desktop.html" style="color:#60a5fa;margin-left:8px;font-weight:800;text-decoration:underline">డెస్క్‌టాప్ వెర్షన్ ఓపెన్ చేయండి →</a>
+</div>
 
 <!-- LOGIN -->
 <div id="loginSec" class="sec active">
@@ -164,6 +175,7 @@ td{padding:9px 8px;border-bottom:1px solid var(--line);font-variant-numeric:tabu
     <div class="f"><label>4-Digit PIN</label><input id="loginPin" type="password" inputmode="numeric" maxlength="4" placeholder="••••"></div>
     <button class="btn btn-primary" onclick="doLogin()">🔐 Sign In</button>
     <div style="text-align:center;margin-top:14px;font-size:10.5px;color:var(--t3);font-weight:600">Owner · Manager · Employee</div>
+    <div style="text-align:center;margin-top:12px"><a href="desktop.html" style="color:var(--pri);font-size:12.5px;font-weight:700;text-decoration:none">💻 Switch to Desktop Version</a></div>
   </div>
 </div>
 
@@ -172,6 +184,7 @@ td{padding:9px 8px;border-bottom:1px solid var(--line);font-variant-numeric:tabu
   <div class="hdr">
     <div class="hdr-logo">⛽</div>
     <div class="hdr-txt"><h1 id="hWelcome">Welcome</h1><p id="hRole">—</p></div>
+    <a href="desktop.html" class="hdr-back" style="text-decoration:none;font-size:14px;display:flex;align-items:center;justify-content:center" title="Desktop View">💻</a>
     <div class="hdr-user" id="hUser">—</div>
   </div>
   <div class="wrap">
@@ -218,16 +231,105 @@ td{padding:9px 8px;border-bottom:1px solid var(--line);font-variant-numeric:tabu
   <div class="hdr"><div class="hdr-back" onclick="show('pumpSec')">←</div><div class="hdr-txt"><h1 id="saleTitle">Pump</h1><p id="saleSub">—</p></div></div>
   <div class="wrap">
     <div class="steps"><div class="step-chip active">1. Readings</div><div class="step-chip">2. Payments</div><div class="step-chip">3. Confirm</div></div>
-    <div id="petrolCard" class="noz ms"><div class="noz-h"><div class="noz-n">MS N1 <span class="tag">PETROL</span></div><div class="noz-l"><span id="pLit1">0.00</span> L</div></div><div class="noz-grid"><div class="f"><label>Opening</label><input id="pOpen1" type="number" inputmode="decimal" oninput="calc()"></div><div class="f"><label>Closing</label><input id="pClose1" type="number" inputmode="decimal" oninput="calc()"></div></div></div>
-    <div id="petrolCard2" class="noz ms"><div class="noz-h"><div class="noz-n">MS N2 <span class="tag">PETROL</span></div><div class="noz-l"><span id="pLit2">0.00</span> L</div></div><div class="noz-grid"><div class="f"><label>Opening</label><input id="pOpen2" type="number" inputmode="decimal" oninput="calc()"></div><div class="f"><label>Closing</label><input id="pClose2" type="number" inputmode="decimal" oninput="calc()"></div></div></div>
-    <div id="dieselCard" class="noz hsd"><div class="noz-h"><div class="noz-n">HSD N1 <span class="tag">DIESEL</span></div><div class="noz-l"><span id="dLit1">0.00</span> L</div></div><div class="noz-grid"><div class="f"><label>Opening</label><input id="dOpen1" type="number" inputmode="decimal" oninput="calc()"></div><div class="f"><label>Closing</label><input id="dClose1" type="number" inputmode="decimal" oninput="calc()"></div></div></div>
-    <div id="dieselCard2" class="noz hsd"><div class="noz-h"><div class="noz-n">HSD N2 <span class="tag">DIESEL</span></div><div class="noz-l"><span id="dLit2">0.00</span> L</div></div><div class="noz-grid"><div class="f"><label>Opening</label><input id="dOpen2" type="number" inputmode="decimal" oninput="calc()"></div><div class="f"><label>Closing</label><input id="dClose2" type="number" inputmode="decimal" oninput="calc()"></div></div></div>
-    <div id="cngCard" class="noz cng"><div class="noz-h"><div class="noz-n">CNG N1 <span class="tag">CNG</span></div><div class="noz-l"><span id="cLit1">0.00</span> KG</div></div><div class="noz-grid"><div class="f"><label>Opening</label><input id="cOpen1" type="number" inputmode="decimal" oninput="calc()"></div><div class="f"><label>Closing</label><input id="cClose1" type="number" inputmode="decimal" oninput="calc()"></div></div></div>
-    <div id="cngCard2" class="noz cng"><div class="noz-h"><div class="noz-n">CNG N2 <span class="tag">CNG</span></div><div class="noz-l"><span id="cLit2">0.00</span> KG</div></div><div class="noz-grid"><div class="f"><label>Opening</label><input id="cOpen2" type="number" inputmode="decimal" oninput="calc()"></div><div class="f"><label>Closing</label><input id="cClose2" type="number" inputmode="decimal" oninput="calc()"></div></div></div>
+
+    <!-- MID SHIFT RATE CHANGE TOGGLE -->
+    <div class="card" style="border:1.5px dashed #f59e0b;background:rgba(245,158,11,.05);margin-bottom:12px;padding:12px 14px">
+      <div style="display:flex;align-items:center;justify-content:space-between">
+        <div>
+          <div style="font-weight:800;font-size:13px;color:#f59e0b;display:flex;align-items:center;gap:6px">
+            <span>⚡</span> రేట్ మార్పు (Mid-Shift Rate Change)
+          </div>
+          <div style="font-size:11px;color:var(--t2);margin-top:2px">మధ్యలో రేట్ మారినప్పుడు మాత్రమే ఆన్ చేయండి</div>
+        </div>
+        <label class="switch">
+          <input type="checkbox" id="splitRateToggle" onchange="toggleSplitRate()">
+          <span class="slider"></span>
+        </label>
+      </div>
+      <div id="splitRateNotice" style="display:none;margin-top:8px;font-size:11px;color:#fbbf24;background:rgba(245,158,11,.1);padding:8px 12px;border-radius:8px;line-height:1.4">
+        ℹ️ రేట్ మారిన సమయానికి ఉన్న <b>Mid Reading</b> మరియు <b>కొత్త రేటు (Rate 2)</b> ఎంటర్ చేయండి.
+      </div>
+    </div>
+
+    <div id="petrolCard" class="noz ms">
+      <div class="noz-h"><div class="noz-n">MS N1 <span class="tag">PETROL</span></div><div class="noz-l"><span id="pLit1">0.00</span> L</div></div>
+      <div class="noz-grid" id="pGrid1">
+        <div class="f"><label>Opening</label><input id="pOpen1" type="number" inputmode="decimal" oninput="calc()"></div>
+        <div class="f split-field" style="display:none"><label style="color:#f59e0b">Mid Reading</label><input id="pMid1" type="number" inputmode="decimal" placeholder="మధ్యది" oninput="calc()"></div>
+        <div class="f"><label>Closing</label><input id="pClose1" type="number" inputmode="decimal" oninput="calc()"></div>
+      </div>
+      <div id="pSplitInfo1" class="split-info" style="display:none"></div>
+    </div>
+
+    <div id="petrolCard2" class="noz ms">
+      <div class="noz-h"><div class="noz-n">MS N2 <span class="tag">PETROL</span></div><div class="noz-l"><span id="pLit2">0.00</span> L</div></div>
+      <div class="noz-grid" id="pGrid2">
+        <div class="f"><label>Opening</label><input id="pOpen2" type="number" inputmode="decimal" oninput="calc()"></div>
+        <div class="f split-field" style="display:none"><label style="color:#f59e0b">Mid Reading</label><input id="pMid2" type="number" inputmode="decimal" placeholder="మధ్యది" oninput="calc()"></div>
+        <div class="f"><label>Closing</label><input id="pClose2" type="number" inputmode="decimal" oninput="calc()"></div>
+      </div>
+      <div id="pSplitInfo2" class="split-info" style="display:none"></div>
+    </div>
+
+    <div id="dieselCard" class="noz hsd">
+      <div class="noz-h"><div class="noz-n">HSD N1 <span class="tag">DIESEL</span></div><div class="noz-l"><span id="dLit1">0.00</span> L</div></div>
+      <div class="noz-grid" id="dGrid1">
+        <div class="f"><label>Opening</label><input id="dOpen1" type="number" inputmode="decimal" oninput="calc()"></div>
+        <div class="f split-field" style="display:none"><label style="color:#f59e0b">Mid Reading</label><input id="dMid1" type="number" inputmode="decimal" placeholder="మధ్యది" oninput="calc()"></div>
+        <div class="f"><label>Closing</label><input id="dClose1" type="number" inputmode="decimal" oninput="calc()"></div>
+      </div>
+      <div id="dSplitInfo1" class="split-info" style="display:none"></div>
+    </div>
+
+    <div id="dieselCard2" class="noz hsd">
+      <div class="noz-h"><div class="noz-n">HSD N2 <span class="tag">DIESEL</span></div><div class="noz-l"><span id="dLit2">0.00</span> L</div></div>
+      <div class="noz-grid" id="dGrid2">
+        <div class="f"><label>Opening</label><input id="dOpen2" type="number" inputmode="decimal" oninput="calc()"></div>
+        <div class="f split-field" style="display:none"><label style="color:#f59e0b">Mid Reading</label><input id="dMid2" type="number" inputmode="decimal" placeholder="మధ్యది" oninput="calc()"></div>
+        <div class="f"><label>Closing</label><input id="dClose2" type="number" inputmode="decimal" oninput="calc()"></div>
+      </div>
+      <div id="dSplitInfo2" class="split-info" style="display:none"></div>
+    </div>
+
+    <div id="cngCard" class="noz cng">
+      <div class="noz-h"><div class="noz-n">CNG N1 <span class="tag">CNG</span></div><div class="noz-l"><span id="cLit1">0.00</span> KG</div></div>
+      <div class="noz-grid" id="cGrid1">
+        <div class="f"><label>Opening</label><input id="cOpen1" type="number" inputmode="decimal" oninput="calc()"></div>
+        <div class="f split-field" style="display:none"><label style="color:#f59e0b">Mid Reading</label><input id="cMid1" type="number" inputmode="decimal" placeholder="మధ్యది" oninput="calc()"></div>
+        <div class="f"><label>Closing</label><input id="cClose1" type="number" inputmode="decimal" oninput="calc()"></div>
+      </div>
+      <div id="cSplitInfo1" class="split-info" style="display:none"></div>
+    </div>
+
+    <div id="cngCard2" class="noz cng">
+      <div class="noz-h"><div class="noz-n">CNG N2 <span class="tag">CNG</span></div><div class="noz-l"><span id="cLit2">0.00</span> KG</div></div>
+      <div class="noz-grid" id="cGrid2">
+        <div class="f"><label>Opening</label><input id="cOpen2" type="number" inputmode="decimal" oninput="calc()"></div>
+        <div class="f split-field" style="display:none"><label style="color:#f59e0b">Mid Reading</label><input id="cMid2" type="number" inputmode="decimal" placeholder="మధ్యది" oninput="calc()"></div>
+        <div class="f"><label>Closing</label><input id="cClose2" type="number" inputmode="decimal" oninput="calc()"></div>
+      </div>
+      <div id="cSplitInfo2" class="split-info" style="display:none"></div>
+    </div>
+
     <div class="card">
       <div class="card-t">🏷️ Rates</div>
-      <div class="noz-grid"><div class="f"><label>MS ₹/L</label><input id="pRate" type="number" class="num" value="116.96" oninput="calc()"></div><div class="f"><label>HSD ₹/L</label><input id="dRate" type="number" class="num" value="105.01" oninput="calc()"></div></div>
-      <div class="f" style="margin-top:10px;margin-bottom:0"><label>CNG ₹/KG</label><input id="cRate" type="number" class="num" value="0" oninput="calc()"></div>
+      <div class="noz-grid">
+        <div class="f"><label id="pRateLbl">MS ₹/L</label><input id="pRate" type="number" class="num" value="116.96" oninput="calc()"></div>
+        <div class="f"><label id="dRateLbl">HSD ₹/L</label><input id="dRate" type="number" class="num" value="105.01" oninput="calc()"></div>
+      </div>
+      <div id="splitRatesWrap" style="display:none;margin-top:10px">
+        <div style="font-size:11px;font-weight:700;color:#f59e0b;margin-bottom:6px">⚡ కొత్త రేట్లు (Rate 2 - మారిన తర్వాత)</div>
+        <div class="noz-grid">
+          <div class="f"><label style="color:#f59e0b">MS Rate 2 ₹/L</label><input id="pRate2" type="number" class="num" placeholder="కొత్త రేటు" oninput="calc()"></div>
+          <div class="f"><label style="color:#f59e0b">HSD Rate 2 ₹/L</label><input id="dRate2" type="number" class="num" placeholder="కొత్త రేటు" oninput="calc()"></div>
+        </div>
+      </div>
+      <div class="f" id="cngRateRow" style="margin-top:10px;margin-bottom:0">
+        <label id="cRateLbl">CNG ₹/KG</label><input id="cRate" type="number" class="num" value="0" oninput="calc()">
+        <div id="cngSplitWrap" style="display:none;margin-top:8px">
+          <label style="color:#f59e0b">CNG Rate 2 ₹/KG</label><input id="cRate2" type="number" class="num" placeholder="కొత్త రేటు" oninput="calc()">
+        </div>
+      </div>
     </div>
     <div id="validateAlert"></div>
     <div class="card">
@@ -407,6 +509,24 @@ td{padding:9px 8px;border-bottom:1px solid var(--line);font-variant-numeric:tabu
   </div>
 </div>
 
+<!-- EDIT SHIFT MODAL -->
+<div class="mask" id="editShiftMask">
+  <div class="modal" style="width:min(520px, 98%); max-height:92vh; overflow-y:auto; padding:18px">
+    <div style="display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid var(--line);padding-bottom:10px;margin-bottom:14px">
+      <div>
+        <h3 style="font-size:16px;font-weight:900;margin:0">✏️ Edit Shift Entry</h3>
+        <p style="font-size:11px;color:var(--t2);margin-top:2px" id="edShiftSub">—</p>
+      </div>
+      <button class="x" onclick="closeEditShift()">×</button>
+    </div>
+    <div id="edShiftBody"></div>
+    <div style="margin-top:16px;display:flex;gap:8px;justify-content:flex-end;border-top:1px solid var(--line);padding-top:12px">
+      <button class="btn btn-ghost" onclick="closeEditShift()">Cancel</button>
+      <button class="btn btn-primary" onclick="submitFullEditShift()">💾 Save Changes</button>
+    </div>
+  </div>
+</div>
+
 <div class="toast" id="toast"><span id="toastI">✅</span><span id="toastM">Saved</span></div>
 <div class="loader" id="loader"><div class="spinner"></div><p id="loaderTxt">Loading...</p></div>
 <div class="success" id="successOverlay"><div class="ck">✓</div><h2>Saved!</h2><p id="successMsg">Entry saved</p></div>
@@ -421,6 +541,7 @@ const num=id=>{const e=$(id);return e&&!isNaN(parseFloat(e.value))?parseFloat(e.
 const fmt=n=>(Number(n)||0).toLocaleString('en-IN',{minimumFractionDigits:2,maximumFractionDigits:2});
 const money=n=>'₹ '+fmt(n);
 const today=()=>{const d=new Date();return new Date(d.getTime()-d.getTimezoneOffset()*60000).toISOString().slice(0,10);};
+const yesterday=()=>{const d=new Date();d.setDate(d.getDate()-1);return new Date(d.getTime()-d.getTimezoneOffset()*60000).toISOString().slice(0,10);};
 const monthNow=()=>today().slice(0,7);
 
 function show(id){document.querySelectorAll('.sec').forEach(s=>s.classList.remove('active'));const el=$(id);if(el)el.classList.add('active');window.scrollTo(0,0);}
@@ -449,6 +570,7 @@ async function doLogin(bgId, bgPin){
 
 // Auto-login on load
 window.addEventListener('DOMContentLoaded',()=>{
+  if(window.innerWidth >= 768){ const b=$('desktopBanner'); if(b) b.style.display='block'; }
   const savedMe=localStorage.getItem('me');
   const savedPin=localStorage.getItem('pin');
   if(savedMe && savedPin){
@@ -515,8 +637,10 @@ function startEntry(){
     $('entryEmpBox').style.display='none';
     if($('empStaticAlert'))$('empStaticAlert').style.display='block';
   }
-  $('entryDate').max=today();$('entryDate').value=today();
-  $('entryDate').min=me.Role==='Employee'?today():'2000-01-01';
+  const isEmp=me.Role==='Employee';
+  $('entryDate').max=today();
+  $('entryDate').value=isEmp?yesterday():today();
+  $('entryDate').min=isEmp?yesterday():'2000-01-01';
   $('pickEmp').textContent=pickedStaffId||'—';
   $('entryAlert').innerHTML='';
   document.querySelectorAll('.pump-btn').forEach(b=>b.classList.remove('active'));
@@ -524,8 +648,9 @@ function startEntry(){
 }
 function onEntryDateChange(){
   const d=$('entryDate').value;
-  if(d>today()){toast('Future not allowed','err');$('entryDate').value=today();return;}
-  if(me.Role==='Employee'&&d<today()){toast('Employee cannot enter past dates','err');$('entryDate').value=today();return;}
+  const isEmp=me.Role==='Employee';
+  if(d>today()){toast('Future not allowed','err');$('entryDate').value=isEmp?yesterday():today();return;}
+  if(isEmp&&d<yesterday()){toast('Employee can only enter yesterday or today','err');$('entryDate').value=yesterday();return;}
 }
 async function pickPump(p){
   if(me.Role!=='Employee'&&!pickedStaffId){toast('Select employee first','err');return;}
@@ -544,7 +669,8 @@ async function pickPump(p){
   $('dOpen2').value=(c.Diesel_2&&c.Diesel_2.closing)||0;
   $('cOpen1').value=(c.CNG_1&&c.CNG_1.closing)||0;
   $('cOpen2').value=(c.CNG_2&&c.CNG_2.closing)||0;
-  ['pClose1','pClose2','dClose1','dClose2','cClose1','cClose2'].forEach(id=>$(id).value='');
+  ['pClose1','pClose2','dClose1','dClose2','cClose1','cClose2','pMid1','pMid2','dMid1','dMid2','cMid1','cMid2','pRate2','dRate2','cRate2'].forEach(id=>{const el=$(id);if(el)el.value='';});
+  if($('splitRateToggle')){$('splitRateToggle').checked=false;toggleSplitRate();}
   $('online').value=0;$('otp').value=0;$('cash').value=0;$('expenditure').value=0;$('expType').value='';$('expRemarks').value='';
   const isCNG=p===3;
   ['petrolCard','petrolCard2','dieselCard','dieselCard2'].forEach(id=>$(id).style.display=isCNG?'none':'block');
@@ -554,111 +680,266 @@ async function pickPump(p){
   $('saleSub').textContent='Date: '+ed+' · '+pickedStaffId;
   calc();show('saleSec');
 }
+function toggleSplitRate(){
+  const on = $('splitRateToggle') && $('splitRateToggle').checked;
+  const notice = $('splitRateNotice');
+  if(notice) notice.style.display = on ? 'block' : 'none';
+  const sw = $('splitRatesWrap');
+  if(sw) sw.style.display = on ? 'block' : 'none';
+  const csw = $('cngSplitWrap');
+  if(csw) csw.style.display = on ? 'block' : 'none';
+  if($('pRateLbl')) $('pRateLbl').textContent = on ? 'MS Rate 1 (పాతది ₹/L)' : 'MS ₹/L';
+  if($('dRateLbl')) $('dRateLbl').textContent = on ? 'HSD Rate 1 (పాతది ₹/L)' : 'HSD ₹/L';
+  if($('cRateLbl')) $('cRateLbl').textContent = on ? 'CNG Rate 1 (పాతది ₹/KG)' : 'CNG ₹/KG';
+  document.querySelectorAll('.split-field').forEach(el => el.style.display = on ? 'block' : 'none');
+  ['pGrid1','pGrid2','dGrid1','dGrid2','cGrid1','cGrid2'].forEach(id => {
+    const el = $(id);
+    if(el) {
+      if(on) { el.classList.remove('noz-grid'); el.classList.add('noz-grid-3'); }
+      else { el.classList.remove('noz-grid-3'); el.classList.add('noz-grid'); }
+    }
+  });
+  calc();
+}
+
+function calcNoz(openId, midId, closeId, rate1Id, rate2Id, isSplit){
+  const o = num(openId), c = num(closeId), m = num(midId);
+  const r1 = num(rate1Id), r2 = num(rate2Id);
+  if(!isSplit || m <= o || m >= c || r2 <= 0){
+    const lit = Math.max(0, c - o);
+    const amt = lit * r1;
+    return { lit, amt, rate: r1, isSplit: false, l1: lit, a1: amt, l2: 0, a2: 0, r1, r2: 0, mid: 0, open: o, close: c };
+  }
+  const l1 = Math.max(0, m - o);
+  const a1 = l1 * r1;
+  const l2 = Math.max(0, c - m);
+  const a2 = l2 * r2;
+  const lit = l1 + l2;
+  const amt = a1 + a2;
+  const rate = lit > 0 ? (amt / lit) : r1;
+  return { lit, amt, rate, isSplit: true, l1, a1, l2, a2, r1, r2, mid: m, open: o, close: c };
+}
+
+function updateSplitInfo(elId, noz, unit){
+  const el = $(elId);
+  if(!el) return;
+  if(noz && noz.isSplit){
+    el.style.display = 'block';
+    el.innerHTML = `⚡ <b>Slot 1:</b> ${noz.l1.toFixed(2)} ${unit} @ ₹${noz.r1} = ₹${fmt(noz.a1)}<br>`+
+                   `⚡ <b>Slot 2:</b> ${noz.l2.toFixed(2)} ${unit} @ ₹${noz.r2} = ₹${fmt(noz.a2)}<br>`+
+                   `👉 <b>Avg Rate:</b> ₹${noz.rate.toFixed(3)} / ${unit}`;
+  } else {
+    el.style.display = 'none';
+    el.innerHTML = '';
+  }
+}
+
+let lastCalcRes = null;
+
 function calc(){
-  const pL=Math.max(0,num('pClose1')-num('pOpen1')-num('pTest1'))+Math.max(0,num('pClose2')-num('pOpen2')-num('pTest2'));
-  const dL=Math.max(0,num('dClose1')-num('dOpen1')-num('dTest1'))+Math.max(0,num('dClose2')-num('dOpen2')-num('dTest2'));
-  const cL=Math.max(0,num('cClose1')-num('cOpen1'))+Math.max(0,num('cClose2')-num('cOpen2'));
-  const pA=pL*num('pRate'),dA=dL*num('dRate'),cA=cL*num('cRate');
-  $('pLit1').textContent=Math.max(0,num('pClose1')-num('pOpen1')-num('pTest1')).toFixed(2);
-  $('pLit2').textContent=Math.max(0,num('pClose2')-num('pOpen2')-num('pTest2')).toFixed(2);
-  $('dLit1').textContent=Math.max(0,num('dClose1')-num('dOpen1')-num('dTest1')).toFixed(2);
-  $('dLit2').textContent=Math.max(0,num('dClose2')-num('dOpen2')-num('dTest2')).toFixed(2);
-  $('cLit1').textContent=Math.max(0,num('cClose1')-num('cOpen1')).toFixed(2);
-  $('cLit2').textContent=Math.max(0,num('cClose2')-num('cOpen2')).toFixed(2);
-  $('totalSales').textContent=money(pA+dA+cA);
-  $('sumP').textContent=money(pA);$('sumD').textContent=money(dA);$('sumC').textContent=money(cA);
-  const errs=[];
-  if(num('pClose1')>0&&num('pClose1')<num('pOpen1'))errs.push('❌ Petrol N1: Close<Open');
-  if(num('pClose2')>0&&num('pClose2')<num('pOpen2'))errs.push('❌ Petrol N2: Close<Open');
-  if(num('dClose1')>0&&num('dClose1')<num('dOpen1'))errs.push('❌ Diesel N1: Close<Open');
-  if(num('dClose2')>0&&num('dClose2')<num('dOpen2'))errs.push('❌ Diesel N2: Close<Open');
-  if(num('cClose1')>0&&num('cClose1')<num('cOpen1'))errs.push('❌ CNG N1: Close<Open');
-  if(num('cClose2')>0&&num('cClose2')<num('cOpen2'))errs.push('❌ CNG N2: Close<Open');
-  $('validateAlert').innerHTML=errs.length?'<div class="alert err">'+errs.join('<br>')+'</div>':'';
+  const isSplit = $('splitRateToggle') && $('splitRateToggle').checked;
+  const isCNG = pickedPump === 3;
+  
+  const pn1 = !isCNG ? calcNoz('pOpen1','pMid1','pClose1','pRate','pRate2',isSplit) : {lit:0,amt:0,rate:0,isSplit:false,l1:0,a1:0,l2:0,a2:0,r1:0,r2:0,mid:0,open:0,close:0};
+  const pn2 = !isCNG ? calcNoz('pOpen2','pMid2','pClose2','pRate','pRate2',isSplit) : {lit:0,amt:0,rate:0,isSplit:false,l1:0,a1:0,l2:0,a2:0,r1:0,r2:0,mid:0,open:0,close:0};
+  const dn1 = !isCNG ? calcNoz('dOpen1','dMid1','dClose1','dRate','dRate2',isSplit) : {lit:0,amt:0,rate:0,isSplit:false,l1:0,a1:0,l2:0,a2:0,r1:0,r2:0,mid:0,open:0,close:0};
+  const dn2 = !isCNG ? calcNoz('dOpen2','dMid2','dClose2','dRate','dRate2',isSplit) : {lit:0,amt:0,rate:0,isSplit:false,l1:0,a1:0,l2:0,a2:0,r1:0,r2:0,mid:0,open:0,close:0};
+  const cn1 = isCNG ? calcNoz('cOpen1','cMid1','cClose1','cRate','cRate2',isSplit) : {lit:0,amt:0,rate:0,isSplit:false,l1:0,a1:0,l2:0,a2:0,r1:0,r2:0,mid:0,open:0,close:0};
+  const cn2 = isCNG ? calcNoz('cOpen2','cMid2','cClose2','cRate','cRate2',isSplit) : {lit:0,amt:0,rate:0,isSplit:false,l1:0,a1:0,l2:0,a2:0,r1:0,r2:0,mid:0,open:0,close:0};
+  
+  const pL = pn1.lit + pn2.lit;
+  const pA = pn1.amt + pn2.amt;
+  const dL = dn1.lit + dn2.lit;
+  const dA = dn1.amt + dn2.amt;
+  const cL = cn1.lit + cn2.lit;
+  const cA = cn1.amt + cn2.amt;
+  const totalSales = pA + dA + cA;
+  
+  lastCalcRes = { pn1, pn2, dn1, dn2, cn1, cn2, pL, pA, dL, dA, cL, cA, totalSales, isSplit };
+  
+  $('pLit1').textContent = pn1.lit.toFixed(2);
+  $('pLit2').textContent = pn2.lit.toFixed(2);
+  $('dLit1').textContent = dn1.lit.toFixed(2);
+  $('dLit2').textContent = dn2.lit.toFixed(2);
+  $('cLit1').textContent = cn1.lit.toFixed(2);
+  $('cLit2').textContent = cn2.lit.toFixed(2);
+  
+  updateSplitInfo('pSplitInfo1', pn1, 'L');
+  updateSplitInfo('pSplitInfo2', pn2, 'L');
+  updateSplitInfo('dSplitInfo1', dn1, 'L');
+  updateSplitInfo('dSplitInfo2', dn2, 'L');
+  updateSplitInfo('cSplitInfo1', cn1, 'KG');
+  updateSplitInfo('cSplitInfo2', cn2, 'KG');
+  
+  $('totalSales').textContent = money(totalSales);
+  $('sumP').textContent = money(pA) + ((pn1.isSplit||pn2.isSplit)&&pL>0 ? ` (Avg: ₹${(pA/pL).toFixed(2)})` : '');
+  $('sumD').textContent = money(dA) + ((dn1.isSplit||dn2.isSplit)&&dL>0 ? ` (Avg: ₹${(dA/dL).toFixed(2)})` : '');
+  $('sumC').textContent = money(cA) + ((cn1.isSplit||cn2.isSplit)&&cL>0 ? ` (Avg: ₹${(cA/cL).toFixed(2)})` : '');
+  
+  const errs = [];
+  if(!isCNG){
+    if(num('pClose1')>0 && num('pClose1')<num('pOpen1')) errs.push('❌ Petrol N1: Close < Open');
+    if(num('pClose2')>0 && num('pClose2')<num('pOpen2')) errs.push('❌ Petrol N2: Close < Open');
+    if(num('dClose1')>0 && num('dClose1')<num('dOpen1')) errs.push('❌ Diesel N1: Close < Open');
+    if(num('dClose2')>0 && num('dClose2')<num('dOpen2')) errs.push('❌ Diesel N2: Close < Open');
+    if(isSplit){
+      if(num('pMid1')>0 && (num('pMid1')<=num('pOpen1') || (num('pClose1')>0 && num('pMid1')>=num('pClose1')))) errs.push('⚠️ Petrol N1: Mid reading must be between Open and Close');
+      if(num('pMid2')>0 && (num('pMid2')<=num('pOpen2') || (num('pClose2')>0 && num('pMid2')>=num('pClose2')))) errs.push('⚠️ Petrol N2: Mid reading must be between Open and Close');
+      if(num('dMid1')>0 && (num('dMid1')<=num('dOpen1') || (num('dClose1')>0 && num('dMid1')>=num('dClose1')))) errs.push('⚠️ Diesel N1: Mid reading must be between Open and Close');
+      if(num('dMid2')>0 && (num('dMid2')<=num('dOpen2') || (num('dClose2')>0 && num('dMid2')>=num('dClose2')))) errs.push('⚠️ Diesel N2: Mid reading must be between Open and Close');
+    }
+  } else {
+    if(num('cClose1')>0 && num('cClose1')<num('cOpen1')) errs.push('❌ CNG N1: Close < Open');
+    if(num('cClose2')>0 && num('cClose2')<num('cOpen2')) errs.push('❌ CNG N2: Close < Open');
+    if(isSplit){
+      if(num('cMid1')>0 && (num('cMid1')<=num('cOpen1') || (num('cClose1')>0 && num('cMid1')>=num('cClose1')))) errs.push('⚠️ CNG N1: Mid reading must be between Open and Close');
+      if(num('cMid2')>0 && (num('cMid2')<=num('cOpen2') || (num('cClose2')>0 && num('cMid2')>=num('cClose2')))) errs.push('⚠️ CNG N2: Mid reading must be between Open and Close');
+    }
+  }
+  $('validateAlert').innerHTML = errs.length ? '<div class="alert err">'+errs.join('<br>')+'</div>' : '';
   calcPay();
 }
+
 function goPayment(){
-  const isCNG=pickedPump===3;
-  const req=isCNG?['cClose1','cClose2','cRate']:['pClose1','pClose2','dClose1','dClose2','pRate','dRate'];
-  if(req.some(id=>$(id).value==='')){toast('Complete readings','err');return;}
-  if($('validateAlert').innerHTML){toast('Fix errors','err');return;}
-  const ed=$('entryDate').value;
-  if(me.Role==='Employee'&&ed<today()){toast('Cannot enter past dates','err');return;}
-  const n=window.nextOpening||{};
-  const checks=[['Petrol N1','pOpen1','pClose1','Petrol_1'],['Petrol N2','pOpen2','pClose2','Petrol_2'],['Diesel N1','dOpen1','dClose1','Diesel_1'],['Diesel N2','dOpen2','dClose2','Diesel_2'],['CNG N1','cOpen1','cClose1','CNG_1'],['CNG N2','cOpen2','cClose2','CNG_2']];
-  for(const[lbl,oId,cId,key]of checks){
-    const nx=n[key]&&Number(n[key].opening||0);
-    if(nx>0){if(num(oId)>=nx){toast(lbl+': Opening must be < next opening','err');return;}if(num(cId)>nx){toast(lbl+': Closing exceeds next opening','err');return;}}
+  const isCNG = pickedPump === 3;
+  const isSplit = $('splitRateToggle') && $('splitRateToggle').checked;
+  const req = isCNG ? ['cClose1','cClose2','cRate'] : ['pClose1','pClose2','dClose1','dClose2','pRate','dRate'];
+  if(req.some(id => $(id).value === '')){ toast('Complete readings', 'err'); return; }
+  if(isSplit){
+    if(!isCNG){
+      if((num('pMid1')>0 || num('pMid2')>0) && num('pRate2')<=0){ toast('Enter Petrol Rate 2 (కొత్త రేటు)', 'err'); return; }
+      if((num('dMid1')>0 || num('dMid2')>0) && num('dRate2')<=0){ toast('Enter Diesel Rate 2 (కొత్త రేటు)', 'err'); return; }
+    } else {
+      if((num('cMid1')>0 || num('cMid2')>0) && num('cRate2')<=0){ toast('Enter CNG Rate 2 (కొత్త రేటు)', 'err'); return; }
+    }
   }
-  calcPay();show('paySec');
+  if($('validateAlert').innerHTML){ toast('Fix errors', 'err'); return; }
+  const ed = $('entryDate').value;
+  if(me.Role === 'Employee' && ed < yesterday()){ toast('Employee can only enter yesterday or today', 'err'); return; }
+  const n = window.nextOpening || {};
+  const checks = [['Petrol N1','pOpen1','pClose1','Petrol_1'],['Petrol N2','pOpen2','pClose2','Petrol_2'],['Diesel N1','dOpen1','dClose1','Diesel_1'],['Diesel N2','dOpen2','dClose2','Diesel_2'],['CNG N1','cOpen1','cClose1','CNG_1'],['CNG N2','cOpen2','cClose2','CNG_2']];
+  for(const[lbl,oId,cId,key] of checks){
+    const nx = n[key] && Number(n[key].opening || 0);
+    if(nx > 0){
+      if(num(oId) >= nx){ toast(lbl+': Opening must be < next opening', 'err'); return; }
+      if(num(cId) > nx){ toast(lbl+': Closing exceeds next opening', 'err'); return; }
+    }
+  }
+  calcPay(); show('paySec');
 }
+
 function calcPay(){
-  const cash=num('cash'),online=num('online'),otp=num('otp'),exp=num('expenditure'),testAmt=num('testingAmt');
-  const salesVal=Math.max(0,num('pClose1')-num('pOpen1'))*num('pRate')+Math.max(0,num('pClose2')-num('pOpen2'))*num('pRate')+Math.max(0,num('dClose1')-num('dOpen1'))*num('dRate')+Math.max(0,num('dClose2')-num('dOpen2'))*num('dRate')+Math.max(0,num('cClose1')-num('cOpen1'))*num('cRate')+Math.max(0,num('cClose2')-num('cOpen2'))*num('cRate');
-  const col=cash+online+otp;
-  const diff=col+exp+testAmt-salesVal;
-  $('pSumSales').textContent=money(salesVal);
-  $('pSumCol').textContent=money(col);
-  $('pSumExp').textContent=money(exp+testAmt);
-  $('pSumDiff').textContent=money(Math.abs(diff));
-  const t=$('tally');
-  if(salesVal===0&&col===0){t.className='tally idle';$('tallyAmt').textContent='₹ 0.00';$('tallyMsg').textContent='Enter amounts';}
-  else if(Math.abs(diff)<0.5){t.className='tally ok';$('tallyAmt').textContent='₹ 0.00';$('tallyMsg').textContent='✅ Balanced';}
-  else if(diff<0){t.className='tally short';$('tallyAmt').textContent=money(Math.abs(diff));$('tallyMsg').textContent='⚠️ Short Cash';}
-  else{t.className='tally excess';$('tallyAmt').textContent=money(diff);$('tallyMsg').textContent='ℹ️ Excess Cash';}
+  const cash = num('cash'), online = num('online'), otp = num('otp'), exp = num('expenditure'), testAmt = num('testingAmt');
+  const salesVal = lastCalcRes ? lastCalcRes.totalSales : 0;
+  const col = cash + online + otp;
+  const diff = col + exp + testAmt - salesVal;
+  $('pSumSales').textContent = money(salesVal);
+  $('pSumCol').textContent = money(col);
+  $('pSumExp').textContent = money(exp + testAmt);
+  $('pSumDiff').textContent = money(Math.abs(diff));
+  const t = $('tally');
+  if(!t) return;
+  if(salesVal === 0 && col === 0){
+    t.className = 'tally idle'; $('tallyAmt').textContent = '₹ 0.00'; $('tallyMsg').textContent = 'Enter amounts';
+  } else if(Math.abs(diff) < 0.5){
+    t.className = 'tally ok'; $('tallyAmt').textContent = '₹ 0.00'; $('tallyMsg').textContent = '✅ Balanced';
+  } else if(diff < 0){
+    t.className = 'tally short'; $('tallyAmt').textContent = money(Math.abs(diff)); $('tallyMsg').textContent = '⚠️ Short Cash';
+  } else {
+    t.className = 'tally excess'; $('tallyAmt').textContent = money(diff); $('tallyMsg').textContent = 'ℹ️ Excess Cash';
+  }
 }
+
 function overrideOpening(){
-  const pin=prompt('Manager/Owner PIN:');
-  if(!pin)return;
-  ['pOpen1','pOpen2','dOpen1','dOpen2','cOpen1','cOpen2'].forEach(id=>{const el=$(id);el.readOnly=false;el.style.background='rgba(245,158,11,.08)';});
-  toast('Opening unlocked','info');
+  const pin = prompt('Manager/Owner PIN:');
+  if(!pin) return;
+  ['pOpen1','pOpen2','dOpen1','dOpen2','cOpen1','cOpen2'].forEach(id => {
+    const el = $(id);
+    if(el) { el.readOnly = false; el.style.background = 'rgba(245,158,11,.08)'; }
+  });
+  toast('Opening unlocked', 'info');
 }
+
 function collectData(){
-  const pL=Math.max(0,num('pClose1')-num('pOpen1'))+Math.max(0,num('pClose2')-num('pOpen2'));
-  const dL=Math.max(0,num('dClose1')-num('dOpen1'))+Math.max(0,num('dClose2')-num('dOpen2'));
-  const cL=Math.max(0,num('cClose1')-num('cOpen1'))+Math.max(0,num('cClose2')-num('cOpen2'));
-  const pA=pL*num('pRate'),dA=dL*num('dRate'),cA=cL*num('cRate');
-  const sales=pA+dA+cA;
-  const cash=num('cash'),online=num('online'),otp=num('otp'),exp=num('expenditure'),testAmt=num('testingAmt');
-  const col=cash+online+otp;
-  return{
-    Date:$('entryDate').value||today(),Shift:'S1',Staff_ID:pickedStaffId,Staff_Name:pickedStaffId,Pump_No:pickedPump,
-    Petrol_Litres:pL,Petrol_Amount:pA,Diesel_Litres:dL,Diesel_Amount:dA,CNG_KG:cL,CNG_Amount:cA,Total_Sales:sales,
-    Online_Amount:online,OTP_Amount:otp,Cash_Total:cash,Change_Amount:0,Expenditure:exp,
-    Testing_Amount:testAmt,
-    Expenditure_Type:$('expType').value.trim(),Expenditure_Remarks:$('expRemarks').value.trim(),
-    Total_Collected:col,Difference:col+exp+testAmt-sales,
-    Nozzle_Readings:[
-      {Nozzle_No:1,Fuel_Type:'Petrol',Opening_Reading:num('pOpen1'),Closing_Reading:num('pClose1'),Litres:Math.max(0,num('pClose1')-num('pOpen1')),Rate:num('pRate'),Amount:Math.max(0,num('pClose1')-num('pOpen1'))*num('pRate')},
-      {Nozzle_No:2,Fuel_Type:'Petrol',Opening_Reading:num('pOpen2'),Closing_Reading:num('pClose2'),Litres:Math.max(0,num('pClose2')-num('pOpen2')),Rate:num('pRate'),Amount:Math.max(0,num('pClose2')-num('pOpen2'))*num('pRate')},
-      {Nozzle_No:1,Fuel_Type:'Diesel',Opening_Reading:num('dOpen1'),Closing_Reading:num('dClose1'),Litres:Math.max(0,num('dClose1')-num('dOpen1')),Rate:num('dRate'),Amount:Math.max(0,num('dClose1')-num('dOpen1'))*num('dRate')},
-      {Nozzle_No:2,Fuel_Type:'Diesel',Opening_Reading:num('dOpen2'),Closing_Reading:num('dClose2'),Litres:Math.max(0,num('dClose2')-num('dOpen2')),Rate:num('dRate'),Amount:Math.max(0,num('dClose2')-num('dOpen2'))*num('dRate')},
-      {Nozzle_No:1,Fuel_Type:'CNG',Opening_Reading:num('cOpen1'),Closing_Reading:num('cClose1'),Litres:Math.max(0,num('cClose1')-num('cOpen1')),Rate:num('cRate'),Amount:Math.max(0,num('cClose1')-num('cOpen1'))*num('cRate')},
-      {Nozzle_No:2,Fuel_Type:'CNG',Opening_Reading:num('cOpen2'),Closing_Reading:num('cClose2'),Litres:Math.max(0,num('cClose2')-num('cOpen2')),Rate:num('cRate'),Amount:Math.max(0,num('cClose2')-num('cOpen2'))*num('cRate')}
-    ],
-    Cash_Details:[],
-    Payments:[{Payment_Type:'Online',Amount:online},{Payment_Type:'OTP',Amount:otp},{Payment_Type:'Cash',Amount:cash}]
+  if(!lastCalcRes) calc();
+  const c = lastCalcRes;
+  const cash = num('cash'), online = num('online'), otp = num('otp'), exp = num('expenditure'), testAmt = num('testingAmt');
+  const col = cash + online + otp;
+  const sales = c.totalSales;
+  
+  const nozReadings = [
+    { Nozzle_No: 1, Fuel_Type: 'Petrol', Opening_Reading: c.pn1.open, Closing_Reading: c.pn1.close, Mid_Reading: c.pn1.mid, Litres: c.pn1.lit, Rate: Number(c.pn1.rate.toFixed(4)), Amount: Number(c.pn1.amt.toFixed(2)), Rate1: c.pn1.r1, Rate2: c.pn1.r2, Slot1_Litres: c.pn1.l1, Slot1_Amount: c.pn1.a1, Slot2_Litres: c.pn1.l2, Slot2_Amount: c.pn1.a2 },
+    { Nozzle_No: 2, Fuel_Type: 'Petrol', Opening_Reading: c.pn2.open, Closing_Reading: c.pn2.close, Mid_Reading: c.pn2.mid, Litres: c.pn2.lit, Rate: Number(c.pn2.rate.toFixed(4)), Amount: Number(c.pn2.amt.toFixed(2)), Rate1: c.pn2.r1, Rate2: c.pn2.r2, Slot1_Litres: c.pn2.l1, Slot1_Amount: c.pn2.a1, Slot2_Litres: c.pn2.l2, Slot2_Amount: c.pn2.a2 },
+    { Nozzle_No: 1, Fuel_Type: 'Diesel', Opening_Reading: c.dn1.open, Closing_Reading: c.dn1.close, Mid_Reading: c.dn1.mid, Litres: c.dn1.lit, Rate: Number(c.dn1.rate.toFixed(4)), Amount: Number(c.dn1.amt.toFixed(2)), Rate1: c.dn1.r1, Rate2: c.dn1.r2, Slot1_Litres: c.dn1.l1, Slot1_Amount: c.dn1.a1, Slot2_Litres: c.dn1.l2, Slot2_Amount: c.dn1.a2 },
+    { Nozzle_No: 2, Fuel_Type: 'Diesel', Opening_Reading: c.dn2.open, Closing_Reading: c.dn2.close, Mid_Reading: c.dn2.mid, Litres: c.dn2.lit, Rate: Number(c.dn2.rate.toFixed(4)), Amount: Number(c.dn2.amt.toFixed(2)), Rate1: c.dn2.r1, Rate2: c.dn2.r2, Slot1_Litres: c.dn2.l1, Slot1_Amount: c.dn2.a1, Slot2_Litres: c.dn2.l2, Slot2_Amount: c.dn2.a2 },
+    { Nozzle_No: 1, Fuel_Type: 'CNG', Opening_Reading: c.cn1.open, Closing_Reading: c.cn1.close, Mid_Reading: c.cn1.mid, Litres: c.cn1.lit, Rate: Number(c.cn1.rate.toFixed(4)), Amount: Number(c.cn1.amt.toFixed(2)), Rate1: c.cn1.r1, Rate2: c.cn1.r2, Slot1_Litres: c.cn1.l1, Slot1_Amount: c.cn1.a1, Slot2_Litres: c.cn1.l2, Slot2_Amount: c.cn1.a2 },
+    { Nozzle_No: 2, Fuel_Type: 'CNG', Opening_Reading: c.cn2.open, Closing_Reading: c.cn2.close, Mid_Reading: c.cn2.mid, Litres: c.cn2.lit, Rate: Number(c.cn2.rate.toFixed(4)), Amount: Number(c.cn2.amt.toFixed(2)), Rate1: c.cn2.r1, Rate2: c.cn2.r2, Slot1_Litres: c.cn2.l1, Slot1_Amount: c.cn2.a1, Slot2_Litres: c.cn2.l2, Slot2_Amount: c.cn2.a2 }
+  ];
+  
+  return {
+    Date: $('entryDate').value || today(),
+    Shift: 'S1',
+    Staff_ID: pickedStaffId || me.Staff_ID,
+    Staff_Name: pickedStaffId || me.Staff_ID,
+    Pump_No: pickedPump,
+    Petrol_Litres: c.pL,
+    Petrol_Amount: c.pA,
+    Diesel_Litres: c.dL,
+    Diesel_Amount: c.dA,
+    CNG_KG: c.cL,
+    CNG_Amount: c.cA,
+    Total_Sales: sales,
+    Online_Amount: online,
+    OTP_Amount: otp,
+    Cash_Total: cash,
+    Change_Amount: 0,
+    Expenditure: exp,
+    Testing_Amount: testAmt,
+    Expenditure_Type: $('expType').value.trim(),
+    Expenditure_Remarks: $('expRemarks') ? $('expRemarks').value.trim() : '',
+    Total_Collected: col,
+    Difference: col + exp + testAmt - sales,
+    Nozzle_Readings: nozReadings,
+    Cash_Details: [],
+    Payments: [
+      { Payment_Type: 'Online', Amount: online },
+      { Payment_Type: 'OTP', Amount: otp },
+      { Payment_Type: 'Cash', Amount: cash }
+    ]
   };
 }
+
 function showSummary(){
-  const d=collectData();
-  const sales=Number(d.Total_Sales||0);
-  const tally=Number(d.Cash_Total||0)+Number(d.Online_Amount||0)+Number(d.OTP_Amount||0)+Number(d.Expenditure||0)+Number(d.Testing_Amount||0);
-  const diff=tally-sales;
-  const cls=Math.abs(diff)<0.5?'ok':(diff<0?'err':'warn');
-  $('confirmBody').innerHTML=`
+  const d = collectData();
+  const sales = Number(d.Total_Sales || 0);
+  const tally = Number(d.Cash_Total || 0) + Number(d.Online_Amount || 0) + Number(d.OTP_Amount || 0) + Number(d.Expenditure || 0) + Number(d.Testing_Amount || 0);
+  const diff = tally - sales;
+  const cls = Math.abs(diff) < 0.5 ? 'ok' : (diff < 0 ? 'err' : 'warn');
+  
+  let splitSummaryHtml = '';
+  if(d.Nozzle_Readings && d.Nozzle_Readings.some(x => x.Mid_Reading > 0)){
+    splitSummaryHtml = '<div style="margin-top:10px;padding:10px;background:rgba(245,158,11,0.08);border:1px solid rgba(245,158,11,0.3);border-radius:10px;font-size:11.5px;color:#fbbf24">';
+    splitSummaryHtml += '<div style="font-weight:800;margin-bottom:4px">⚡ Mid-Shift Rate Change:</div>';
+    d.Nozzle_Readings.filter(x => x.Mid_Reading > 0).forEach(x => {
+      splitSummaryHtml += `• <b>${x.Fuel_Type} N${x.Nozzle_No}:</b> ${x.Slot1_Litres.toFixed(1)}L @ ₹${x.Rate1} + ${x.Slot2_Litres.toFixed(1)}L @ ₹${x.Rate2} (Avg: ₹${x.Rate.toFixed(2)})<br>`;
+    });
+    splitSummaryHtml += '</div>';
+  }
+  
+  $('confirmBody').innerHTML = `
     <div class="sum-line"><span class="sl">Date</span><span class="sv">${d.Date}</span></div>
     <div class="sum-line"><span class="sl">Pump</span><span class="sv">P${d.Pump_No}</span></div>
     <div class="sum-line"><span class="sl">Employee</span><span class="sv">${d.Staff_ID}</span></div>
     <div class="sum-line"><span class="sl">Petrol</span><span class="sv">${money(d.Petrol_Amount)}</span></div>
     <div class="sum-line"><span class="sl">Diesel</span><span class="sv">${money(d.Diesel_Amount)}</span></div>
-    ${d.CNG_Amount>0?`<div class="sum-line"><span class="sl">CNG</span><span class="sv">${money(d.CNG_Amount)}</span></div>`:''}
+    ${d.CNG_Amount > 0 ? `<div class="sum-line"><span class="sl">CNG</span><span class="sv">${money(d.CNG_Amount)}</span></div>` : ''}
     <div class="sum-line hl"><span class="sl">Total Sales</span><span class="sv">${money(sales)}</span></div>
     <div class="sum-line"><span class="sl">Cash</span><span class="sv">${money(d.Cash_Total)}</span></div>
     <div class="sum-line"><span class="sl">Online</span><span class="sv">${money(d.Online_Amount)}</span></div>
     <div class="sum-line"><span class="sl">OTP</span><span class="sv">${money(d.OTP_Amount)}</span></div>
     <div class="sum-line"><span class="sl">Expenditure</span><span class="sv">${money(d.Expenditure)}</span></div>
     <div class="sum-line"><span class="sl">Testing Amt</span><span class="sv">${money(d.Testing_Amount)}</span></div>
+    ${splitSummaryHtml}
     <div class="alert ${cls}" style="margin-top:12px">${Math.abs(diff)<0.5?'✅ Tally Balanced':'⚠️ Difference: '+money(Math.abs(diff))}</div>`;
   $('confirmMask').classList.add('show');
 }
@@ -680,18 +961,384 @@ async function saveEntry(){
 function showEntries(){$('entriesDate').value='';loadEntries();show('entriesSec');}
 async function loadEntries(){
   loading(true,'Loading...');
-  const params={staffId:me.Role==='Employee'?me.Staff_ID:pickedStaffId};
-  if($('entriesDate').value)params.date=$('entriesDate').value;
+  const params={};
+  if(me.Role==='Employee') params.staffId=me.Staff_ID;
+  if($('entriesDate')&&$('entriesDate').value) params.date=$('entriesDate').value;
   const r=await api('getShifts',params);
   loading(false);
-  if(!r.ok){$('entriesOut').innerHTML='<div class="card">Failed</div>';return;}
+  if(!r.ok){$('entriesOut').innerHTML='<div class="card">Failed to load entries</div>';return;}
   const shifts=r.shifts||[];
-  if(!shifts.length){$('entriesOut').innerHTML='<div class="card tbl-empty">No entries</div>';return;}
-  let h='<div class="tbl-wrap"><table><thead><tr><th>Date</th><th>Pump</th><th>Staff</th><th>Sales</th><th>Diff</th></tr></thead><tbody>';
-  shifts.forEach(s=>{const d=Number(s.Difference||0);const bc=Math.abs(d)<0.5?'ok':(d<0?'bad':'warn');
-    h+=`<tr><td>${s.Date}</td><td>P${s.Pump_No}</td><td>${s.Staff_Name||s.Staff_ID}</td><td>${money(s.Total_Sales)}</td><td><span class="b ${bc}">${money(Math.abs(d))}</span></td></tr>`;});
-  h+='</tbody></table></div>';
+  if(!shifts.length){$('entriesOut').innerHTML='<div class="card tbl-empty">No entries found</div>';return;}
+  const isOwn=(me.Role==='Owner'||me.Staff_ID==='ADMIN');
+  let h='';
+  shifts.forEach(s=>{
+    const d=Number(s.Difference||0);
+    const bc=Math.abs(d)<0.5?'ok':(d<0?'bad':'warn');
+    const dt = String(s.Date||'').slice(0,10);
+    h+=`
+    <div class="card" style="margin-bottom:12px;padding:14px;border-left:4px solid var(--pri)">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start">
+        <div>
+          <div style="font-weight:800;font-size:14.5px;color:var(--t)">📅 <b>${dt}</b> · Pump ${s.Pump_No}</div>
+          <div style="font-size:12px;color:var(--t2);margin-top:4px">👤 Staff: <b>${s.Staff_Name||s.Staff_ID}</b></div>
+        </div>
+        <div style="text-align:right">
+          <div style="font-weight:900;font-size:15px;color:#60a5fa">${money(s.Total_Sales)}</div>
+          <div style="margin-top:3px"><span class="b ${bc}">${money(Math.abs(d))}</span></div>
+        </div>
+      </div>
+      ${isOwn ? `
+      <div style="display:flex;gap:8px;margin-top:12px;padding-top:10px;border-top:1px solid var(--line);justify-content:flex-end">
+        <button class="btn btn-primary btn-sm" onclick="openFullEditShift('${s.Shift_ID}')" style="padding:6px 14px;font-size:12px;font-weight:700">✏️ Edit Shift</button>
+        <button class="btn btn-ghost btn-sm" onclick="changeShiftDate('${s.Shift_ID}','${dt}')" style="padding:6px 12px;font-size:12px">📅 Change Date</button>
+      </div>` : ''}
+    </div>`;
+  });
   $('entriesOut').innerHTML=h;
+}
+
+let __edShift=null, __edStaffList=[];
+
+async function openFullEditShift(shiftId){
+  loading(true, 'Loading shift details...');
+  const [rShift, rStaff] = await Promise.all([
+    api('getShift', { shiftId }),
+    api('getStaff', { activeOnly: false })
+  ]);
+  loading(false);
+  if(!rShift.ok || !rShift.shift){ toast(rShift.error || 'Failed to load shift', 'err'); return; }
+  __edShift = rShift.shift;
+  __edStaffList = rStaff.staff || [];
+  
+  const s = __edShift;
+  const isCNG = Number(s.Pump_No) === 3;
+  $('edShiftSub').textContent = `Shift: ${s.Shift_ID} · ${s.Entered_By_Name || s.Entered_By || s.Staff_ID}`;
+  
+  let staffOpts = '';
+  __edStaffList.forEach(st => {
+    const sel = (String(st.Staff_ID).toUpperCase() === String(s.Staff_ID).toUpperCase()) ? 'selected' : '';
+    staffOpts += `<option value="${st.Staff_ID}" ${sel}>${st.Staff_ID} · ${st.Staff_Name}</option>`;
+  });
+  
+  const nz = s.Nozzle_Readings || [];
+  const getNz = (type, no) => nz.find(x => x.Fuel_Type === type && Number(x.Nozzle_No) === no) || {};
+  const p1 = getNz('Petrol', 1), p2 = getNz('Petrol', 2);
+  const d1 = getNz('Diesel', 1), d2 = getNz('Diesel', 2);
+  const c1 = getNz('CNG', 1), c2 = getNz('CNG', 2);
+  
+  const hasSplit = nz.some(x => Number(x.Mid_Reading || 0) > 0);
+  const pRateVal = p1.Rate1 || p1.Rate || p2.Rate1 || p2.Rate || 116.96;
+  const pRate2Val = p1.Rate2 || p2.Rate2 || 0;
+  const dRateVal = d1.Rate1 || d1.Rate || d2.Rate1 || d2.Rate || 105.01;
+  const dRate2Val = d1.Rate2 || d2.Rate2 || 0;
+  const cRateVal = c1.Rate1 || c1.Rate || c2.Rate1 || c2.Rate || 114.00;
+  const cRate2Val = c1.Rate2 || c2.Rate2 || 0;
+  const dt = String(s.Date || '').slice(0, 10);
+  
+  let html = `
+    <div class="card" style="margin-bottom:12px;padding:12px">
+      <div style="font-size:10.5px;font-weight:700;color:var(--t2);text-transform:uppercase;margin-bottom:8px">1. Basic Info</div>
+      <div class="f" style="margin-bottom:8px"><label>Date</label><input type="date" id="edDate" value="${dt}" max="${today()}"></div>
+      <div class="f" style="margin-bottom:8px"><label>Pump</label>
+        <select id="edPump" onchange="onEdPumpChange()">
+          <option value="1" ${Number(s.Pump_No)===1?'selected':''}>Pump 1</option>
+          <option value="2" ${Number(s.Pump_No)===2?'selected':''}>Pump 2</option>
+          <option value="3" ${Number(s.Pump_No)===3?'selected':''}>Pump 3 (CNG)</option>
+        </select>
+      </div>
+      <div class="f" style="margin-bottom:0"><label>Staff</label><select id="edStaff">${staffOpts}</select></div>
+    </div>
+    
+    <div class="card" style="margin-bottom:12px;padding:12px" id="edNozzleCard">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+        <div style="font-size:10.5px;font-weight:700;color:var(--t2);text-transform:uppercase">2. Readings & Rates</div>
+        <label style="font-size:11px;font-weight:700;color:#fbbf24;display:flex;align-items:center;gap:6px;cursor:pointer">
+          <input type="checkbox" id="edSplitToggle" ${hasSplit?'checked':''} onchange="toggleEdSplit()">
+          ⚡ Mid Rate Change
+        </label>
+      </div>
+      <div id="edNozzleInputs">
+        ${renderEdNozzleFields(isCNG, p1, p2, d1, d2, c1, c2, pRateVal, pRate2Val, dRateVal, dRate2Val, cRateVal, cRate2Val, hasSplit)}
+      </div>
+      <div class="f" style="margin-bottom:0"><label>Testing Amount (₹)</label><input type="number" step="0.01" class="num" id="edTestAmt" value="${s.Testing_Amount||0}" oninput="calcEditTally()"></div>
+    </div>
+    
+    <div class="card" style="margin-bottom:12px;padding:12px">
+      <div style="font-size:10.5px;font-weight:700;color:var(--t2);text-transform:uppercase;margin-bottom:8px">3. Collections</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px">
+        <div class="f"><label>Cash</label><input type="number" step="0.01" class="num" id="edCash" value="${s.Cash_Total||0}" oninput="calcEditTally()"></div>
+        <div class="f"><label>Online</label><input type="number" step="0.01" class="num" id="edOnline" value="${s.Online_Amount||0}" oninput="calcEditTally()"></div>
+        <div class="f"><label>OTP</label><input type="number" step="0.01" class="num" id="edOtp" value="${s.OTP_Amount||0}" oninput="calcEditTally()"></div>
+        <div class="f"><label>Expenses</label><input type="number" step="0.01" class="num" id="edExp" value="${s.Expenditure||0}" oninput="calcEditTally()"></div>
+      </div>
+    </div>
+    
+    <div class="card" style="margin-bottom:12px;padding:12px;background:#1e293b;border:1px solid #334155;color:#e2e8f0">
+      <div style="font-size:10.5px;font-weight:700;color:#94a3b8;text-transform:uppercase;margin-bottom:8px">4. Summary & Tally</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;font-size:12px">
+        <div>Sales: <b id="edSumSales">₹ 0</b></div>
+        <div>Collected: <b id="edSumCol">₹ 0</b></div>
+        <div>Exp+Test: <b id="edSumExp">₹ 0</b></div>
+        <div>Diff: <b id="edSumDiff">₹ 0</b></div>
+      </div>
+    </div>
+    
+    <div class="f" style="margin-bottom:0">
+      <label>Reason for Edit</label>
+      <input id="edReason" placeholder="Reason for edit" value="Edited by Admin/Owner">
+    </div>
+  `;
+  
+  $('edShiftBody').innerHTML = html;
+  calcEditTally();
+  $('editShiftMask').classList.add('show');
+}
+
+function closeEditShift(){
+  $('editShiftMask').classList.remove('show');
+  __edShift = null;
+}
+
+function renderEdNozzleFields(isCNG, p1, p2, d1, d2, c1, c2, pRate, pRate2, dRate, dRate2, cRate, cRate2, isSplit){
+  if(!isCNG){
+    return `
+      <div style="font-size:11px;font-weight:700;color:#60a5fa;margin-bottom:4px">⛽ MS Petrol Nozzles</div>
+      <div style="display:grid;grid-template-columns:${isSplit?'1fr 1fr 1fr':'1fr 1fr'};gap:6px;margin-bottom:6px">
+        <div class="f"><label>MS N1 Open</label><input type="number" step="0.01" class="num" id="edPOpen1" value="${p1.Opening_Reading||0}" oninput="calcEditTally()"></div>
+        ${isSplit ? `<div class="f"><label style="color:#fbbf24">MS N1 Mid</label><input type="number" step="0.01" class="num" id="edPMid1" value="${p1.Mid_Reading||0}" oninput="calcEditTally()"></div>` : ''}
+        <div class="f"><label>MS N1 Close</label><input type="number" step="0.01" class="num" id="edPClose1" value="${p1.Closing_Reading||0}" oninput="calcEditTally()"></div>
+      </div>
+      <div style="display:grid;grid-template-columns:${isSplit?'1fr 1fr 1fr':'1fr 1fr'};gap:6px;margin-bottom:6px">
+        <div class="f"><label>MS N2 Open</label><input type="number" step="0.01" class="num" id="edPOpen2" value="${p2.Opening_Reading||0}" oninput="calcEditTally()"></div>
+        ${isSplit ? `<div class="f"><label style="color:#fbbf24">MS N2 Mid</label><input type="number" step="0.01" class="num" id="edPMid2" value="${p2.Mid_Reading||0}" oninput="calcEditTally()"></div>` : ''}
+        <div class="f"><label>MS N2 Close</label><input type="number" step="0.01" class="num" id="edPClose2" value="${p2.Closing_Reading||0}" oninput="calcEditTally()"></div>
+      </div>
+      <div style="display:grid;grid-template-columns:${isSplit?'1fr 1fr':'1fr'};gap:6px;margin-bottom:10px">
+        <div class="f"><label>MS Rate 1 ₹/L</label><input type="number" step="0.01" class="num" id="edPRate" value="${pRate}" oninput="calcEditTally()"></div>
+        ${isSplit ? `<div class="f"><label style="color:#fbbf24">MS Rate 2 ₹/L</label><input type="number" step="0.01" class="num" id="edPRate2" value="${pRate2}" oninput="calcEditTally()"></div>` : ''}
+      </div>
+
+      <div style="font-size:11px;font-weight:700;color:#34d399;margin-bottom:4px">⛽ HSD Diesel Nozzles</div>
+      <div style="display:grid;grid-template-columns:${isSplit?'1fr 1fr 1fr':'1fr 1fr'};gap:6px;margin-bottom:6px">
+        <div class="f"><label>HSD N1 Open</label><input type="number" step="0.01" class="num" id="edDOpen1" value="${d1.Opening_Reading||0}" oninput="calcEditTally()"></div>
+        ${isSplit ? `<div class="f"><label style="color:#fbbf24">HSD N1 Mid</label><input type="number" step="0.01" class="num" id="edDMid1" value="${d1.Mid_Reading||0}" oninput="calcEditTally()"></div>` : ''}
+        <div class="f"><label>HSD N1 Close</label><input type="number" step="0.01" class="num" id="edDClose1" value="${d1.Closing_Reading||0}" oninput="calcEditTally()"></div>
+      </div>
+      <div style="display:grid;grid-template-columns:${isSplit?'1fr 1fr 1fr':'1fr 1fr'};gap:6px;margin-bottom:6px">
+        <div class="f"><label>HSD N2 Open</label><input type="number" step="0.01" class="num" id="edDOpen2" value="${d2.Opening_Reading||0}" oninput="calcEditTally()"></div>
+        ${isSplit ? `<div class="f"><label style="color:#fbbf24">HSD N2 Mid</label><input type="number" step="0.01" class="num" id="edDMid2" value="${d2.Mid_Reading||0}" oninput="calcEditTally()"></div>` : ''}
+        <div class="f"><label>HSD N2 Close</label><input type="number" step="0.01" class="num" id="edDClose2" value="${d2.Closing_Reading||0}" oninput="calcEditTally()"></div>
+      </div>
+      <div style="display:grid;grid-template-columns:${isSplit?'1fr 1fr':'1fr'};gap:6px;margin-bottom:6px">
+        <div class="f"><label>HSD Rate 1 ₹/L</label><input type="number" step="0.01" class="num" id="edDRate" value="${dRate}" oninput="calcEditTally()"></div>
+        ${isSplit ? `<div class="f"><label style="color:#fbbf24">HSD Rate 2 ₹/L</label><input type="number" step="0.01" class="num" id="edDRate2" value="${dRate2}" oninput="calcEditTally()"></div>` : ''}
+      </div>`;
+  } else {
+    return `
+      <div style="font-size:11px;font-weight:700;color:#c084fc;margin-bottom:4px">⛽ CNG Nozzles</div>
+      <div style="display:grid;grid-template-columns:${isSplit?'1fr 1fr 1fr':'1fr 1fr'};gap:6px;margin-bottom:6px">
+        <div class="f"><label>CNG N1 Open</label><input type="number" step="0.01" class="num" id="edCOpen1" value="${c1.Opening_Reading||0}" oninput="calcEditTally()"></div>
+        ${isSplit ? `<div class="f"><label style="color:#fbbf24">CNG N1 Mid</label><input type="number" step="0.01" class="num" id="edCMid1" value="${c1.Mid_Reading||0}" oninput="calcEditTally()"></div>` : ''}
+        <div class="f"><label>CNG N1 Close</label><input type="number" step="0.01" class="num" id="edCClose1" value="${c1.Closing_Reading||0}" oninput="calcEditTally()"></div>
+      </div>
+      <div style="display:grid;grid-template-columns:${isSplit?'1fr 1fr 1fr':'1fr 1fr'};gap:6px;margin-bottom:6px">
+        <div class="f"><label>CNG N2 Open</label><input type="number" step="0.01" class="num" id="edCOpen2" value="${c2.Opening_Reading||0}" oninput="calcEditTally()"></div>
+        ${isSplit ? `<div class="f"><label style="color:#fbbf24">CNG N2 Mid</label><input type="number" step="0.01" class="num" id="edCMid2" value="${c2.Mid_Reading||0}" oninput="calcEditTally()"></div>` : ''}
+        <div class="f"><label>CNG N2 Close</label><input type="number" step="0.01" class="num" id="edCClose2" value="${c2.Closing_Reading||0}" oninput="calcEditTally()"></div>
+      </div>
+      <div style="display:grid;grid-template-columns:${isSplit?'1fr 1fr':'1fr'};gap:6px;margin-bottom:6px">
+        <div class="f"><label>CNG Rate 1 ₹/KG</label><input type="number" step="0.01" class="num" id="edCRate" value="${cRate}" oninput="calcEditTally()"></div>
+        ${isSplit ? `<div class="f"><label style="color:#fbbf24">CNG Rate 2 ₹/KG</label><input type="number" step="0.01" class="num" id="edCRate2" value="${cRate2}" oninput="calcEditTally()"></div>` : ''}
+      </div>`;
+  }
+}
+
+function toggleEdSplit(){
+  const isSplit = $('edSplitToggle') && $('edSplitToggle').checked;
+  const p = Number($('edPump').value);
+  const isCNG = p === 3;
+  const s = __edShift || {};
+  const nz = s.Nozzle_Readings || [];
+  const getNz = (type, no) => nz.find(x => x.Fuel_Type === type && Number(x.Nozzle_No) === no) || {};
+  const p1 = getNz('Petrol', 1), p2 = getNz('Petrol', 2);
+  const d1 = getNz('Diesel', 1), d2 = getNz('Diesel', 2);
+  const c1 = getNz('CNG', 1), c2 = getNz('CNG', 2);
+  
+  const curPO1 = num('edPOpen1') || p1.Opening_Reading || 0;
+  const curPC1 = num('edPClose1') || p1.Closing_Reading || 0;
+  const curPM1 = num('edPMid1') || p1.Mid_Reading || 0;
+  const curPO2 = num('edPOpen2') || p2.Opening_Reading || 0;
+  const curPC2 = num('edPClose2') || p2.Closing_Reading || 0;
+  const curPM2 = num('edPMid2') || p2.Mid_Reading || 0;
+
+  const curDO1 = num('edDOpen1') || d1.Opening_Reading || 0;
+  const curDC1 = num('edDClose1') || d1.Closing_Reading || 0;
+  const curDM1 = num('edDMid1') || d1.Mid_Reading || 0;
+  const curDO2 = num('edDOpen2') || d2.Opening_Reading || 0;
+  const curDC2 = num('edDClose2') || d2.Closing_Reading || 0;
+  const curDM2 = num('edDMid2') || d2.Mid_Reading || 0;
+
+  const curCO1 = num('edCOpen1') || c1.Opening_Reading || 0;
+  const curCC1 = num('edCClose1') || c1.Closing_Reading || 0;
+  const curCM1 = num('edCMid1') || c1.Mid_Reading || 0;
+  const curCO2 = num('edCOpen2') || c2.Opening_Reading || 0;
+  const curCC2 = num('edCClose2') || c2.Closing_Reading || 0;
+  const curCM2 = num('edCMid2') || c2.Mid_Reading || 0;
+
+  const pR = num('edPRate') || p1.Rate || 116.96;
+  const pR2 = num('edPRate2') || p1.Rate2 || 0;
+  const dR = num('edDRate') || d1.Rate || 105.01;
+  const dR2 = num('edDRate2') || d1.Rate2 || 0;
+  const cR = num('edCRate') || c1.Rate || 114.00;
+  const cR2 = num('edCRate2') || c1.Rate2 || 0;
+
+  $('edNozzleInputs').innerHTML = renderEdNozzleFields(isCNG,
+    {Opening_Reading: curPO1, Closing_Reading: curPC1, Mid_Reading: curPM1},
+    {Opening_Reading: curPO2, Closing_Reading: curPC2, Mid_Reading: curPM2},
+    {Opening_Reading: curDO1, Closing_Reading: curDC1, Mid_Reading: curDM1},
+    {Opening_Reading: curDO2, Closing_Reading: curDC2, Mid_Reading: curDM2},
+    {Opening_Reading: curCO1, Closing_Reading: curCC1, Mid_Reading: curCM1},
+    {Opening_Reading: curCO2, Closing_Reading: curCC2, Mid_Reading: curCM2},
+    pR, pR2, dR, dR2, cR, cR2, isSplit);
+  calcEditTally();
+}
+
+function onEdPumpChange(){
+  toggleEdSplit();
+}
+
+function calcEditTally(){
+  const p = Number($('edPump').value);
+  const isCNG = p === 3;
+  const isSplit = $('edSplitToggle') && $('edSplitToggle').checked;
+  
+  const pn1 = !isCNG ? calcNoz('edPOpen1','edPMid1','edPClose1','edPRate','edPRate2',isSplit) : {lit:0,amt:0,rate:0};
+  const pn2 = !isCNG ? calcNoz('edPOpen2','edPMid2','edPClose2','edPRate','edPRate2',isSplit) : {lit:0,amt:0,rate:0};
+  const dn1 = !isCNG ? calcNoz('edDOpen1','edDMid1','edDClose1','edDRate','edDRate2',isSplit) : {lit:0,amt:0,rate:0};
+  const dn2 = !isCNG ? calcNoz('edDOpen2','edDMid2','edDClose2','edDRate','edDRate2',isSplit) : {lit:0,amt:0,rate:0};
+  const cn1 = isCNG ? calcNoz('edCOpen1','edCMid1','edCClose1','edCRate','edCRate2',isSplit) : {lit:0,amt:0,rate:0};
+  const cn2 = isCNG ? calcNoz('edCOpen2','edCMid2','edCClose2','edCRate','edCRate2',isSplit) : {lit:0,amt:0,rate:0};
+  
+  const pLit = pn1.lit + pn2.lit;
+  const pAmt = pn1.amt + pn2.amt;
+  const dLit = dn1.lit + dn2.lit;
+  const dAmt = dn1.amt + dn2.amt;
+  const cLit = cn1.lit + cn2.lit;
+  const cAmt = cn1.amt + cn2.amt;
+  
+  const totalSales = pAmt + dAmt + cAmt;
+  const cash = num('edCash');
+  const online = num('edOnline');
+  const otp = num('edOtp');
+  const exp = num('edExp');
+  const testAmt = num('edTestAmt');
+  const col = cash + online + otp;
+  const diff = col + exp + testAmt - totalSales;
+  
+  $('edSumSales').textContent = money(totalSales);
+  $('edSumCol').textContent = money(col);
+  $('edSumExp').textContent = money(exp + testAmt);
+  $('edSumDiff').textContent = money(Math.abs(diff)) + (Math.abs(diff)<0.5?' (Bal)':(diff<0?' (Short)':' (Excess)'));
+  $('edSumDiff').style.color = Math.abs(diff) < 0.5 ? '#34d399' : (diff < 0 ? '#f87171' : '#fbbf24');
+}
+
+async function submitFullEditShift(){
+  if(!__edShift){ toast('No shift loaded', 'err'); return; }
+  const reason = $('edReason').value.trim();
+  if(!reason){ toast('Please enter reason for edit', 'err'); return; }
+  
+  const p = Number($('edPump').value);
+  const isCNG = p === 3;
+  const isSplit = $('edSplitToggle') && $('edSplitToggle').checked;
+  const dateVal = $('edDate').value;
+  const staffIdVal = $('edStaff').value;
+  if(!dateVal){ toast('Please select date', 'err'); return; }
+  
+  const pn1 = !isCNG ? calcNoz('edPOpen1','edPMid1','edPClose1','edPRate','edPRate2',isSplit) : {lit:0,amt:0,rate:0,l1:0,a1:0,l2:0,a2:0,r1:0,r2:0,mid:0,open:0,close:0};
+  const pn2 = !isCNG ? calcNoz('edPOpen2','edPMid2','edPClose2','edPRate','edPRate2',isSplit) : {lit:0,amt:0,rate:0,l1:0,a1:0,l2:0,a2:0,r1:0,r2:0,mid:0,open:0,close:0};
+  const dn1 = !isCNG ? calcNoz('edDOpen1','edDMid1','edDClose1','edDRate','edDRate2',isSplit) : {lit:0,amt:0,rate:0,l1:0,a1:0,l2:0,a2:0,r1:0,r2:0,mid:0,open:0,close:0};
+  const dn2 = !isCNG ? calcNoz('edDOpen2','edDMid2','edDClose2','edDRate','edDRate2',isSplit) : {lit:0,amt:0,rate:0,l1:0,a1:0,l2:0,a2:0,r1:0,r2:0,mid:0,open:0,close:0};
+  const cn1 = isCNG ? calcNoz('edCOpen1','edCMid1','edCClose1','edCRate','edCRate2',isSplit) : {lit:0,amt:0,rate:0,l1:0,a1:0,l2:0,a2:0,r1:0,r2:0,mid:0,open:0,close:0};
+  const cn2 = isCNG ? calcNoz('edCOpen2','edCMid2','edCClose2','edCRate','edCRate2',isSplit) : {lit:0,amt:0,rate:0,l1:0,a1:0,l2:0,a2:0,r1:0,r2:0,mid:0,open:0,close:0};
+  
+  const pLit = pn1.lit + pn2.lit;
+  const pAmt = pn1.amt + pn2.amt;
+  const dLit = dn1.lit + dn2.lit;
+  const dAmt = dn1.amt + dn2.amt;
+  const cLit = cn1.lit + cn2.lit;
+  const cAmt = cn1.amt + cn2.amt;
+  
+  const nozzles = [];
+  if(!isCNG){
+    nozzles.push({ Nozzle_No: 1, Fuel_Type: 'Petrol', Opening_Reading: pn1.open, Closing_Reading: pn1.close, Mid_Reading: pn1.mid, Litres: pn1.lit, Rate: Number(pn1.rate.toFixed(4)), Amount: Number(pn1.amt.toFixed(2)), Rate1: pn1.r1, Rate2: pn1.r2, Slot1_Litres: pn1.l1, Slot1_Amount: pn1.a1, Slot2_Litres: pn1.l2, Slot2_Amount: pn1.a2 });
+    nozzles.push({ Nozzle_No: 2, Fuel_Type: 'Petrol', Opening_Reading: pn2.open, Closing_Reading: pn2.close, Mid_Reading: pn2.mid, Litres: pn2.lit, Rate: Number(pn2.rate.toFixed(4)), Amount: Number(pn2.amt.toFixed(2)), Rate1: pn2.r1, Rate2: pn2.r2, Slot1_Litres: pn2.l1, Slot1_Amount: pn2.a1, Slot2_Litres: pn2.l2, Slot2_Amount: pn2.a2 });
+    nozzles.push({ Nozzle_No: 1, Fuel_Type: 'Diesel', Opening_Reading: dn1.open, Closing_Reading: dn1.close, Mid_Reading: dn1.mid, Litres: dn1.lit, Rate: Number(dn1.rate.toFixed(4)), Amount: Number(dn1.amt.toFixed(2)), Rate1: dn1.r1, Rate2: dn1.r2, Slot1_Litres: dn1.l1, Slot1_Amount: dn1.a1, Slot2_Litres: dn1.l2, Slot2_Amount: dn1.a2 });
+    nozzles.push({ Nozzle_No: 2, Fuel_Type: 'Diesel', Opening_Reading: dn2.open, Closing_Reading: dn2.close, Mid_Reading: dn2.mid, Litres: dn2.lit, Rate: Number(dn2.rate.toFixed(4)), Amount: Number(dn2.amt.toFixed(2)), Rate1: dn2.r1, Rate2: dn2.r2, Slot1_Litres: dn2.l1, Slot1_Amount: dn2.a1, Slot2_Litres: dn2.l2, Slot2_Amount: dn2.a2 });
+  } else {
+    nozzles.push({ Nozzle_No: 1, Fuel_Type: 'CNG', Opening_Reading: cn1.open, Closing_Reading: cn1.close, Mid_Reading: cn1.mid, Litres: cn1.lit, Rate: Number(cn1.rate.toFixed(4)), Amount: Number(cn1.amt.toFixed(2)), Rate1: cn1.r1, Rate2: cn1.r2, Slot1_Litres: cn1.l1, Slot1_Amount: cn1.a1, Slot2_Litres: cn1.l2, Slot2_Amount: cn1.a2 });
+    nozzles.push({ Nozzle_No: 2, Fuel_Type: 'CNG', Opening_Reading: cn2.open, Closing_Reading: cn2.close, Mid_Reading: cn2.mid, Litres: cn2.lit, Rate: Number(cn2.rate.toFixed(4)), Amount: Number(cn2.amt.toFixed(2)), Rate1: cn2.r1, Rate2: cn2.r2, Slot1_Litres: cn2.l1, Slot1_Amount: cn2.a1, Slot2_Litres: cn2.l2, Slot2_Amount: cn2.a2 });
+  }
+  
+  const totalSales = pAmt + dAmt + cAmt;
+  const cash = num('edCash');
+  const online = num('edOnline');
+  const otp = num('edOtp');
+  const exp = num('edExp');
+  const testAmt = num('edTestAmt');
+  const col = cash + online + otp;
+  const diff = col + exp + testAmt - totalSales;
+  
+  const payload = {
+    Shift_ID: __edShift.Shift_ID,
+    Date: dateVal,
+    Pump_No: p,
+    Staff_ID: staffIdVal,
+    Petrol_Litres: pLit,
+    Petrol_Amount: pAmt,
+    Diesel_Litres: dLit,
+    Diesel_Amount: dAmt,
+    CNG_KG: cLit,
+    CNG_Amount: cAmt,
+    Total_Sales: totalSales,
+    Online_Amount: online,
+    OTP_Amount: otp,
+    Cash_Total: cash,
+    Change_Amount: 0,
+    Expenditure: exp,
+    Testing_Amount: testAmt,
+    Total_Collected: col,
+    Difference: diff,
+    Nozzle_Readings: nozzles
+  };
+  
+  loading(true, 'Saving edit to shift...');
+  const res = await api('updateShift', { data: payload, reason });
+  loading(false);
+  if(!res.ok){ toast(res.error || 'Edit failed', 'err'); return; }
+  toast('✅ Shift successfully updated');
+  closeEditShift();
+  loadEntries();
+}
+
+async function changeShiftDate(shiftId, currentDate){
+  const newDate = prompt(`Shift ID: ${shiftId}\nప్రస్తుత తేదీ: ${currentDate}\nమార్చాల్సిన కొత్త తేదీ (YYYY-MM-DD):`, yesterday());
+  if(!newDate || newDate === currentDate) return;
+  if(!/^\d{4}-\d{2}-\d{2}$/.test(newDate)){ toast('Invalid date format','err'); return; }
+  loading(true, 'Updating date...');
+  const rShift = await api('getShift', {shiftId});
+  if(!rShift.ok || !rShift.shift){ loading(false); toast(rShift.error || 'Failed to fetch', 'err'); return; }
+  const sData = rShift.shift;
+  sData.Date = newDate;
+  (sData.Nozzle_Readings||[]).forEach(x=>x.Date=newDate);
+  (sData.Cash_Details||[]).forEach(x=>x.Date=newDate);
+  (sData.Payments||[]).forEach(x=>x.Date=newDate);
+  (sData.OTP_Settlement||[]).forEach(x=>x.Sales_Date=newDate);
+  (sData.Expenditure_Details||[]).forEach(x=>x.Date=newDate);
+  const res = await api('updateShift', { data: sData, reason: 'Date correction: ' + currentDate + ' -> ' + newDate });
+  loading(false);
+  if(!res.ok){ toast(res.error || 'Update failed', 'err'); return; }
+  toast('✅ Date updated to ' + newDate);
+  loadEntries();
 }
 
 /* ═════ DASHBOARD ═════ */
