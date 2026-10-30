@@ -266,6 +266,9 @@ tbody tr:hover td{background:#f8fafc}
         </div>
       </div>
       <div class="topbar-right">
+        <button class="btn btn-ghost btn-sm" onclick="configureServerUrl()" title="Click to Switch API Server (Cloudflare vs Google Sheets)" style="display:flex;align-items:center;gap:6px;font-size:12px;font-weight:700;border:1px solid var(--line);background:#fff">
+          <span id="srvBadgeDesk">⚡ Server</span>
+        </button>
         <a href="index.html" class="btn btn-ghost btn-sm" style="text-decoration:none" title="Switch to Mobile View">📱 Mobile View</a>
         <div class="badge-sync" id="syncBadge">☁️ Connected</div>
       </div>
@@ -483,7 +486,36 @@ tbody tr:hover td{background:#f8fafc}
 
 <script>
 /* ═════ CONFIG ═════ */
-const API_URL = "https://script.google.com/macros/s/AKfycby3RCm-KbT1_YUA3BCapzEiNxekRSbOjNKxoxQwFx_qgKufeTVCPyERQ8VHuU7GFuErtw/exec";
+const DEFAULT_GAS_URL = "https://script.google.com/macros/s/AKfycby3RCm-KbT1_YUA3BCapzEiNxekRSbOjNKxoxQwFx_qgKufeTVCPyERQ8VHuU7GFuErtw/exec";
+function getApiUrl(){ return localStorage.getItem('CUSTOM_API_URL') || DEFAULT_GAS_URL; }
+const API_URL = getApiUrl();
+
+
+function updateServerBadgeUi(){
+  const isCustom = !!localStorage.getItem('CUSTOM_API_URL');
+  const d = $('srvBadgeDesk'), m = $('srvBadgeMob');
+  const txt = isCustom ? '⚡ Cloudflare Edge (<50ms)' : '🐢 Google Sheets';
+  const color = isCustom ? '#16a34a' : '#ea580c';
+  if(d){ d.innerHTML = txt; d.style.color = color; }
+  if(m){ m.innerHTML = txt; m.style.color = color; }
+}
+window.addEventListener('DOMContentLoaded', updateServerBadgeUi);
+
+function configureServerUrl(){
+  const curr = localStorage.getItem('CUSTOM_API_URL') || '';
+  const val = prompt('Server API URL ని మార్చండి:\n- Cloudflare Worker URL (ఉదా: https://fuel-bunk-api.xxx.workers.dev)\n- లేదా ఖాళీగా వదిలేస్తే డీఫాల్ట్ Google Sheets కి వెళ్తుంది:', curr);
+  if(val !== null){
+    if(val.trim()){
+      localStorage.setItem('CUSTOM_API_URL', val.trim());
+      alert('⚡ Cloudflare Ultra-Fast Server సెట్ చేయబడింది! పేజీ రీలోడ్ అవుతుంది.');
+    } else {
+      localStorage.removeItem('CUSTOM_API_URL');
+      alert('🐢 Google Sheets డీఫాల్ట్ సర్వర్ కి మార్చబడింది! పేజీ రీలోడ్ అవుతుంది.');
+    }
+    location.reload();
+  }
+}
+
 
 let me=null, pickedStaffId=null, pickedPump=0, charts={}, repType='daily';
 const $=id=>document.getElementById(id);
@@ -497,7 +529,7 @@ const monthNow=()=>today().slice(0,7);
 function toast(msg,type='ok'){$('toastM').textContent=msg;$('toastI').textContent=type==='ok'?'✅':type==='err'?'⚠️':'ℹ️';$('toast').className='toast '+type+' show';clearTimeout(window.__tt);window.__tt=setTimeout(()=>$('toast').classList.remove('show'),2600);}
 function loading(on,txt){$('loaderTxt').textContent=txt||'Loading...';$('loader').classList.toggle('show',on);}
 async function sha256(t){const b=new TextEncoder().encode(t);const h=await crypto.subtle.digest('SHA-256',b);return Array.from(new Uint8Array(h)).map(x=>x.toString(16).padStart(2,'0')).join('');}
-async function api(action,extra={}){try{const res=await fetch(API_URL,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify({action,currentUser:me,...extra})});return await res.json();}catch(e){return{ok:false,error:'Network: '+e.message};}}
+async function api(action,extra={}){try{const res=await fetch(getApiUrl(),{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify({action,currentUser:me,...extra})});return await res.json();}catch(e){return{ok:false,error:'Network: '+e.message};}}
 
 function nav(id,el){
   document.querySelectorAll('.sec').forEach(s=>s.classList.remove('active'));

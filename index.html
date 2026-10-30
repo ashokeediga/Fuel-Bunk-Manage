@@ -191,7 +191,12 @@ td{padding:9px 8px;border-bottom:1px solid var(--line);font-variant-numeric:tabu
     <div id="mgrPickBox" class="card" style="display:none">
       <div class="f" style="margin-bottom:0"><label>👤 Employee</label><select id="empPickHome" style="display:none"></select></div>
     </div>
-    <div class="home-hello"><h2 id="helloName">Hello 👋</h2><p id="helloDate">—</p></div>
+    <div class="home-hello">
+      <div style="display:flex;justify-content:flex-end;margin-bottom:6px">
+        <button class="btn btn-ghost btn-sm" onclick="configureServerUrl()" style="padding:4px 10px;font-size:11px;font-weight:700;border:1px solid var(--line);background:#fff">
+          <span id="srvBadgeMob">⚡ Server</span>
+        </button>
+      </div><h2 id="helloName">Hello 👋</h2><p id="helloDate">—</p></div>
     <div class="kpi-grid" id="homeKpis"></div>
     <div class="tile-grid">
       <div class="tile primary" onclick="startEntry()"><div class="ti">➕</div><div><div class="tt">New Entry</div><div class="ts">Sales entry</div></div></div>
@@ -533,7 +538,36 @@ td{padding:9px 8px;border-bottom:1px solid var(--line);font-variant-numeric:tabu
 
 <script>
 /* ═════ CONFIG ═════ */
-const API_URL = "https://script.google.com/macros/s/AKfycby3RCm-KbT1_YUA3BCapzEiNxekRSbOjNKxoxQwFx_qgKufeTVCPyERQ8VHuU7GFuErtw/exec";
+const DEFAULT_GAS_URL = "https://script.google.com/macros/s/AKfycby3RCm-KbT1_YUA3BCapzEiNxekRSbOjNKxoxQwFx_qgKufeTVCPyERQ8VHuU7GFuErtw/exec";
+function getApiUrl(){ return localStorage.getItem('CUSTOM_API_URL') || DEFAULT_GAS_URL; }
+const API_URL = getApiUrl();
+
+
+function updateServerBadgeUi(){
+  const isCustom = !!localStorage.getItem('CUSTOM_API_URL');
+  const d = $('srvBadgeDesk'), m = $('srvBadgeMob');
+  const txt = isCustom ? '⚡ Cloudflare Edge (<50ms)' : '🐢 Google Sheets';
+  const color = isCustom ? '#16a34a' : '#ea580c';
+  if(d){ d.innerHTML = txt; d.style.color = color; }
+  if(m){ m.innerHTML = txt; m.style.color = color; }
+}
+window.addEventListener('DOMContentLoaded', updateServerBadgeUi);
+
+function configureServerUrl(){
+  const curr = localStorage.getItem('CUSTOM_API_URL') || '';
+  const val = prompt('Server API URL ని మార్చండి:\n- Cloudflare Worker URL (ఉదా: https://fuel-bunk-api.xxx.workers.dev)\n- లేదా ఖాళీగా వదిలేస్తే డీఫాల్ట్ Google Sheets కి వెళ్తుంది:', curr);
+  if(val !== null){
+    if(val.trim()){
+      localStorage.setItem('CUSTOM_API_URL', val.trim());
+      alert('⚡ Cloudflare Ultra-Fast Server సెట్ చేయబడింది! పేజీ రీలోడ్ అవుతుంది.');
+    } else {
+      localStorage.removeItem('CUSTOM_API_URL');
+      alert('🐢 Google Sheets డీఫాల్ట్ సర్వర్ కి మార్చబడింది! పేజీ రీలోడ్ అవుతుంది.');
+    }
+    location.reload();
+  }
+}
+
 
 let me=null, pickedStaffId=null, pickedPump=0, charts={}, repType='daily';
 const $=id=>document.getElementById(id);
@@ -549,7 +583,7 @@ function toast(msg,type='ok'){$('toastM').textContent=msg;$('toastI').textConten
 function loading(on,txt){$('loaderTxt').textContent=txt||'Loading...';$('loader').classList.toggle('show',on);}
 function vibrate(p){if(navigator.vibrate)try{navigator.vibrate(p||10);}catch(e){}}
 async function sha256(t){const b=new TextEncoder().encode(t);const h=await crypto.subtle.digest('SHA-256',b);return Array.from(new Uint8Array(h)).map(x=>x.toString(16).padStart(2,'0')).join('');}
-async function api(action,extra={}){try{const res=await fetch(API_URL,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify({action,currentUser:me,...extra})});return await res.json();}catch(e){return{ok:false,error:'Network: '+e.message};}}
+async function api(action,extra={}){try{const res=await fetch(getApiUrl(),{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify({action,currentUser:me,...extra})});return await res.json();}catch(e){return{ok:false,error:'Network: '+e.message};}}
 
 /* ═════ LOGIN ═════ */
 async function doLogin(bgId, bgPin){
