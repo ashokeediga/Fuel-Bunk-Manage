@@ -303,8 +303,15 @@ tbody tr:hover td{background:#f8fafc}
       <div id="secEntries" class="sec">
         <div class="card">
           <div class="card-hdr"><div><h3>Saved Entries</h3><div class="h-sub">Recent shift records</div></div>
-            <div style="display:flex;gap:10px;align-items:center">
+            <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">
+              <select id="entriesPump" onchange="loadEntries()" style="border:1.5px solid var(--line);border-radius:9px;padding:8px 12px;font-size:13px;font-weight:600;font-family:inherit">
+                <option value="">All Pumps (MS, HSD & CNG)</option>
+                <option value="1">Pump 1 (Petrol + Diesel)</option>
+                <option value="2">Pump 2 (Petrol + Diesel)</option>
+                <option value="3">Pump 3 (CNG Only)</option>
+              </select>
               <input type="date" id="entriesDate" onchange="loadEntries()" style="border:1.5px solid var(--line);border-radius:9px;padding:8px 12px;font-size:13px;font-weight:600;font-family:inherit">
+              <button class="btn btn-ghost btn-sm" onclick="$('entriesDate').value='';$('entriesPump').value='';loadEntries();" style="border:1.5px solid var(--line);padding:7px 12px;font-size:12px;font-weight:600">Clear</button>
             </div>
           </div>
           <div id="entriesOut"></div>
@@ -318,7 +325,7 @@ tbody tr:hover td{background:#f8fafc}
           <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px">
             <div>
               <h2 style="font-size:20px;font-weight:800;margin:0 0 4px 0;display:flex;align-items:center;gap:10px">📖 Rapid Book Entry Dashboard <span style="font-size:12px;background:#3b82f6;color:#fff;padding:2px 8px;border-radius:12px">BULK MODE</span></h2>
-              <div style="font-size:13px;color:#cbd5e1">చేతితో రాసిన పాత డైరీ / బల్కాపూర్ ఎక్సెల్ ఎంట్రీలను వేగంగా ఎంటర్ చేయండి. ప్రతీ బాక్స్ లో <b>Enter</b> నొక్కగానే నెక్స్ట్ బాక్స్ కి వెళ్తుంది. క్లోజింగ్ రీడింగ్ ఆటోమేటిక్ గా తర్వాతి రోజు ఓపెనింగ్ గా మారుతుంది.</div>
+              <div style="font-size:13px;color:#cbd5e1">Quickly enter daily diary records or Excel shift entries. Press <b>Enter</b> in any box to jump to the next field. Closing reading automatically sets the next day's opening reading.</div>
             </div>
             <div style="display:flex;gap:8px;flex-wrap:wrap">
               <button class="btn btn-primary" onclick="addBookRow()" style="font-weight:700">➕ Add Row (Enter)</button>
@@ -536,15 +543,15 @@ tbody tr:hover td{background:#f8fafc}
   <div class="modal" style="width:min(820px, 98%); max-height:92vh; overflow-y:auto">
     <div style="display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid var(--line);padding-bottom:12px;margin-bottom:16px">
       <div>
-        <h3 style="font-size:17px;font-weight:900;margin:0">✏️ Edit Shift Entry (పూర్తి సవరణ)</h3>
+        <h3 style="font-size:17px;font-weight:900;margin:0">✏️ Edit Shift Entry</h3>
         <p style="font-size:11.5px;color:var(--t2);margin-top:3px" id="edShiftSub">—</p>
       </div>
       <button class="x" onclick="closeEditShift()">×</button>
     </div>
     <div id="edShiftBody"></div>
     <div style="margin-top:20px;display:flex;gap:10px;justify-content:flex-end;border-top:1px solid var(--line);padding-top:14px">
-      <button class="btn btn-ghost" onclick="closeEditShift()">Cancel (రద్దు)</button>
-      <button class="btn btn-primary" onclick="submitFullEditShift()">💾 Save Changes (సేవ్ చేయి)</button>
+      <button class="btn btn-ghost" onclick="closeEditShift()">Cancel</button>
+      <button class="btn btn-primary" onclick="submitFullEditShift()">💾 Save Changes</button>
     </div>
   </div>
 </div>
@@ -585,14 +592,14 @@ window.addEventListener('DOMContentLoaded', updateServerBadgeUi);
 
 function configureServerUrl(){
   const curr = localStorage.getItem('CUSTOM_API_URL') || '';
-  const val = prompt('Server API URL ని మార్చండి:\n- Cloudflare Worker URL (ఉదా: https://fuel-bunk-api.xxx.workers.dev)\n- లేదా ఖాళీగా వదిలేస్తే డీఫాల్ట్ Google Sheets కి వెళ్తుంది:', curr);
+  const val = prompt('Change Server API URL:\n- Cloudflare Worker URL (e.g., https://fuel-bunk-api.xxx.workers.dev)\n- Leave blank to use default Google Sheets backend:', curr);
   if(val !== null){
     if(val.trim()){
       localStorage.setItem('CUSTOM_API_URL', val.trim());
-      alert('⚡ Cloudflare Ultra-Fast Server సెట్ చేయబడింది! పేజీ రీలోడ్ అవుతుంది.');
+      alert('⚡ Cloudflare Ultra-Fast Server active! Page will reload.');
     } else {
       localStorage.removeItem('CUSTOM_API_URL');
-      alert('🐢 Google Sheets డీఫాల్ట్ సర్వర్ కి మార్చబడింది! పేజీ రీలోడ్ అవుతుంది.');
+      alert('🐢 Switched to Google Sheets backend! Page will reload.');
     }
     location.reload();
   }
@@ -969,10 +976,19 @@ async function loadEntries(){
   loading(true,'Loading...');
   const params={};
   if(me.Role==='Employee') params.staffId=me.Staff_ID;
-  if($('entriesDate')&&$('entriesDate').value)params.date=$('entriesDate').value;
+  if($('entriesDate')&&$('entriesDate').value) params.date=$('entriesDate').value;
+  if($('entriesPump')&&$('entriesPump').value) params.pump=$('entriesPump').value;
+
   const r=await api('getShifts',params);loading(false);
   if(!r.ok){$('entriesOut').innerHTML='<div class="tbl-empty">Failed to load entries</div>';return;}
-  const shifts=r.shifts||[];
+  let shifts=r.shifts||[];
+
+  // Client-side fallback filter for pump
+  if($('entriesPump') && $('entriesPump').value){
+    const pFilter = String($('entriesPump').value);
+    shifts = shifts.filter(s => String(s.Pump_No) === pFilter);
+  }
+
   if(!shifts.length){$('entriesOut').innerHTML='<div class="tbl-empty">No entries found</div>';return;}
 
   // Strict sorting: newest date first, then Pump 1, 2, 3
@@ -1001,21 +1017,28 @@ async function loadEntries(){
       const d = Number(s.Difference || 0);
       const bc = Math.abs(d) < 0.5 ? 'ok' : (d < 0 ? 'bad' : 'warn');
       const dt = String(s.Date || '').slice(0, 10);
+      const isCNG = Number(s.Pump_No) === 3 || Number(s.CNG_KG || s.CNG_Total_Kg || 0) > 0;
+      const cngKg = Number(s.CNG_KG || s.CNG_Total_Kg || 0);
       h += `
-        <div class="card" style="margin:0;padding:16px;border-left:4px solid var(--pri);position:relative">
+        <div class="card" style="margin:0;padding:16px;border-left:4px solid ${isCNG ? '#8b5cf6' : 'var(--pri)'};position:relative">
           <div style="display:flex;justify-content:space-between;align-items:flex-start">
             <div>
-              <div style="font-weight:800;font-size:15px;color:var(--t)">📅 <b>${dt}</b> · Pump ${s.Pump_No}</div>
+              <div style="font-weight:800;font-size:15px;color:var(--t)">📅 <b>${dt}</b> · <span style="color:${isCNG ? '#8b5cf6' : 'var(--pri)'}">Pump ${s.Pump_No}${isCNG ? ' (CNG)' : ''}</span></div>
               <div style="font-size:12px;color:var(--t2);margin-top:4px">👤 Staff: <b>${s.Staff_Name || s.Staff_ID}</b></div>
             </div>
             <div style="text-align:right">
-              <div style="font-weight:900;font-size:16px;color:#2563eb">${money(s.Total_Sales)}</div>
+              <div style="font-weight:900;font-size:16px;color:var(--pri)">${money(s.Total_Sales)}</div>
               <div style="margin-top:3px"><span class="b ${bc}">${money(Math.abs(d))}</span></div>
             </div>
           </div>
           <div style="display:flex;justify-content:space-between;font-size:12px;color:var(--t2);margin:10px 0;padding:8px 0;border-top:1px dashed var(--line);border-bottom:1px dashed var(--line)">
-            <span>MS: <b>${fmt(s.Petrol_Litres||0)} L</b></span>
-            <span>HSD: <b>${fmt(s.Diesel_Litres||0)} L</b></span>
+            ${isCNG ? `
+              <span>CNG: <b style="color:#8b5cf6;font-size:13px">${fmt(cngKg)} KG</b></span>
+              <span>Rate: <b>₹ ${Number(s.CNG_Kg_Rate || 114).toFixed(2)}</b></span>
+            ` : `
+              <span>MS: <b>${fmt(s.Petrol_Litres||0)} L</b></span>
+              <span>HSD: <b>${fmt(s.Diesel_Litres||0)} L</b></span>
+            `}
             <span>Collected: <b>${money(s.Total_Collected)}</b></span>
           </div>
           ${isOwn ? `
@@ -1029,20 +1052,33 @@ async function loadEntries(){
     h += '</div>';
     $('entriesOut').innerHTML = h;
   } else {
-    // Table View
-    let h = headerBar + '<div class="tbl-wrap"><table><thead><tr><th>Date</th><th>Pump</th><th>Staff</th><th>Petrol L</th><th>Diesel L</th><th>Total Sales</th><th>Collected</th><th>Difference</th>'+(isOwn?'<th style="text-align:center">Actions</th>':'')+'</tr></thead><tbody>';
+    // Table View - now with dedicated CNG (KG) column!
+    let h = headerBar + '<div class="tbl-wrap"><table><thead><tr><th>Date</th><th>Pump</th><th>Staff</th><th>Petrol (L)</th><th>Diesel (L)</th><th>CNG (KG)</th><th>Total Sales</th><th>Collected</th><th>Difference</th>'+(isOwn?'<th style="text-align:center">Actions</th>':'')+'</tr></thead><tbody>';
     shifts.forEach(s => {
       const d = Number(s.Difference || 0);
       const bc = Math.abs(d) < 0.5 ? 'ok' : (d < 0 ? 'bad' : 'warn');
       const dt = String(s.Date || '').slice(0, 10);
-      h += `<tr><td><b>${dt}</b></td><td>P${s.Pump_No}</td><td>${s.Staff_Name||s.Staff_ID}</td><td>${fmt(s.Petrol_Litres||0)}</td><td>${fmt(s.Diesel_Litres||0)}</td><td><b>${money(s.Total_Sales)}</b></td><td>${money(s.Total_Collected)}</td><td><span class="b ${bc}">${money(Math.abs(d))}</span></td>` + (isOwn ? `<td style="text-align:center"><div style="display:flex;gap:6px;justify-content:center"><button class="btn btn-primary btn-sm" onclick="openFullEditShift('${s.Shift_ID}')" title="Full Edit">✏️ Edit Shift</button><button class="btn btn-ghost btn-sm" onclick="changeShiftDate('${s.Shift_ID}','${dt}')" title="Edit Date Only">📅 Date</button></div></td>` : '') + `</tr>`;
+      const isCNG = Number(s.Pump_No) === 3 || Number(s.CNG_KG || s.CNG_Total_Kg || 0) > 0;
+      const cngKg = Number(s.CNG_KG || s.CNG_Total_Kg || 0);
+      h += `<tr>
+        <td><b>${dt}</b></td>
+        <td><span style="font-weight:800;color:${isCNG ? '#8b5cf6' : 'var(--pri)'}">P${s.Pump_No}${isCNG ? ' (CNG)' : ''}</span></td>
+        <td>${s.Staff_Name||s.Staff_ID}</td>
+        <td>${Number(s.Petrol_Litres||0) > 0 ? fmt(s.Petrol_Litres) : '-'}</td>
+        <td>${Number(s.Diesel_Litres||0) > 0 ? fmt(s.Diesel_Litres) : '-'}</td>
+        <td><b style="color:#8b5cf6">${cngKg > 0 ? fmt(cngKg) : '-'}</b></td>
+        <td><b>${money(s.Total_Sales)}</b></td>
+        <td>${money(s.Total_Collected)}</td>
+        <td><span class="b ${bc}">${money(Math.abs(d))}</span></td>` + 
+        (isOwn ? `<td style="text-align:center"><div style="display:flex;gap:6px;justify-content:center"><button class="btn btn-primary btn-sm" onclick="openFullEditShift('${s.Shift_ID}')" title="Full Edit">✏️ Edit</button><button class="btn btn-ghost btn-sm" onclick="changeShiftDate('${s.Shift_ID}','${dt}')" title="Edit Date Only">📅 Date</button></div></td>` : '') + 
+        `</tr>`;
     });
     h += '</tbody></table></div>';
     $('entriesOut').innerHTML = h;
   }
 }
 
-let __edShift=null, __edStaffList=[];
+let __edShift=nulllet __edShift=null, __edStaffList=[];
 
 function calcNoz(openId, midId, closeId, rate1Id, rate2Id, isSplit){
   const o = num(openId), c = num(closeId), m = num(midId);
@@ -1078,7 +1114,7 @@ function renderEdNozzleFields(isCNG, p1, p2, d1, d2, c1, c2, pRate, pRate2, dRat
       </div>
       <div style="display:grid;grid-template-columns:${isSplit?'1fr 1fr':'1fr'};gap:10px;margin-bottom:16px">
         <div class="f"><label>MS Rate 1 ₹/L</label><input type="number" step="0.01" class="num" id="edPRate" value="${pRate}" oninput="calcEditTally()"></div>
-        ${isSplit ? `<div class="f"><label style="color:#d97706;font-weight:800">⚡ MS Rate 2 ₹/L (కొత్త రేటు)</label><input type="number" step="0.01" class="num" id="edPRate2" value="${pRate2}" style="border-color:#f59e0b;background:#fffbeb" oninput="calcEditTally()"></div>` : ''}
+        ${isSplit ? `<div class="f"><label style="color:#d97706;font-weight:800">⚡ MS Rate 2 (₹/L)</label><input type="number" step="0.01" class="num" id="edPRate2" value="${pRate2}" style="border-color:#f59e0b;background:#fffbeb" oninput="calcEditTally()"></div>` : ''}
       </div>
 
       <div style="font-size:12px;font-weight:800;color:var(--ok);margin-bottom:8px">⛽ HSD Diesel Nozzles</div>
@@ -1094,7 +1130,7 @@ function renderEdNozzleFields(isCNG, p1, p2, d1, d2, c1, c2, pRate, pRate2, dRat
       </div>
       <div style="display:grid;grid-template-columns:${isSplit?'1fr 1fr':'1fr'};gap:10px;margin-bottom:12px">
         <div class="f"><label>HSD Rate 1 ₹/L</label><input type="number" step="0.01" class="num" id="edDRate" value="${dRate}" oninput="calcEditTally()"></div>
-        ${isSplit ? `<div class="f"><label style="color:#d97706;font-weight:800">⚡ HSD Rate 2 ₹/L (కొత్త రేటు)</label><input type="number" step="0.01" class="num" id="edDRate2" value="${dRate2}" style="border-color:#f59e0b;background:#fffbeb" oninput="calcEditTally()"></div>` : ''}
+        ${isSplit ? `<div class="f"><label style="color:#d97706;font-weight:800">⚡ HSD Rate 2 (₹/L)</label><input type="number" step="0.01" class="num" id="edDRate2" value="${dRate2}" style="border-color:#f59e0b;background:#fffbeb" oninput="calcEditTally()"></div>` : ''}
       </div>`;
   } else {
     return `
@@ -1111,7 +1147,7 @@ function renderEdNozzleFields(isCNG, p1, p2, d1, d2, c1, c2, pRate, pRate2, dRat
       </div>
       <div style="display:grid;grid-template-columns:${isSplit?'1fr 1fr':'1fr'};gap:10px;margin-bottom:12px">
         <div class="f"><label>CNG Rate 1 ₹/KG</label><input type="number" step="0.01" class="num" id="edCRate" value="${cRate}" oninput="calcEditTally()"></div>
-        ${isSplit ? `<div class="f"><label style="color:#d97706;font-weight:800">⚡ CNG Rate 2 ₹/KG (కొత్త రేటు)</label><input type="number" step="0.01" class="num" id="edCRate2" value="${cRate2}" style="border-color:#f59e0b;background:#fffbeb" oninput="calcEditTally()"></div>` : ''}
+        ${isSplit ? `<div class="f"><label style="color:#d97706;font-weight:800">⚡ CNG Rate 2 (₹/KG)</label><input type="number" step="0.01" class="num" id="edCRate2" value="${cRate2}" style="border-color:#f59e0b;background:#fffbeb" oninput="calcEditTally()"></div>` : ''}
       </div>`;
   }
 }
@@ -1143,37 +1179,44 @@ async function openFullEditShift(shiftId){
   const d1 = getNz('Diesel', 1), d2 = getNz('Diesel', 2);
   const c1 = getNz('CNG', 1), c2 = getNz('CNG', 2);
   
+  // If shift has CNG but nozzle reading closing is 0, populate from CNG_KG
+  const cngTotal = Number(s.CNG_KG || s.CNG_Total_Kg || 0);
+  if (isCNG && (!c1.Closing_Reading || c1.Closing_Reading === 0) && cngTotal > 0) {
+    c1.Closing_Reading = cngTotal;
+    c1.Litres = cngTotal;
+  }
+
   const hasSplit = nz.some(x => Number(x.Mid_Reading || 0) > 0 || Number(x.Rate2 || 0) > 0);
   const pRateVal = p1.Rate1 || p1.Rate || p2.Rate1 || p2.Rate || 116.96;
   const pRate2Val = p1.Rate2 || p2.Rate2 || 0;
   const dRateVal = d1.Rate1 || d1.Rate || d2.Rate1 || d2.Rate || 105.01;
   const dRate2Val = d1.Rate2 || d2.Rate2 || 0;
-  const cRateVal = c1.Rate1 || c1.Rate || c2.Rate1 || c2.Rate || 114.00;
+  const cRateVal = c1.Rate1 || c1.Rate || c2.Rate1 || c2.Rate || Number(s.CNG_Kg_Rate || 0) || 114.00;
   const cRate2Val = c1.Rate2 || c2.Rate2 || 0;
   const dt = String(s.Date || '').slice(0, 10);
   
   let html = `
     <div class="card" style="margin-bottom:14px;background:#f8fafc">
-      <div style="font-size:11px;font-weight:700;color:var(--t2);text-transform:uppercase;margin-bottom:10px">1. General Information (ప్రాథమిక వివరాలు)</div>
+      <div style="font-size:11px;font-weight:700;color:var(--t2);text-transform:uppercase;margin-bottom:10px">1. General Information</div>
       <div class="f-row">
-        <div class="f"><label>Shift Date (తేదీ)</label><input type="date" id="edDate" value="${dt}" max="${today()}"></div>
-        <div class="f"><label>Pump (పంప్ నెంబర్)</label>
+        <div class="f"><label>Shift Date</label><input type="date" id="edDate" value="${dt}" max="${today()}"></div>
+        <div class="f"><label>Pump Number</label>
           <select id="edPump" onchange="onEdPumpChange()">
             <option value="1" ${Number(s.Pump_No)===1?'selected':''}>Pump 1</option>
             <option value="2" ${Number(s.Pump_No)===2?'selected':''}>Pump 2</option>
             <option value="3" ${Number(s.Pump_No)===3?'selected':''}>Pump 3 (CNG)</option>
           </select>
         </div>
-        <div class="f"><label>Staff (డ్యూటీ ఎంప్లాయ్)</label><select id="edStaff">${staffOpts}</select></div>
+        <div class="f"><label>Duty Staff</label><select id="edStaff">${staffOpts}</select></div>
       </div>
     </div>
     
     <div class="card" style="margin-bottom:14px;background:#f8fafc" id="edNozzleCard">
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;flex-wrap:wrap;gap:8px">
-        <div style="font-size:11px;font-weight:700;color:var(--t2);text-transform:uppercase">2. Meter Readings & Rates (మీటర్ రీడింగ్స్ & ధరలు)</div>
+        <div style="font-size:11px;font-weight:700;color:var(--t2);text-transform:uppercase">2. Meter Readings & Rates</div>
         <label style="font-size:12px;font-weight:800;color:#d97706;display:flex;align-items:center;gap:6px;cursor:pointer;background:#fffbeb;padding:4px 10px;border-radius:8px;border:1px solid #fde68a">
           <input type="checkbox" id="edSplitToggle" ${hasSplit?'checked':''} onchange="toggleEdSplit()">
-          ⚡ Mid-Shift Rate Change (మధ్యలో రేట్ మార్పు)
+          ⚡ Mid-Shift Rate Change
         </label>
       </div>
       <div id="edNozzleInputs">
@@ -1185,17 +1228,17 @@ async function openFullEditShift(shiftId){
     </div>
     
     <div class="card" style="margin-bottom:14px;background:#f8fafc">
-      <div style="font-size:11px;font-weight:700;color:var(--t2);text-transform:uppercase;margin-bottom:10px">3. Collections & Expenses (వసూళ్లు & ఖర్చులు)</div>
+      <div style="font-size:11px;font-weight:700;color:var(--t2);text-transform:uppercase;margin-bottom:10px">3. Collections & Expenses</div>
       <div class="f-row">
-        <div class="f"><label>Cash Total (నగదు)</label><input type="number" step="0.01" class="num" id="edCash" value="${s.Cash_Total||0}" oninput="calcEditTally()"></div>
+        <div class="f"><label>Cash Total</label><input type="number" step="0.01" class="num" id="edCash" value="${s.Cash_Total||0}" oninput="calcEditTally()"></div>
         <div class="f"><label>Online (PhonePe/Card)</label><input type="number" step="0.01" class="num" id="edOnline" value="${s.Online_Amount||0}" oninput="calcEditTally()"></div>
-        <div class="f"><label>HPCL OTP (ఓటీపీ అమౌంట్)</label><input type="number" step="0.01" class="num" id="edOtp" value="${s.OTP_Amount||0}" oninput="calcEditTally()"></div>
-        <div class="f"><label>Expenditure (ఖర్చులు)</label><input type="number" step="0.01" class="num" id="edExp" value="${s.Expenditure||0}" oninput="calcEditTally()"></div>
+        <div class="f"><label>HPCL OTP Amount</label><input type="number" step="0.01" class="num" id="edOtp" value="${s.OTP_Amount||0}" oninput="calcEditTally()"></div>
+        <div class="f"><label>Expenditure</label><input type="number" step="0.01" class="num" id="edExp" value="${s.Expenditure||0}" oninput="calcEditTally()"></div>
       </div>
     </div>
     
     <div class="card" style="margin-bottom:14px;background:#eff6ff;border-color:#bfdbfe">
-      <div style="font-size:11px;font-weight:700;color:var(--pri);text-transform:uppercase;margin-bottom:10px">4. Live Summary & Tally (లెక్కల సమీక్ష)</div>
+      <div style="font-size:11px;font-weight:700;color:var(--pri);text-transform:uppercase;margin-bottom:10px">4. Live Summary & Tally</div>
       <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:12px;text-align:center">
         <div><span style="font-size:10.5px;color:var(--t2);font-weight:700">TOTAL SALES</span><div id="edSumSales" style="font-size:16px;font-weight:900;color:var(--t)">—</div></div>
         <div><span style="font-size:10.5px;color:var(--t2);font-weight:700">COLLECTED</span><div id="edSumCol" style="font-size:16px;font-weight:900;color:var(--ok)">—</div></div>
@@ -1205,8 +1248,8 @@ async function openFullEditShift(shiftId){
     </div>
     
     <div class="f" style="margin-bottom:10px">
-      <label>Reason for Edit (సవరణకు గల కారణం — Audit Log)</label>
-      <input id="edReason" placeholder="ఉదా: రీడింగ్ సరిగ్గా వేయకపోవడం వల్ల సవరించడమైనది" value="Shift edited by Admin/Owner">
+      <label>Reason for Edit (Audit Log)</label>
+      <input id="edReason" placeholder="e.g. Corrected meter reading or rate" value="Shift edited by Admin/Owner">
     </div>
   `;
   
@@ -1400,13 +1443,13 @@ async function submitFullEditShift(){
   loading(false);
   
   if(!res.ok){ toast(res.error || 'Failed to update shift', 'err'); return; }
-  toast('✅ Shift updated successfully! (సవరణ విజయవంతం)');
+  toast('✅ Shift updated successfully!');
   closeEditShift();
   loadEntries();
 }
 
 async function changeShiftDate(shiftId, currentDate){
-  const newDate = prompt(`Shift ID: ${shiftId}\nప్రస్తుత తేదీ: ${currentDate}\nమార్చాల్సిన కొత్త తేదీ నమోదు చేయండి (YYYY-MM-DD):`, yesterday());
+  const newDate = prompt(`Shift ID: ${shiftId}\nCurrent Date: ${currentDate}\nEnter new shift date (YYYY-MM-DD):`, yesterday());
   if(!newDate || newDate === currentDate) return;
   if(!/^\d{4}-\d{2}-\d{2}$/.test(newDate)){ toast('Invalid date format (YYYY-MM-DD)','err'); return; }
   loading(true, 'Updating shift date...');

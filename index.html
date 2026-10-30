@@ -162,7 +162,7 @@ td{padding:9px 8px;border-bottom:1px solid var(--line);font-variant-numeric:tabu
 </head>
 <body>
 <div id="desktopBanner" style="display:none;background:#1e293b;border-bottom:1px solid #334155;color:#e2e8f0;padding:10px 16px;text-align:center;font-size:12.5px;font-weight:600">
-  💻 డెస్క్‌టాప్ వెర్షన్ అందుబాటులో ఉంది: <a href="desktop.html" style="color:#60a5fa;margin-left:8px;font-weight:800;text-decoration:underline">డెస్క్‌టాప్ వెర్షన్ ఓపెన్ చేయండి →</a>
+  💻 Desktop Version Available: <a href="desktop.html" style="color:#60a5fa;margin-left:8px;font-weight:800;text-decoration:underline">Open Desktop Version →</a>
 </div>
 
 <!-- LOGIN -->
@@ -242,9 +242,9 @@ td{padding:9px 8px;border-bottom:1px solid var(--line);font-variant-numeric:tabu
       <div style="display:flex;align-items:center;justify-content:space-between">
         <div>
           <div style="font-weight:800;font-size:13px;color:#f59e0b;display:flex;align-items:center;gap:6px">
-            <span>⚡</span> రేట్ మార్పు (Mid-Shift Rate Change)
+            <span>⚡</span> Mid-Shift Rate Change
           </div>
-          <div style="font-size:11px;color:var(--t2);margin-top:2px">మధ్యలో రేట్ మారినప్పుడు మాత్రమే ఆన్ చేయండి</div>
+          <div style="font-size:11px;color:var(--t2);margin-top:2px">Enable only if fuel rate changed mid-shift</div>
         </div>
         <label class="switch">
           <input type="checkbox" id="splitRateToggle" onchange="toggleSplitRate()">
@@ -252,7 +252,7 @@ td{padding:9px 8px;border-bottom:1px solid var(--line);font-variant-numeric:tabu
         </label>
       </div>
       <div id="splitRateNotice" style="display:none;margin-top:8px;font-size:11px;color:#fbbf24;background:rgba(245,158,11,.1);padding:8px 12px;border-radius:8px;line-height:1.4">
-        ℹ️ రేట్ మారిన సమయానికి ఉన్న <b>Mid Reading</b> మరియు <b>కొత్త రేటు (Rate 2)</b> ఎంటర్ చేయండి.
+        ℹ️ Enter <b>Mid Reading</b> at the time of rate change and <b>New Rate (Rate 2)</b>.
       </div>
     </div>
 
@@ -260,7 +260,7 @@ td{padding:9px 8px;border-bottom:1px solid var(--line);font-variant-numeric:tabu
       <div class="noz-h"><div class="noz-n">MS N1 <span class="tag">PETROL</span></div><div class="noz-l"><span id="pLit1">0.00</span> L</div></div>
       <div class="noz-grid" id="pGrid1">
         <div class="f"><label>Opening</label><input id="pOpen1" type="number" inputmode="decimal" oninput="calc()"></div>
-        <div class="f split-field" style="display:none"><label style="color:#f59e0b">Mid Reading</label><input id="pMid1" type="number" inputmode="decimal" placeholder="మధ్యది" oninput="calc()"></div>
+        <div class="f split-field" style="display:none"><label style="color:#f59e0b">Mid Reading</label><input id="pMid1" type="number" inputmode="decimal" placeholder="Mid" oninput="calc()"></div>
         <div class="f"><label>Closing</label><input id="pClose1" type="number" inputmode="decimal" oninput="calc()"></div>
       </div>
       <div id="pSplitInfo1" class="split-info" style="display:none"></div>
@@ -270,7 +270,7 @@ td{padding:9px 8px;border-bottom:1px solid var(--line);font-variant-numeric:tabu
       <div class="noz-h"><div class="noz-n">MS N2 <span class="tag">PETROL</span></div><div class="noz-l"><span id="pLit2">0.00</span> L</div></div>
       <div class="noz-grid" id="pGrid2">
         <div class="f"><label>Opening</label><input id="pOpen2" type="number" inputmode="decimal" oninput="calc()"></div>
-        <div class="f split-field" style="display:none"><label style="color:#f59e0b">Mid Reading</label><input id="pMid2" type="number" inputmode="decimal" placeholder="మధ్యది" oninput="calc()"></div>
+        <div class="f split-field" style="display:none"><label style="color:#f59e0b">Mid Reading</label><input id="pMid2" type="number" inputmode="decimal" placeholder="Mid" oninput="calc()"></div>
         <div class="f"><label>Closing</label><input id="pClose2" type="number" inputmode="decimal" oninput="calc()"></div>
       </div>
       <div id="pSplitInfo2" class="split-info" style="display:none"></div>
@@ -280,7 +280,7 @@ td{padding:9px 8px;border-bottom:1px solid var(--line);font-variant-numeric:tabu
       <div class="noz-h"><div class="noz-n">HSD N1 <span class="tag">DIESEL</span></div><div class="noz-l"><span id="dLit1">0.00</span> L</div></div>
       <div class="noz-grid" id="dGrid1">
         <div class="f"><label>Opening</label><input id="dOpen1" type="number" inputmode="decimal" oninput="calc()"></div>
-        <div class="f split-field" style="display:none"><label style="color:#f59e0b">Mid Reading</label><input id="dMid1" type="number" inputmode="decimal" placeholder="మధ్యది" oninput="calc()"></div>
+        <div class="f split-field" style="display:none"><label style="color:#f59e0b">Mid Reading</label><input id="dMid1" type="number" inputmode="decimal" placeholder="Mid" oninput="calc()"></div>
         <div class="f"><label>Closing</label><input id="dClose1" type="number" inputmode="decimal" oninput="calc()"></div>
       </div>
       <div id="dSplitInfo1" class="split-info" style="display:none"></div>
@@ -290,7 +290,7 @@ td{padding:9px 8px;border-bottom:1px solid var(--line);font-variant-numeric:tabu
       <div class="noz-h"><div class="noz-n">HSD N2 <span class="tag">DIESEL</span></div><div class="noz-l"><span id="dLit2">0.00</span> L</div></div>
       <div class="noz-grid" id="dGrid2">
         <div class="f"><label>Opening</label><input id="dOpen2" type="number" inputmode="decimal" oninput="calc()"></div>
-        <div class="f split-field" style="display:none"><label style="color:#f59e0b">Mid Reading</label><input id="dMid2" type="number" inputmode="decimal" placeholder="మధ్యది" oninput="calc()"></div>
+        <div class="f split-field" style="display:none"><label style="color:#f59e0b">Mid Reading</label><input id="dMid2" type="number" inputmode="decimal" placeholder="Mid" oninput="calc()"></div>
         <div class="f"><label>Closing</label><input id="dClose2" type="number" inputmode="decimal" oninput="calc()"></div>
       </div>
       <div id="dSplitInfo2" class="split-info" style="display:none"></div>
@@ -300,7 +300,7 @@ td{padding:9px 8px;border-bottom:1px solid var(--line);font-variant-numeric:tabu
       <div class="noz-h"><div class="noz-n">CNG N1 <span class="tag">CNG</span></div><div class="noz-l"><span id="cLit1">0.00</span> KG</div></div>
       <div class="noz-grid" id="cGrid1">
         <div class="f"><label>Opening</label><input id="cOpen1" type="number" inputmode="decimal" oninput="calc()"></div>
-        <div class="f split-field" style="display:none"><label style="color:#f59e0b">Mid Reading</label><input id="cMid1" type="number" inputmode="decimal" placeholder="మధ్యది" oninput="calc()"></div>
+        <div class="f split-field" style="display:none"><label style="color:#f59e0b">Mid Reading</label><input id="cMid1" type="number" inputmode="decimal" placeholder="Mid" oninput="calc()"></div>
         <div class="f"><label>Closing</label><input id="cClose1" type="number" inputmode="decimal" oninput="calc()"></div>
       </div>
       <div id="cSplitInfo1" class="split-info" style="display:none"></div>
@@ -310,7 +310,7 @@ td{padding:9px 8px;border-bottom:1px solid var(--line);font-variant-numeric:tabu
       <div class="noz-h"><div class="noz-n">CNG N2 <span class="tag">CNG</span></div><div class="noz-l"><span id="cLit2">0.00</span> KG</div></div>
       <div class="noz-grid" id="cGrid2">
         <div class="f"><label>Opening</label><input id="cOpen2" type="number" inputmode="decimal" oninput="calc()"></div>
-        <div class="f split-field" style="display:none"><label style="color:#f59e0b">Mid Reading</label><input id="cMid2" type="number" inputmode="decimal" placeholder="మధ్యది" oninput="calc()"></div>
+        <div class="f split-field" style="display:none"><label style="color:#f59e0b">Mid Reading</label><input id="cMid2" type="number" inputmode="decimal" placeholder="Mid" oninput="calc()"></div>
         <div class="f"><label>Closing</label><input id="cClose2" type="number" inputmode="decimal" oninput="calc()"></div>
       </div>
       <div id="cSplitInfo2" class="split-info" style="display:none"></div>
@@ -323,16 +323,16 @@ td{padding:9px 8px;border-bottom:1px solid var(--line);font-variant-numeric:tabu
         <div class="f"><label id="dRateLbl">HSD ₹/L</label><input id="dRate" type="number" class="num" value="105.01" oninput="calc()"></div>
       </div>
       <div id="splitRatesWrap" style="display:none;margin-top:10px">
-        <div style="font-size:11px;font-weight:700;color:#f59e0b;margin-bottom:6px">⚡ కొత్త రేట్లు (Rate 2 - మారిన తర్వాత)</div>
+        <div style="font-size:11px;font-weight:700;color:#f59e0b;margin-bottom:6px">⚡ New Rates (Rate 2 - After Change)</div>
         <div class="noz-grid">
-          <div class="f"><label style="color:#f59e0b">MS Rate 2 ₹/L</label><input id="pRate2" type="number" class="num" placeholder="కొత్త రేటు" oninput="calc()"></div>
-          <div class="f"><label style="color:#f59e0b">HSD Rate 2 ₹/L</label><input id="dRate2" type="number" class="num" placeholder="కొత్త రేటు" oninput="calc()"></div>
+          <div class="f"><label style="color:#f59e0b">MS Rate 2 ₹/L</label><input id="pRate2" type="number" class="num" placeholder="New rate" oninput="calc()"></div>
+          <div class="f"><label style="color:#f59e0b">HSD Rate 2 ₹/L</label><input id="dRate2" type="number" class="num" placeholder="New rate" oninput="calc()"></div>
         </div>
       </div>
       <div class="f" id="cngRateRow" style="margin-top:10px;margin-bottom:0">
         <label id="cRateLbl">CNG ₹/KG</label><input id="cRate" type="number" class="num" value="0" oninput="calc()">
         <div id="cngSplitWrap" style="display:none;margin-top:8px">
-          <label style="color:#f59e0b">CNG Rate 2 ₹/KG</label><input id="cRate2" type="number" class="num" placeholder="కొత్త రేటు" oninput="calc()">
+          <label style="color:#f59e0b">CNG Rate 2 ₹/KG</label><input id="cRate2" type="number" class="num" placeholder="New rate" oninput="calc()">
         </div>
       </div>
     </div>
@@ -557,14 +557,14 @@ window.addEventListener('DOMContentLoaded', updateServerBadgeUi);
 
 function configureServerUrl(){
   const curr = localStorage.getItem('CUSTOM_API_URL') || '';
-  const val = prompt('Server API URL ని మార్చండి:\n- Cloudflare Worker URL (ఉదా: https://fuel-bunk-api.xxx.workers.dev)\n- లేదా ఖాళీగా వదిలేస్తే డీఫాల్ట్ Google Sheets కి వెళ్తుంది:', curr);
+  const val = prompt('Change Server API URL:\n- Cloudflare Worker URL (e.g., https://fuel-bunk-api.xxx.workers.dev)\n- Leave blank to use default Google Sheets:', curr);
   if(val !== null){
     if(val.trim()){
       localStorage.setItem('CUSTOM_API_URL', val.trim());
-      alert('⚡ Cloudflare Ultra-Fast Server సెట్ చేయబడింది! పేజీ రీలోడ్ అవుతుంది.');
+      alert('⚡ Cloudflare Ultra-Fast Server active! Page will reload.');
     } else {
       localStorage.removeItem('CUSTOM_API_URL');
-      alert('🐢 Google Sheets డీఫాల్ట్ సర్వర్ కి మార్చబడింది! పేజీ రీలోడ్ అవుతుంది.');
+      alert('🐢 Switched to Google Sheets backend! Page will reload.');
     }
     location.reload();
   }
@@ -764,9 +764,9 @@ function toggleSplitRate(){
   if(sw) sw.style.display = on ? 'block' : 'none';
   const csw = $('cngSplitWrap');
   if(csw) csw.style.display = on ? 'block' : 'none';
-  if($('pRateLbl')) $('pRateLbl').textContent = on ? 'MS Rate 1 (పాతది ₹/L)' : 'MS ₹/L';
-  if($('dRateLbl')) $('dRateLbl').textContent = on ? 'HSD Rate 1 (పాతది ₹/L)' : 'HSD ₹/L';
-  if($('cRateLbl')) $('cRateLbl').textContent = on ? 'CNG Rate 1 (పాతది ₹/KG)' : 'CNG ₹/KG';
+  if($('pRateLbl')) $('pRateLbl').textContent = on ? 'MS Rate 1 (Old ₹/L)' : 'MS ₹/L';
+  if($('dRateLbl')) $('dRateLbl').textContent = on ? 'HSD Rate 1 (Old ₹/L)' : 'HSD ₹/L';
+  if($('cRateLbl')) $('cRateLbl').textContent = on ? 'CNG Rate 1 (Old ₹/KG)' : 'CNG ₹/KG';
   document.querySelectorAll('.split-field').forEach(el => el.style.display = on ? 'block' : 'none');
   ['pGrid1','pGrid2','dGrid1','dGrid2','cGrid1','cGrid2'].forEach(id => {
     const el = $(id);
@@ -883,10 +883,10 @@ function goPayment(){
   if(req.some(id => $(id).value === '')){ toast('Complete readings', 'err'); return; }
   if(isSplit){
     if(!isCNG){
-      if((num('pMid1')>0 || num('pMid2')>0) && num('pRate2')<=0){ toast('Enter Petrol Rate 2 (కొత్త రేటు)', 'err'); return; }
-      if((num('dMid1')>0 || num('dMid2')>0) && num('dRate2')<=0){ toast('Enter Diesel Rate 2 (కొత్త రేటు)', 'err'); return; }
+      if((num('pMid1')>0 || num('pMid2')>0) && num('pRate2')<=0){ toast('Enter Petrol Rate 2 (New Rate)', 'err'); return; }
+      if((num('dMid1')>0 || num('dMid2')>0) && num('dRate2')<=0){ toast('Enter Diesel Rate 2 (New Rate)', 'err'); return; }
     } else {
-      if((num('cMid1')>0 || num('cMid2')>0) && num('cRate2')<=0){ toast('Enter CNG Rate 2 (కొత్త రేటు)', 'err'); return; }
+      if((num('cMid1')>0 || num('cMid2')>0) && num('cRate2')<=0){ toast('Enter CNG Rate 2 (New Rate)', 'err'); return; }
     }
   }
   if($('validateAlert').innerHTML){ toast('Fix errors', 'err'); return; }
@@ -1064,13 +1064,23 @@ async function loadEntries(){
     <div class="card" style="margin-bottom:12px;padding:14px;border-left:4px solid var(--pri)">
       <div style="display:flex;justify-content:space-between;align-items:flex-start">
         <div>
-          <div style="font-weight:800;font-size:14.5px;color:var(--t)">📅 <b>${dt}</b> · Pump ${s.Pump_No}</div>
+          <div style="font-weight:800;font-size:14.5px;color:var(--t)">📅 <b>${dt}</b> · <span style="color:${Number(s.Pump_No)===3?'#8b5cf6':'var(--pri)'}">Pump ${s.Pump_No}${Number(s.Pump_No)===3?' (CNG)':''}</span></div>
           <div style="font-size:12px;color:var(--t2);margin-top:4px">👤 Staff: <b>${s.Staff_Name||s.Staff_ID}</b></div>
         </div>
         <div style="text-align:right">
           <div style="font-weight:900;font-size:15px;color:#60a5fa">${money(s.Total_Sales)}</div>
           <div style="margin-top:3px"><span class="b ${bc}">${money(Math.abs(d))}</span></div>
         </div>
+      </div>
+      <div style="display:flex;justify-content:space-between;font-size:12px;color:var(--t2);margin:8px 0;padding:6px 0;border-top:1px dashed var(--line);border-bottom:1px dashed var(--line)">
+        ${(Number(s.Pump_No)===3 || Number(s.CNG_KG||s.CNG_Total_Kg||0)>0) ? `
+          <span>CNG: <b style="color:#8b5cf6">${fmt(s.CNG_KG||s.CNG_Total_Kg||0)} KG</b></span>
+          <span>Rate: <b>₹ ${Number(s.CNG_Kg_Rate||114).toFixed(2)}</b></span>
+        ` : `
+          <span>MS: <b>${fmt(s.Petrol_Litres||0)} L</b></span>
+          <span>HSD: <b>${fmt(s.Diesel_Litres||0)} L</b></span>
+        `}
+        <span>Collected: <b>${money(s.Total_Collected)}</b></span>
       </div>
       ${isOwn ? `
       <div style="display:flex;gap:8px;margin-top:12px;padding-top:10px;border-top:1px solid var(--line);justify-content:flex-end">
@@ -1406,7 +1416,7 @@ async function submitFullEditShift(){
 }
 
 async function changeShiftDate(shiftId, currentDate){
-  const newDate = prompt(`Shift ID: ${shiftId}\nప్రస్తుత తేదీ: ${currentDate}\nమార్చాల్సిన కొత్త తేదీ (YYYY-MM-DD):`, yesterday());
+  const newDate = prompt(`Shift ID: ${shiftId}\nCurrent Date: ${currentDate}\nEnter new shift date (YYYY-MM-DD):`, yesterday());
   if(!newDate || newDate === currentDate) return;
   if(!/^\d{4}-\d{2}-\d{2}$/.test(newDate)){ toast('Invalid date format','err'); return; }
   loading(true, 'Updating date...');

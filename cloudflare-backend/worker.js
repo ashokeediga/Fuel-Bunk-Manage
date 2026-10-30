@@ -340,6 +340,10 @@ async function handleGetShifts(body, kv) {
     list = list.filter(s => String(s.Date).slice(0, 10) === dStr);
   }
 
+  if (body.pump) {
+    list = list.filter(s => String(s.Pump_No) === String(body.pump));
+  }
+
   // Strict sorting by Date descending (newest first), then by Pump_No ascending
   list.sort((a, b) => {
     const da = String(a.Date || '').slice(0, 10);
@@ -420,14 +424,16 @@ async function handleGetShift(body, kv) {
         Slot2_Litres: Number(found.Diesel_N2_Slot2_Litres) || 0
       });
     } else {
+      const cngTotal = Number(found.CNG_KG || found.CNG_Total_Kg) || 0;
+      const cngRate = Number(found.CNG_Kg_Rate) || (cngTotal > 0 && Number(found.CNG_Amount) ? Number((Number(found.CNG_Amount) / cngTotal).toFixed(2)) : 114);
       nz.push({
         Nozzle_No: 1, Fuel_Type: 'CNG',
         Opening_Reading: Number(found.CNG_Nozzle_1_Open) || 0,
-        Closing_Reading: Number(found.CNG_Nozzle_1_Close) || 0,
+        Closing_Reading: Number(found.CNG_Nozzle_1_Close) || cngTotal,
         Mid_Reading: Number(found.CNG_Nozzle_1_Mid) || 0,
-        Litres: Number(found.CNG_Nozzle_1_Sale) || 0,
-        Rate: Number(found.CNG_Kg_Rate) || 0,
-        Rate1: Number(found.CNG_Rate_1 || found.CNG_Kg_Rate) || 0,
+        Litres: Number(found.CNG_Nozzle_1_Sale) || cngTotal,
+        Rate: cngRate,
+        Rate1: Number(found.CNG_Rate_1 || cngRate) || cngRate,
         Rate2: Number(found.CNG_Rate_2) || 0,
         Slot1_Litres: Number(found.CNG_N1_Slot1_Litres) || 0,
         Slot2_Litres: Number(found.CNG_N1_Slot2_Litres) || 0
