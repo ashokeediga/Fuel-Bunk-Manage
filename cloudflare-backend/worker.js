@@ -340,6 +340,14 @@ async function handleGetShifts(body, kv) {
     list = list.filter(s => String(s.Date).slice(0, 10) === dStr);
   }
 
+  // Strict sorting by Date descending (newest first), then by Pump_No ascending
+  list.sort((a, b) => {
+    const da = String(a.Date || '').slice(0, 10);
+    const db = String(b.Date || '').slice(0, 10);
+    if (da !== db) return db.localeCompare(da);
+    return (Number(a.Pump_No) || 0) - (Number(b.Pump_No) || 0);
+  });
+
   if (body.limit) {
     list = list.slice(0, Number(body.limit));
   }
@@ -358,6 +366,88 @@ async function handleGetShift(body, kv) {
     return json({ ok: false, error: 'Shift not found' });
   }
 
+  // Reconstruct Nozzle_Readings if missing or empty
+  if (!found.Nozzle_Readings || !Array.isArray(found.Nozzle_Readings) || found.Nozzle_Readings.length === 0) {
+    const isCNG = Number(found.Pump_No) === 3;
+    const nz = [];
+    if (!isCNG) {
+      nz.push({
+        Nozzle_No: 1, Fuel_Type: 'Petrol',
+        Opening_Reading: Number(found.Petrol_Nozzle_1_Open) || 0,
+        Closing_Reading: Number(found.Petrol_Nozzle_1_Close) || 0,
+        Mid_Reading: Number(found.Petrol_Nozzle_1_Mid) || 0,
+        Litres: Number(found.Petrol_Nozzle_1_Sale) || 0,
+        Rate: Number(found.Petrol_Litre_Rate) || 0,
+        Rate1: Number(found.Petrol_Rate_1 || found.Petrol_Litre_Rate) || 0,
+        Rate2: Number(found.Petrol_Rate_2) || 0,
+        Slot1_Litres: Number(found.Petrol_N1_Slot1_Litres) || 0,
+        Slot2_Litres: Number(found.Petrol_N1_Slot2_Litres) || 0
+      });
+      nz.push({
+        Nozzle_No: 2, Fuel_Type: 'Petrol',
+        Opening_Reading: Number(found.Petrol_Nozzle_2_Open) || 0,
+        Closing_Reading: Number(found.Petrol_Nozzle_2_Close) || 0,
+        Mid_Reading: Number(found.Petrol_Nozzle_2_Mid) || 0,
+        Litres: Number(found.Petrol_Nozzle_2_Sale) || 0,
+        Rate: Number(found.Petrol_Litre_Rate) || 0,
+        Rate1: Number(found.Petrol_Rate_1 || found.Petrol_Litre_Rate) || 0,
+        Rate2: Number(found.Petrol_Rate_2) || 0,
+        Slot1_Litres: Number(found.Petrol_N2_Slot1_Litres) || 0,
+        Slot2_Litres: Number(found.Petrol_N2_Slot2_Litres) || 0
+      });
+      nz.push({
+        Nozzle_No: 1, Fuel_Type: 'Diesel',
+        Opening_Reading: Number(found.Diesel_Nozzle_1_Open) || 0,
+        Closing_Reading: Number(found.Diesel_Nozzle_1_Close) || 0,
+        Mid_Reading: Number(found.Diesel_Nozzle_1_Mid) || 0,
+        Litres: Number(found.Diesel_Nozzle_1_Sale) || 0,
+        Rate: Number(found.Diesel_Litre_Rate) || 0,
+        Rate1: Number(found.Diesel_Rate_1 || found.Diesel_Litre_Rate) || 0,
+        Rate2: Number(found.Diesel_Rate_2) || 0,
+        Slot1_Litres: Number(found.Diesel_N1_Slot1_Litres) || 0,
+        Slot2_Litres: Number(found.Diesel_N1_Slot2_Litres) || 0
+      });
+      nz.push({
+        Nozzle_No: 2, Fuel_Type: 'Diesel',
+        Opening_Reading: Number(found.Diesel_Nozzle_2_Open) || 0,
+        Closing_Reading: Number(found.Diesel_Nozzle_2_Close) || 0,
+        Mid_Reading: Number(found.Diesel_Nozzle_2_Mid) || 0,
+        Litres: Number(found.Diesel_Nozzle_2_Sale) || 0,
+        Rate: Number(found.Diesel_Litre_Rate) || 0,
+        Rate1: Number(found.Diesel_Rate_1 || found.Diesel_Litre_Rate) || 0,
+        Rate2: Number(found.Diesel_Rate_2) || 0,
+        Slot1_Litres: Number(found.Diesel_N2_Slot1_Litres) || 0,
+        Slot2_Litres: Number(found.Diesel_N2_Slot2_Litres) || 0
+      });
+    } else {
+      nz.push({
+        Nozzle_No: 1, Fuel_Type: 'CNG',
+        Opening_Reading: Number(found.CNG_Nozzle_1_Open) || 0,
+        Closing_Reading: Number(found.CNG_Nozzle_1_Close) || 0,
+        Mid_Reading: Number(found.CNG_Nozzle_1_Mid) || 0,
+        Litres: Number(found.CNG_Nozzle_1_Sale) || 0,
+        Rate: Number(found.CNG_Kg_Rate) || 0,
+        Rate1: Number(found.CNG_Rate_1 || found.CNG_Kg_Rate) || 0,
+        Rate2: Number(found.CNG_Rate_2) || 0,
+        Slot1_Litres: Number(found.CNG_N1_Slot1_Litres) || 0,
+        Slot2_Litres: Number(found.CNG_N1_Slot2_Litres) || 0
+      });
+      nz.push({
+        Nozzle_No: 2, Fuel_Type: 'CNG',
+        Opening_Reading: Number(found.CNG_Nozzle_2_Open) || 0,
+        Closing_Reading: Number(found.CNG_Nozzle_2_Close) || 0,
+        Mid_Reading: Number(found.CNG_Nozzle_2_Mid) || 0,
+        Litres: Number(found.CNG_Nozzle_2_Sale) || 0,
+        Rate: Number(found.CNG_Kg_Rate) || 0,
+        Rate1: Number(found.CNG_Rate_1 || found.CNG_Kg_Rate) || 0,
+        Rate2: Number(found.CNG_Rate_2) || 0,
+        Slot1_Litres: Number(found.CNG_N2_Slot1_Litres) || 0,
+        Slot2_Litres: Number(found.CNG_N2_Slot2_Litres) || 0
+      });
+    }
+    found.Nozzle_Readings = nz;
+  }
+
   return json({ ok: true, shift: found });
 }
 
@@ -366,50 +456,14 @@ async function handleSaveShift(body, kv, ctx) {
   const shiftId = d.Shift_ID || uid('SH');
   const now = new Date().toISOString();
 
+  // Preserve all fields from d (including Nozzle_Readings, Mid_Readings, Slot1, Slot2, Rate1, Rate2)
   const newShift = {
+    ...d,
     Shift_ID: shiftId,
     Date: d.Date || now.slice(0, 10),
     Staff_ID: d.Staff_ID || (body.currentUser && body.currentUser.Staff_ID) || 'OWN001',
     Staff_Name: d.Staff_Name || (body.currentUser && body.currentUser.Staff_Name) || 'Owner',
     Pump_No: Number(d.Pump_No) || 1,
-    Petrol_Litre_Rate: Number(d.Petrol_Litre_Rate) || 0,
-    Diesel_Litre_Rate: Number(d.Diesel_Litre_Rate) || 0,
-    CNG_Kg_Rate: Number(d.CNG_Kg_Rate) || 0,
-    Petrol_Nozzle_1_Open: Number(d.Petrol_Nozzle_1_Open) || 0,
-    Petrol_Nozzle_1_Close: Number(d.Petrol_Nozzle_1_Close) || 0,
-    Petrol_Nozzle_1_Sale: Number(d.Petrol_Nozzle_1_Sale) || 0,
-    Petrol_Nozzle_2_Open: Number(d.Petrol_Nozzle_2_Open) || 0,
-    Petrol_Nozzle_2_Close: Number(d.Petrol_Nozzle_2_Close) || 0,
-    Petrol_Nozzle_2_Sale: Number(d.Petrol_Nozzle_2_Sale) || 0,
-    Petrol_Total_Litres: Number(d.Petrol_Total_Litres) || 0,
-    Petrol_Total_Amount: Number(d.Petrol_Total_Amount) || 0,
-    Diesel_Nozzle_1_Open: Number(d.Diesel_Nozzle_1_Open) || 0,
-    Diesel_Nozzle_1_Close: Number(d.Diesel_Nozzle_1_Close) || 0,
-    Diesel_Nozzle_1_Sale: Number(d.Diesel_Nozzle_1_Sale) || 0,
-    Diesel_Nozzle_2_Open: Number(d.Diesel_Nozzle_2_Open) || 0,
-    Diesel_Nozzle_2_Close: Number(d.Diesel_Nozzle_2_Close) || 0,
-    Diesel_Nozzle_2_Sale: Number(d.Diesel_Nozzle_2_Sale) || 0,
-    Diesel_Total_Litres: Number(d.Diesel_Total_Litres) || 0,
-    Diesel_Total_Amount: Number(d.Diesel_Total_Amount) || 0,
-    CNG_Nozzle_1_Open: Number(d.CNG_Nozzle_1_Open) || 0,
-    CNG_Nozzle_1_Close: Number(d.CNG_Nozzle_1_Close) || 0,
-    CNG_Nozzle_1_Sale: Number(d.CNG_Nozzle_1_Sale) || 0,
-    CNG_Nozzle_2_Open: Number(d.CNG_Nozzle_2_Open) || 0,
-    CNG_Nozzle_2_Close: Number(d.CNG_Nozzle_2_Close) || 0,
-    CNG_Nozzle_2_Sale: Number(d.CNG_Nozzle_2_Sale) || 0,
-    CNG_Total_Kg: Number(d.CNG_Total_Kg) || 0,
-    CNG_Total_Amount: Number(d.CNG_Total_Amount) || 0,
-    Total_Sales_Amount: Number(d.Total_Sales_Amount) || 0,
-    Cash_Collected: Number(d.Cash_Collected) || 0,
-    Online_Paytm: Number(d.Online_Paytm) || 0,
-    Online_PhonePe: Number(d.Online_PhonePe) || 0,
-    Online_GPay: Number(d.Online_GPay) || 0,
-    Online_Total: Number(d.Online_Total) || 0,
-    OTP_Sale: Number(d.OTP_Sale) || 0,
-    Expenses_Total: Number(d.Expenses_Total) || 0,
-    Total_Settled: Number(d.Total_Settled) || 0,
-    Short_Excess: Number(d.Short_Excess) || 0,
-    Remarks: d.Remarks || '',
     Created_At: now
   };
 
@@ -501,35 +555,82 @@ async function handleGetDashboardData(kv) {
   const data = await kv.get('shifts', 'json');
   const shifts = (data && data.shifts) || [];
 
-  const todayStr = new Date().toISOString().slice(0, 10);
-  const thisMonthStr = todayStr.slice(0, 7);
+  const now = new Date();
+  const todayStr = now.toISOString().slice(0, 10);
+  const start30 = new Date(now.getTime() - 29 * 86400000).toISOString().slice(0, 10);
 
-  const todayShifts = shifts.filter(s => String(s.Date).slice(0, 10) === todayStr);
-  const monthShifts = shifts.filter(s => String(s.Date).slice(0, 7) === thisMonthStr);
+  const num = v => Number(v) || 0;
 
-  const sum = (arr, key) => arr.reduce((acc, cur) => acc + (Number(cur[key]) || 0), 0);
+  // Filter 30 days
+  const inRange = shifts.filter(r => {
+    const d = String(r.Date || '').slice(0, 10);
+    return d >= start30 && d <= todayStr;
+  });
+
+  const targetShifts = inRange.length > 0 ? inRange : shifts;
+  const todayRows = shifts.filter(r => String(r.Date || '').slice(0, 10) === todayStr);
+
+  const calcSum = rs => rs.reduce((a, r) => {
+    a.count++;
+    a.Total_Sales += num(r.Total_Sales_Amount || r.Total_Sales);
+    a.Cash_Total += num(r.Cash_Collected || r.Cash_Total);
+    a.Online_Amount += num(r.Online_Total || r.Online_Amount);
+    a.OTP_Amount += num(r.OTP_Sale || r.OTP_Amount);
+    a.Expenditure += num(r.Expenses_Total || r.Expenditure);
+    a.Difference += num(r.Short_Excess || r.Difference);
+    a.Petrol_Litres += num(r.Petrol_Total_Litres || r.Petrol_Litres);
+    a.Diesel_Litres += num(r.Diesel_Total_Litres || r.Diesel_Litres);
+    a.CNG_KG += num(r.CNG_Total_Kg || r.CNG_KG);
+    a.Petrol_Amount += num(r.Petrol_Total_Amount || r.Petrol_Amount);
+    a.Diesel_Amount += num(r.Diesel_Total_Amount || r.Diesel_Amount);
+    a.CNG_Amount += num(r.CNG_Total_Amount || r.CNG_Amount);
+    return a;
+  }, {
+    count: 0, Total_Sales: 0, Cash_Total: 0, Online_Amount: 0, OTP_Amount: 0,
+    Expenditure: 0, Difference: 0, Petrol_Litres: 0, Diesel_Litres: 0, CNG_KG: 0,
+    Petrol_Amount: 0, Diesel_Amount: 0, CNG_Amount: 0
+  });
+
+  const totals = calcSum(targetShifts);
+  const todayTotals = calcSum(todayRows);
+
+  // 7-day trend
+  const trend = [];
+  for (let i = 6; i >= 0; i--) {
+    const dt = new Date(now.getTime() - i * 86400000).toISOString().slice(0, 10);
+    const rs = shifts.filter(r => String(r.Date || '').slice(0, 10) === dt);
+    trend.push({ date: dt, sales: calcSum(rs).Total_Sales });
+  }
+
+  // byPump
+  const byPump = {};
+  targetShifts.forEach(r => {
+    const k = String(r.Pump_No || 1);
+    if (!byPump[k]) byPump[k] = { sales: 0, count: 0 };
+    byPump[k].sales += num(r.Total_Sales_Amount || r.Total_Sales);
+    byPump[k].count++;
+  });
+
+  // byStaff
+  const staffMap = {};
+  targetShifts.forEach(r => {
+    const k = String(r.Staff_ID);
+    if (!staffMap[k]) staffMap[k] = { name: String(r.Staff_Name || k), sales: 0, diff: 0, count: 0 };
+    staffMap[k].sales += num(r.Total_Sales_Amount || r.Total_Sales);
+    staffMap[k].diff += num(r.Short_Excess || r.Difference);
+    staffMap[k].count++;
+  });
+  const byStaff = Object.values(staffMap).sort((a, b) => b.sales - a.sales);
 
   return json({
     ok: true,
-    today: {
-      sales: sum(todayShifts, 'Total_Sales_Amount'),
-      litres: sum(todayShifts, 'Petrol_Total_Litres') + sum(todayShifts, 'Diesel_Total_Litres'),
-      cash: sum(todayShifts, 'Cash_Collected'),
-      online: sum(todayShifts, 'Online_Total'),
-      otp: sum(todayShifts, 'OTP_Sale'),
-      short: sum(todayShifts, 'Short_Excess'),
-      count: todayShifts.length,
-    },
-    month: {
-      sales: sum(monthShifts, 'Total_Sales_Amount'),
-      litres: sum(monthShifts, 'Petrol_Total_Litres') + sum(monthShifts, 'Diesel_Total_Litres'),
-      cash: sum(monthShifts, 'Cash_Collected'),
-      online: sum(monthShifts, 'Online_Total'),
-      otp: sum(monthShifts, 'OTP_Sale'),
-      short: sum(monthShifts, 'Short_Excess'),
-      count: monthShifts.length,
-    },
-    recentShifts: shifts.slice(0, 10),
+    data: {
+      totals,
+      today: todayTotals,
+      trend,
+      byPump,
+      byStaff
+    }
   });
 }
 

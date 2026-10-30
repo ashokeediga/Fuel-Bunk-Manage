@@ -974,6 +974,15 @@ async function loadEntries(){
   if(!r.ok){$('entriesOut').innerHTML='<div class="tbl-empty">Failed to load entries</div>';return;}
   const shifts=r.shifts||[];
   if(!shifts.length){$('entriesOut').innerHTML='<div class="tbl-empty">No entries found</div>';return;}
+
+  // Strict sorting: newest date first, then Pump 1, 2, 3
+  shifts.sort((a, b) => {
+    const da = String(a.Date || '').slice(0, 10);
+    const db = String(b.Date || '').slice(0, 10);
+    if (da !== db) return db.localeCompare(da);
+    return (Number(a.Pump_No) || 0) - (Number(b.Pump_No) || 0);
+  });
+
   const isOwn = isUserAdmin();
 
   let headerBar = `
@@ -1035,6 +1044,78 @@ async function loadEntries(){
 
 let __edShift=null, __edStaffList=[];
 
+function calcNoz(openId, midId, closeId, rate1Id, rate2Id, isSplit){
+  const o = num(openId), c = num(closeId), m = num(midId);
+  const r1 = num(rate1Id), r2 = num(rate2Id);
+  if(!isSplit || m <= o || m >= c || r2 <= 0){
+    const lit = Math.max(0, c - o);
+    const amt = lit * r1;
+    return { lit, amt, rate: r1, isSplit: false, l1: lit, a1: amt, l2: 0, a2: 0, r1, r2: 0, mid: 0, open: o, close: c };
+  }
+  const l1 = Math.max(0, m - o);
+  const a1 = l1 * r1;
+  const l2 = Math.max(0, c - m);
+  const a2 = l2 * r2;
+  const lit = l1 + l2;
+  const amt = a1 + a2;
+  const rate = lit > 0 ? (amt / lit) : r1;
+  return { lit, amt, rate, isSplit: true, l1, a1, l2, a2, r1, r2, mid: m, open: o, close: c };
+}
+
+function renderEdNozzleFields(isCNG, p1, p2, d1, d2, c1, c2, pRate, pRate2, dRate, dRate2, cRate, cRate2, isSplit){
+  if(!isCNG){
+    return `
+      <div style="font-size:12px;font-weight:800;color:var(--pri);margin-bottom:8px">⛽ MS Petrol Nozzles</div>
+      <div style="display:grid;grid-template-columns:${isSplit?'1fr 1fr 1fr':'1fr 1fr'};gap:10px;margin-bottom:10px">
+        <div class="f"><label>MS N1 Open</label><input type="number" step="0.01" class="num" id="edPOpen1" value="${p1.Opening_Reading||0}" oninput="calcEditTally()"></div>
+        ${isSplit ? `<div class="f"><label style="color:#d97706;font-weight:800">⚡ MS N1 Mid Reading</label><input type="number" step="0.01" class="num" id="edPMid1" value="${p1.Mid_Reading||0}" style="border-color:#f59e0b;background:#fffbeb" oninput="calcEditTally()"></div>` : ''}
+        <div class="f"><label>MS N1 Close</label><input type="number" step="0.01" class="num" id="edPClose1" value="${p1.Closing_Reading||0}" oninput="calcEditTally()"></div>
+      </div>
+      <div style="display:grid;grid-template-columns:${isSplit?'1fr 1fr 1fr':'1fr 1fr'};gap:10px;margin-bottom:10px">
+        <div class="f"><label>MS N2 Open</label><input type="number" step="0.01" class="num" id="edPOpen2" value="${p2.Opening_Reading||0}" oninput="calcEditTally()"></div>
+        ${isSplit ? `<div class="f"><label style="color:#d97706;font-weight:800">⚡ MS N2 Mid Reading</label><input type="number" step="0.01" class="num" id="edPMid2" value="${p2.Mid_Reading||0}" style="border-color:#f59e0b;background:#fffbeb" oninput="calcEditTally()"></div>` : ''}
+        <div class="f"><label>MS N2 Close</label><input type="number" step="0.01" class="num" id="edPClose2" value="${p2.Closing_Reading||0}" oninput="calcEditTally()"></div>
+      </div>
+      <div style="display:grid;grid-template-columns:${isSplit?'1fr 1fr':'1fr'};gap:10px;margin-bottom:16px">
+        <div class="f"><label>MS Rate 1 ₹/L</label><input type="number" step="0.01" class="num" id="edPRate" value="${pRate}" oninput="calcEditTally()"></div>
+        ${isSplit ? `<div class="f"><label style="color:#d97706;font-weight:800">⚡ MS Rate 2 ₹/L (కొత్త రేటు)</label><input type="number" step="0.01" class="num" id="edPRate2" value="${pRate2}" style="border-color:#f59e0b;background:#fffbeb" oninput="calcEditTally()"></div>` : ''}
+      </div>
+
+      <div style="font-size:12px;font-weight:800;color:var(--ok);margin-bottom:8px">⛽ HSD Diesel Nozzles</div>
+      <div style="display:grid;grid-template-columns:${isSplit?'1fr 1fr 1fr':'1fr 1fr'};gap:10px;margin-bottom:10px">
+        <div class="f"><label>HSD N1 Open</label><input type="number" step="0.01" class="num" id="edDOpen1" value="${d1.Opening_Reading||0}" oninput="calcEditTally()"></div>
+        ${isSplit ? `<div class="f"><label style="color:#d97706;font-weight:800">⚡ HSD N1 Mid Reading</label><input type="number" step="0.01" class="num" id="edDMid1" value="${d1.Mid_Reading||0}" style="border-color:#f59e0b;background:#fffbeb" oninput="calcEditTally()"></div>` : ''}
+        <div class="f"><label>HSD N1 Close</label><input type="number" step="0.01" class="num" id="edDClose1" value="${d1.Closing_Reading||0}" oninput="calcEditTally()"></div>
+      </div>
+      <div style="display:grid;grid-template-columns:${isSplit?'1fr 1fr 1fr':'1fr 1fr'};gap:10px;margin-bottom:10px">
+        <div class="f"><label>HSD N2 Open</label><input type="number" step="0.01" class="num" id="edDOpen2" value="${d2.Opening_Reading||0}" oninput="calcEditTally()"></div>
+        ${isSplit ? `<div class="f"><label style="color:#d97706;font-weight:800">⚡ HSD N2 Mid Reading</label><input type="number" step="0.01" class="num" id="edDMid2" value="${d2.Mid_Reading||0}" style="border-color:#f59e0b;background:#fffbeb" oninput="calcEditTally()"></div>` : ''}
+        <div class="f"><label>HSD N2 Close</label><input type="number" step="0.01" class="num" id="edDClose2" value="${d2.Closing_Reading||0}" oninput="calcEditTally()"></div>
+      </div>
+      <div style="display:grid;grid-template-columns:${isSplit?'1fr 1fr':'1fr'};gap:10px;margin-bottom:12px">
+        <div class="f"><label>HSD Rate 1 ₹/L</label><input type="number" step="0.01" class="num" id="edDRate" value="${dRate}" oninput="calcEditTally()"></div>
+        ${isSplit ? `<div class="f"><label style="color:#d97706;font-weight:800">⚡ HSD Rate 2 ₹/L (కొత్త రేటు)</label><input type="number" step="0.01" class="num" id="edDRate2" value="${dRate2}" style="border-color:#f59e0b;background:#fffbeb" oninput="calcEditTally()"></div>` : ''}
+      </div>`;
+  } else {
+    return `
+      <div style="font-size:12px;font-weight:800;color:var(--pur);margin-bottom:8px">⛽ CNG Nozzles</div>
+      <div style="display:grid;grid-template-columns:${isSplit?'1fr 1fr 1fr':'1fr 1fr'};gap:10px;margin-bottom:10px">
+        <div class="f"><label>CNG N1 Open</label><input type="number" step="0.01" class="num" id="edCOpen1" value="${c1.Opening_Reading||0}" oninput="calcEditTally()"></div>
+        ${isSplit ? `<div class="f"><label style="color:#d97706;font-weight:800">⚡ CNG N1 Mid Reading</label><input type="number" step="0.01" class="num" id="edCMid1" value="${c1.Mid_Reading||0}" style="border-color:#f59e0b;background:#fffbeb" oninput="calcEditTally()"></div>` : ''}
+        <div class="f"><label>CNG N1 Close</label><input type="number" step="0.01" class="num" id="edCClose1" value="${c1.Closing_Reading||0}" oninput="calcEditTally()"></div>
+      </div>
+      <div style="display:grid;grid-template-columns:${isSplit?'1fr 1fr 1fr':'1fr 1fr'};gap:10px;margin-bottom:10px">
+        <div class="f"><label>CNG N2 Open</label><input type="number" step="0.01" class="num" id="edCOpen2" value="${c2.Opening_Reading||0}" oninput="calcEditTally()"></div>
+        ${isSplit ? `<div class="f"><label style="color:#d97706;font-weight:800">⚡ CNG N2 Mid Reading</label><input type="number" step="0.01" class="num" id="edCMid2" value="${c2.Mid_Reading||0}" style="border-color:#f59e0b;background:#fffbeb" oninput="calcEditTally()"></div>` : ''}
+        <div class="f"><label>CNG N2 Close</label><input type="number" step="0.01" class="num" id="edCClose2" value="${c2.Closing_Reading||0}" oninput="calcEditTally()"></div>
+      </div>
+      <div style="display:grid;grid-template-columns:${isSplit?'1fr 1fr':'1fr'};gap:10px;margin-bottom:12px">
+        <div class="f"><label>CNG Rate 1 ₹/KG</label><input type="number" step="0.01" class="num" id="edCRate" value="${cRate}" oninput="calcEditTally()"></div>
+        ${isSplit ? `<div class="f"><label style="color:#d97706;font-weight:800">⚡ CNG Rate 2 ₹/KG (కొత్త రేటు)</label><input type="number" step="0.01" class="num" id="edCRate2" value="${cRate2}" style="border-color:#f59e0b;background:#fffbeb" oninput="calcEditTally()"></div>` : ''}
+      </div>`;
+  }
+}
+
 async function openFullEditShift(shiftId){
   loading(true, 'Loading shift details...');
   const [rShift, rStaff] = await Promise.all([
@@ -1062,9 +1143,13 @@ async function openFullEditShift(shiftId){
   const d1 = getNz('Diesel', 1), d2 = getNz('Diesel', 2);
   const c1 = getNz('CNG', 1), c2 = getNz('CNG', 2);
   
-  const pRateVal = p1.Rate || p2.Rate || 116.96;
-  const dRateVal = d1.Rate || d2.Rate || 105.01;
-  const cRateVal = c1.Rate || c2.Rate || 114.00;
+  const hasSplit = nz.some(x => Number(x.Mid_Reading || 0) > 0 || Number(x.Rate2 || 0) > 0);
+  const pRateVal = p1.Rate1 || p1.Rate || p2.Rate1 || p2.Rate || 116.96;
+  const pRate2Val = p1.Rate2 || p2.Rate2 || 0;
+  const dRateVal = d1.Rate1 || d1.Rate || d2.Rate1 || d2.Rate || 105.01;
+  const dRate2Val = d1.Rate2 || d2.Rate2 || 0;
+  const cRateVal = c1.Rate1 || c1.Rate || c2.Rate1 || c2.Rate || 114.00;
+  const cRate2Val = c1.Rate2 || c2.Rate2 || 0;
   const dt = String(s.Date || '').slice(0, 10);
   
   let html = `
@@ -1084,30 +1169,15 @@ async function openFullEditShift(shiftId){
     </div>
     
     <div class="card" style="margin-bottom:14px;background:#f8fafc" id="edNozzleCard">
-      <div style="font-size:11px;font-weight:700;color:var(--t2);text-transform:uppercase;margin-bottom:10px">2. Meter Readings & Rates (మీటర్ రీడింగ్స్ & ధరలు)</div>
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;flex-wrap:wrap;gap:8px">
+        <div style="font-size:11px;font-weight:700;color:var(--t2);text-transform:uppercase">2. Meter Readings & Rates (మీటర్ రీడింగ్స్ & ధరలు)</div>
+        <label style="font-size:12px;font-weight:800;color:#d97706;display:flex;align-items:center;gap:6px;cursor:pointer;background:#fffbeb;padding:4px 10px;border-radius:8px;border:1px solid #fde68a">
+          <input type="checkbox" id="edSplitToggle" ${hasSplit?'checked':''} onchange="toggleEdSplit()">
+          ⚡ Mid-Shift Rate Change (మధ్యలో రేట్ మార్పు)
+        </label>
+      </div>
       <div id="edNozzleInputs">
-        ${!isCNG ? `
-        <div class="f-row" style="margin-bottom:12px">
-          <div class="f"><label>MS N1 Open</label><input type="number" step="0.01" class="num" id="edPOpen1" value="${p1.Opening_Reading||0}" oninput="calcEditTally()"></div>
-          <div class="f"><label>MS N1 Close</label><input type="number" step="0.01" class="num" id="edPClose1" value="${p1.Closing_Reading||0}" oninput="calcEditTally()"></div>
-          <div class="f"><label>MS N2 Open</label><input type="number" step="0.01" class="num" id="edPOpen2" value="${p2.Opening_Reading||0}" oninput="calcEditTally()"></div>
-          <div class="f"><label>MS N2 Close</label><input type="number" step="0.01" class="num" id="edPClose2" value="${p2.Closing_Reading||0}" oninput="calcEditTally()"></div>
-          <div class="f"><label>MS Rate ₹/L</label><input type="number" step="0.01" class="num" id="edPRate" value="${pRateVal}" oninput="calcEditTally()"></div>
-        </div>
-        <div class="f-row" style="margin-bottom:12px">
-          <div class="f"><label>HSD N1 Open</label><input type="number" step="0.01" class="num" id="edDOpen1" value="${d1.Opening_Reading||0}" oninput="calcEditTally()"></div>
-          <div class="f"><label>HSD N1 Close</label><input type="number" step="0.01" class="num" id="edDClose1" value="${d1.Closing_Reading||0}" oninput="calcEditTally()"></div>
-          <div class="f"><label>HSD N2 Open</label><input type="number" step="0.01" class="num" id="edDOpen2" value="${d2.Opening_Reading||0}" oninput="calcEditTally()"></div>
-          <div class="f"><label>HSD N2 Close</label><input type="number" step="0.01" class="num" id="edDClose2" value="${d2.Closing_Reading||0}" oninput="calcEditTally()"></div>
-          <div class="f"><label>HSD Rate ₹/L</label><input type="number" step="0.01" class="num" id="edDRate" value="${dRateVal}" oninput="calcEditTally()"></div>
-        </div>` : `
-        <div class="f-row" style="margin-bottom:12px">
-          <div class="f"><label>CNG N1 Open</label><input type="number" step="0.01" class="num" id="edCOpen1" value="${c1.Opening_Reading||0}" oninput="calcEditTally()"></div>
-          <div class="f"><label>CNG N1 Close</label><input type="number" step="0.01" class="num" id="edCClose1" value="${c1.Closing_Reading||0}" oninput="calcEditTally()"></div>
-          <div class="f"><label>CNG N2 Open</label><input type="number" step="0.01" class="num" id="edCOpen2" value="${c2.Opening_Reading||0}" oninput="calcEditTally()"></div>
-          <div class="f"><label>CNG N2 Close</label><input type="number" step="0.01" class="num" id="edCClose2" value="${c2.Closing_Reading||0}" oninput="calcEditTally()"></div>
-          <div class="f"><label>CNG Rate ₹/KG</label><input type="number" step="0.01" class="num" id="edCRate" value="${cRateVal}" oninput="calcEditTally()"></div>
-        </div>`}
+        ${renderEdNozzleFields(isCNG, p1, p2, d1, d2, c1, c2, pRateVal, pRate2Val, dRateVal, dRate2Val, cRateVal, cRate2Val, hasSplit)}
       </div>
       <div class="f-row" style="margin-top:10px">
         <div class="f"><label>Testing Amount (₹)</label><input type="number" step="0.01" class="num" id="edTestAmt" value="${s.Testing_Amount||0}" oninput="calcEditTally()"></div>
@@ -1150,59 +1220,78 @@ function closeEditShift(){
   __edShift = null;
 }
 
-function onEdPumpChange(){
+function toggleEdSplit(){
+  const isSplit = $('edSplitToggle') && $('edSplitToggle').checked;
   const p = Number($('edPump').value);
   const isCNG = p === 3;
-  const pRateVal = num('edPRate') || 116.96;
-  const dRateVal = num('edDRate') || 105.01;
-  const cRateVal = num('edCRate') || 114.00;
+  const s = __edShift || {};
+  const nz = s.Nozzle_Readings || [];
+  const getNz = (type, no) => nz.find(x => x.Fuel_Type === type && Number(x.Nozzle_No) === no) || {};
+  const p1 = getNz('Petrol', 1), p2 = getNz('Petrol', 2);
+  const d1 = getNz('Diesel', 1), d2 = getNz('Diesel', 2);
+  const c1 = getNz('CNG', 1), c2 = getNz('CNG', 2);
   
-  $('edNozzleInputs').innerHTML = !isCNG ? `
-    <div class="f-row" style="margin-bottom:12px">
-      <div class="f"><label>MS N1 Open</label><input type="number" step="0.01" class="num" id="edPOpen1" value="${num('edPOpen1')||0}" oninput="calcEditTally()"></div>
-      <div class="f"><label>MS N1 Close</label><input type="number" step="0.01" class="num" id="edPClose1" value="${num('edPClose1')||0}" oninput="calcEditTally()"></div>
-      <div class="f"><label>MS N2 Open</label><input type="number" step="0.01" class="num" id="edPOpen2" value="${num('edPOpen2')||0}" oninput="calcEditTally()"></div>
-      <div class="f"><label>MS N2 Close</label><input type="number" step="0.01" class="num" id="edPClose2" value="${num('edPClose2')||0}" oninput="calcEditTally()"></div>
-      <div class="f"><label>MS Rate ₹/L</label><input type="number" step="0.01" class="num" id="edPRate" value="${pRateVal}" oninput="calcEditTally()"></div>
-    </div>
-    <div class="f-row" style="margin-bottom:12px">
-      <div class="f"><label>HSD N1 Open</label><input type="number" step="0.01" class="num" id="edDOpen1" value="${num('edDOpen1')||0}" oninput="calcEditTally()"></div>
-      <div class="f"><label>HSD N1 Close</label><input type="number" step="0.01" class="num" id="edDClose1" value="${num('edDClose1')||0}" oninput="calcEditTally()"></div>
-      <div class="f"><label>HSD N2 Open</label><input type="number" step="0.01" class="num" id="edDOpen2" value="${num('edDOpen2')||0}" oninput="calcEditTally()"></div>
-      <div class="f"><label>HSD N2 Close</label><input type="number" step="0.01" class="num" id="edDClose2" value="${num('edDClose2')||0}" oninput="calcEditTally()"></div>
-      <div class="f"><label>HSD Rate ₹/L</label><input type="number" step="0.01" class="num" id="edDRate" value="${dRateVal}" oninput="calcEditTally()"></div>
-    </div>` : `
-    <div class="f-row" style="margin-bottom:12px">
-      <div class="f"><label>CNG N1 Open</label><input type="number" step="0.01" class="num" id="edCOpen1" value="${num('edCOpen1')||0}" oninput="calcEditTally()"></div>
-      <div class="f"><label>CNG N1 Close</label><input type="number" step="0.01" class="num" id="edCClose1" value="${num('edCClose1')||0}" oninput="calcEditTally()"></div>
-      <div class="f"><label>CNG N2 Open</label><input type="number" step="0.01" class="num" id="edCOpen2" value="${num('edCOpen2')||0}" oninput="calcEditTally()"></div>
-      <div class="f"><label>CNG N2 Close</label><input type="number" step="0.01" class="num" id="edCClose2" value="${num('edCClose2')||0}" oninput="calcEditTally()"></div>
-      <div class="f"><label>CNG Rate ₹/KG</label><input type="number" step="0.01" class="num" id="edCRate" value="${cRateVal}" oninput="calcEditTally()"></div>
-    </div>`;
+  const curPO1 = num('edPOpen1') || p1.Opening_Reading || 0;
+  const curPC1 = num('edPClose1') || p1.Closing_Reading || 0;
+  const curPM1 = num('edPMid1') || p1.Mid_Reading || 0;
+  const curPO2 = num('edPOpen2') || p2.Opening_Reading || 0;
+  const curPC2 = num('edPClose2') || p2.Closing_Reading || 0;
+  const curPM2 = num('edPMid2') || p2.Mid_Reading || 0;
+
+  const curDO1 = num('edDOpen1') || d1.Opening_Reading || 0;
+  const curDC1 = num('edDClose1') || d1.Closing_Reading || 0;
+  const curDM1 = num('edDMid1') || d1.Mid_Reading || 0;
+  const curDO2 = num('edDOpen2') || d2.Opening_Reading || 0;
+  const curDC2 = num('edDClose2') || d2.Closing_Reading || 0;
+  const curDM2 = num('edDMid2') || d2.Mid_Reading || 0;
+
+  const curCO1 = num('edCOpen1') || c1.Opening_Reading || 0;
+  const curCC1 = num('edCClose1') || c1.Closing_Reading || 0;
+  const curCM1 = num('edCMid1') || c1.Mid_Reading || 0;
+  const curCO2 = num('edCOpen2') || c2.Opening_Reading || 0;
+  const curCC2 = num('edCClose2') || c2.Closing_Reading || 0;
+  const curCM2 = num('edCMid2') || c2.Mid_Reading || 0;
+
+  const pR = num('edPRate') || p1.Rate || 116.96;
+  const pR2 = num('edPRate2') || p1.Rate2 || 0;
+  const dR = num('edDRate') || d1.Rate || 105.01;
+  const dR2 = num('edDRate2') || d1.Rate2 || 0;
+  const cR = num('edCRate') || c1.Rate || 114.00;
+  const cR2 = num('edCRate2') || c1.Rate2 || 0;
+
+  $('edNozzleInputs').innerHTML = renderEdNozzleFields(isCNG,
+    {Opening_Reading: curPO1, Closing_Reading: curPC1, Mid_Reading: curPM1},
+    {Opening_Reading: curPO2, Closing_Reading: curPC2, Mid_Reading: curPM2},
+    {Opening_Reading: curDO1, Closing_Reading: curDC1, Mid_Reading: curDM1},
+    {Opening_Reading: curDO2, Closing_Reading: curDC2, Mid_Reading: curDM2},
+    {Opening_Reading: curCO1, Closing_Reading: curCC1, Mid_Reading: curCM1},
+    {Opening_Reading: curCO2, Closing_Reading: curCC2, Mid_Reading: curCM2},
+    pR, pR2, dR, dR2, cR, cR2, isSplit);
   calcEditTally();
+}
+
+function onEdPumpChange(){
+  toggleEdSplit();
 }
 
 function calcEditTally(){
   const p = Number($('edPump').value);
   const isCNG = p === 3;
-  let pLit = 0, pAmt = 0, dLit = 0, dAmt = 0, cLit = 0, cAmt = 0;
+  const isSplit = $('edSplitToggle') && $('edSplitToggle').checked;
   
-  if(!isCNG){
-    const po1 = Math.max(0, num('edPClose1') - num('edPOpen1'));
-    const po2 = Math.max(0, num('edPClose2') - num('edPOpen2'));
-    pLit = po1 + po2;
-    pAmt = pLit * num('edPRate');
-    
-    const do1 = Math.max(0, num('edDClose1') - num('edDOpen1'));
-    const do2 = Math.max(0, num('edDClose2') - num('edDOpen2'));
-    dLit = do1 + do2;
-    dAmt = dLit * num('edDRate');
-  } else {
-    const co1 = Math.max(0, num('edCClose1') - num('edCOpen1'));
-    const co2 = Math.max(0, num('edCClose2') - num('edCOpen2'));
-    cLit = co1 + co2;
-    cAmt = cLit * num('edCRate');
-  }
+  const pn1 = !isCNG ? calcNoz('edPOpen1','edPMid1','edPClose1','edPRate','edPRate2',isSplit) : {lit:0,amt:0,rate:0};
+  const pn2 = !isCNG ? calcNoz('edPOpen2','edPMid2','edPClose2','edPRate','edPRate2',isSplit) : {lit:0,amt:0,rate:0};
+  const dn1 = !isCNG ? calcNoz('edDOpen1','edDMid1','edDClose1','edDRate','edDRate2',isSplit) : {lit:0,amt:0,rate:0};
+  const dn2 = !isCNG ? calcNoz('edDOpen2','edDMid2','edDClose2','edDRate','edDRate2',isSplit) : {lit:0,amt:0,rate:0};
+  const cn1 = isCNG ? calcNoz('edCOpen1','edCMid1','edCClose1','edCRate','edCRate2',isSplit) : {lit:0,amt:0,rate:0};
+  const cn2 = isCNG ? calcNoz('edCOpen2','edCMid2','edCClose2','edCRate','edCRate2',isSplit) : {lit:0,amt:0,rate:0};
+  
+  const pLit = pn1.lit + pn2.lit;
+  const pAmt = pn1.amt + pn2.amt;
+  const dLit = dn1.lit + dn2.lit;
+  const dAmt = dn1.amt + dn2.amt;
+  const cLit = cn1.lit + cn2.lit;
+  const cAmt = cn1.amt + cn2.amt;
   
   const totalSales = pAmt + dAmt + cAmt;
   const cash = num('edCash');
@@ -1227,34 +1316,34 @@ async function submitFullEditShift(){
   
   const p = Number($('edPump').value);
   const isCNG = p === 3;
+  const isSplit = $('edSplitToggle') && $('edSplitToggle').checked;
   const dateVal = $('edDate').value;
   const staffIdVal = $('edStaff').value;
   if(!dateVal){ toast('Please select date', 'err'); return; }
   
-  let pLit = 0, pAmt = 0, dLit = 0, dAmt = 0, cLit = 0, cAmt = 0;
-  const nozzles = [];
+  const pn1 = !isCNG ? calcNoz('edPOpen1','edPMid1','edPClose1','edPRate','edPRate2',isSplit) : {lit:0,amt:0,rate:0,l1:0,a1:0,l2:0,a2:0,r1:0,r2:0,mid:0,open:0,close:0};
+  const pn2 = !isCNG ? calcNoz('edPOpen2','edPMid2','edPClose2','edPRate','edPRate2',isSplit) : {lit:0,amt:0,rate:0,l1:0,a1:0,l2:0,a2:0,r1:0,r2:0,mid:0,open:0,close:0};
+  const dn1 = !isCNG ? calcNoz('edDOpen1','edDMid1','edDClose1','edDRate','edDRate2',isSplit) : {lit:0,amt:0,rate:0,l1:0,a1:0,l2:0,a2:0,r1:0,r2:0,mid:0,open:0,close:0};
+  const dn2 = !isCNG ? calcNoz('edDOpen2','edDMid2','edDClose2','edDRate','edDRate2',isSplit) : {lit:0,amt:0,rate:0,l1:0,a1:0,l2:0,a2:0,r1:0,r2:0,mid:0,open:0,close:0};
+  const cn1 = isCNG ? calcNoz('edCOpen1','edCMid1','edCClose1','edCRate','edCRate2',isSplit) : {lit:0,amt:0,rate:0,l1:0,a1:0,l2:0,a2:0,r1:0,r2:0,mid:0,open:0,close:0};
+  const cn2 = isCNG ? calcNoz('edCOpen2','edCMid2','edCClose2','edCRate','edCRate2',isSplit) : {lit:0,amt:0,rate:0,l1:0,a1:0,l2:0,a2:0,r1:0,r2:0,mid:0,open:0,close:0};
   
+  const pLit = pn1.lit + pn2.lit;
+  const pAmt = pn1.amt + pn2.amt;
+  const dLit = dn1.lit + dn2.lit;
+  const dAmt = dn1.amt + dn2.amt;
+  const cLit = cn1.lit + cn2.lit;
+  const cAmt = cn1.amt + cn2.amt;
+  
+  const nozzles = [];
   if(!isCNG){
-    const po1 = Math.max(0, num('edPClose1') - num('edPOpen1'));
-    const po2 = Math.max(0, num('edPClose2') - num('edPOpen2'));
-    pLit = po1 + po2;
-    pAmt = pLit * num('edPRate');
-    nozzles.push({ Nozzle_No: 1, Fuel_Type: 'Petrol', Opening_Reading: num('edPOpen1'), Closing_Reading: num('edPClose1'), Litres: po1, Rate: num('edPRate'), Amount: po1 * num('edPRate') });
-    nozzles.push({ Nozzle_No: 2, Fuel_Type: 'Petrol', Opening_Reading: num('edPOpen2'), Closing_Reading: num('edPClose2'), Litres: po2, Rate: num('edPRate'), Amount: po2 * num('edPRate') });
-    
-    const do1 = Math.max(0, num('edDClose1') - num('edDOpen1'));
-    const do2 = Math.max(0, num('edDClose2') - num('edDOpen2'));
-    dLit = do1 + do2;
-    dAmt = dLit * num('edDRate');
-    nozzles.push({ Nozzle_No: 1, Fuel_Type: 'Diesel', Opening_Reading: num('edDOpen1'), Closing_Reading: num('edDClose1'), Litres: do1, Rate: num('edDRate'), Amount: do1 * num('edDRate') });
-    nozzles.push({ Nozzle_No: 2, Fuel_Type: 'Diesel', Opening_Reading: num('edDOpen2'), Closing_Reading: num('edDClose2'), Litres: do2, Rate: num('edDRate'), Amount: do2 * num('edDRate') });
+    nozzles.push({ Nozzle_No: 1, Fuel_Type: 'Petrol', Opening_Reading: pn1.open, Closing_Reading: pn1.close, Mid_Reading: pn1.mid, Litres: pn1.lit, Rate: Number(pn1.rate.toFixed(4)), Amount: Number(pn1.amt.toFixed(2)), Rate1: pn1.r1, Rate2: pn1.r2, Slot1_Litres: pn1.l1, Slot1_Amount: pn1.a1, Slot2_Litres: pn1.l2, Slot2_Amount: pn1.a2 });
+    nozzles.push({ Nozzle_No: 2, Fuel_Type: 'Petrol', Opening_Reading: pn2.open, Closing_Reading: pn2.close, Mid_Reading: pn2.mid, Litres: pn2.lit, Rate: Number(pn2.rate.toFixed(4)), Amount: Number(pn2.amt.toFixed(2)), Rate1: pn2.r1, Rate2: pn2.r2, Slot1_Litres: pn2.l1, Slot1_Amount: pn2.a1, Slot2_Litres: pn2.l2, Slot2_Amount: pn2.a2 });
+    nozzles.push({ Nozzle_No: 1, Fuel_Type: 'Diesel', Opening_Reading: dn1.open, Closing_Reading: dn1.close, Mid_Reading: dn1.mid, Litres: dn1.lit, Rate: Number(dn1.rate.toFixed(4)), Amount: Number(dn1.amt.toFixed(2)), Rate1: dn1.r1, Rate2: dn1.r2, Slot1_Litres: dn1.l1, Slot1_Amount: dn1.a1, Slot2_Litres: dn1.l2, Slot2_Amount: dn1.a2 });
+    nozzles.push({ Nozzle_No: 2, Fuel_Type: 'Diesel', Opening_Reading: dn2.open, Closing_Reading: dn2.close, Mid_Reading: dn2.mid, Litres: dn2.lit, Rate: Number(dn2.rate.toFixed(4)), Amount: Number(dn2.amt.toFixed(2)), Rate1: dn2.r1, Rate2: dn2.r2, Slot1_Litres: dn2.l1, Slot1_Amount: dn2.a1, Slot2_Litres: dn2.l2, Slot2_Amount: dn2.a2 });
   } else {
-    const co1 = Math.max(0, num('edCClose1') - num('edCOpen1'));
-    const co2 = Math.max(0, num('edCClose2') - num('edCOpen2'));
-    cLit = co1 + co2;
-    cAmt = cLit * num('edCRate');
-    nozzles.push({ Nozzle_No: 1, Fuel_Type: 'CNG', Opening_Reading: num('edCOpen1'), Closing_Reading: num('edCClose1'), Litres: co1, Rate: num('edCRate'), Amount: co1 * num('edCRate') });
-    nozzles.push({ Nozzle_No: 2, Fuel_Type: 'CNG', Opening_Reading: num('edCOpen2'), Closing_Reading: num('edCClose2'), Litres: co2, Rate: num('edCRate'), Amount: co2 * num('edCRate') });
+    nozzles.push({ Nozzle_No: 1, Fuel_Type: 'CNG', Opening_Reading: cn1.open, Closing_Reading: cn1.close, Mid_Reading: cn1.mid, Litres: cn1.lit, Rate: Number(cn1.rate.toFixed(4)), Amount: Number(cn1.amt.toFixed(2)), Rate1: cn1.r1, Rate2: cn1.r2, Slot1_Litres: cn1.l1, Slot1_Amount: cn1.a1, Slot2_Litres: cn1.l2, Slot2_Amount: cn1.a2 });
+    nozzles.push({ Nozzle_No: 2, Fuel_Type: 'CNG', Opening_Reading: cn2.open, Closing_Reading: cn2.close, Mid_Reading: cn2.mid, Litres: cn2.lit, Rate: Number(cn2.rate.toFixed(4)), Amount: Number(cn2.amt.toFixed(2)), Rate1: cn2.r1, Rate2: cn2.r2, Slot1_Litres: cn2.l1, Slot1_Amount: cn2.a1, Slot2_Litres: cn2.l2, Slot2_Amount: cn2.a2 });
   }
   
   const totalSales = pAmt + dAmt + cAmt;
@@ -1266,11 +1355,15 @@ async function submitFullEditShift(){
   const col = cash + online + otp;
   const diff = col + exp + testAmt - totalSales;
   
+  const stObj = __edStaffList.find(x => String(x.Staff_ID).toUpperCase() === String(staffIdVal).toUpperCase());
+  const staffNameVal = stObj ? stObj.Staff_Name : staffIdVal;
+  
   const payload = {
     Shift_ID: __edShift.Shift_ID,
     Date: dateVal,
     Pump_No: p,
     Staff_ID: staffIdVal,
+    Staff_Name: staffNameVal,
     Petrol_Litres: pLit,
     Petrol_Amount: pAmt,
     Diesel_Litres: dLit,
@@ -1278,22 +1371,36 @@ async function submitFullEditShift(){
     CNG_KG: cLit,
     CNG_Amount: cAmt,
     Total_Sales: totalSales,
-    Online_Amount: online,
-    OTP_Amount: otp,
+    Total_Sales_Amount: totalSales,
     Cash_Total: cash,
-    Change_Amount: 0,
+    Cash_Collected: cash,
+    Online_Amount: online,
+    Online_Total: online,
+    OTP_Amount: otp,
+    OTP_Sale: otp,
     Expenditure: exp,
+    Expenses_Total: exp,
     Testing_Amount: testAmt,
     Total_Collected: col,
     Difference: diff,
-    Nozzle_Readings: nozzles
+    Short_Excess: diff,
+    Edit_Reason: reason,
+    Nozzle_Readings: nozzles,
+    // Store mid readings and rates directly so nothing is ever lost
+    Petrol_Nozzle_1_Open: pn1.open, Petrol_Nozzle_1_Mid: pn1.mid, Petrol_Nozzle_1_Close: pn1.close,
+    Petrol_Nozzle_2_Open: pn2.open, Petrol_Nozzle_2_Mid: pn2.mid, Petrol_Nozzle_2_Close: pn2.close,
+    Diesel_Nozzle_1_Open: dn1.open, Diesel_Nozzle_1_Mid: dn1.mid, Diesel_Nozzle_1_Close: dn1.close,
+    Diesel_Nozzle_2_Open: dn2.open, Diesel_Nozzle_2_Mid: dn2.mid, Diesel_Nozzle_2_Close: dn2.close,
+    CNG_Nozzle_1_Open: cn1.open, CNG_Nozzle_1_Mid: cn1.mid, CNG_Nozzle_1_Close: cn1.close,
+    CNG_Nozzle_2_Open: cn2.open, CNG_Nozzle_2_Mid: cn2.mid, CNG_Nozzle_2_Close: cn2.close
   };
   
-  loading(true, 'Saving edit to shift...');
-  const res = await api('updateShift', { data: payload, reason });
+  loading(true, 'Saving updated shift...');
+  const res = await api('updateShift', { data: payload, shiftId: __edShift.Shift_ID, reason });
   loading(false);
-  if(!res.ok){ toast(res.error || 'Edit failed', 'err'); return; }
-  toast('✅ Shift successfully updated');
+  
+  if(!res.ok){ toast(res.error || 'Failed to update shift', 'err'); return; }
+  toast('✅ Shift updated successfully! (సవరణ విజయవంతం)');
   closeEditShift();
   loadEntries();
 }

@@ -1045,6 +1045,15 @@ async function loadEntries(){
   if(!r.ok){$('entriesOut').innerHTML='<div class="card">Failed to load entries</div>';return;}
   const shifts=r.shifts||[];
   if(!shifts.length){$('entriesOut').innerHTML='<div class="card tbl-empty">No entries found</div>';return;}
+
+  // Strict sorting: newest date first, then Pump 1, 2, 3
+  shifts.sort((a, b) => {
+    const da = String(a.Date || '').slice(0, 10);
+    const db = String(b.Date || '').slice(0, 10);
+    if (da !== db) return db.localeCompare(da);
+    return (Number(a.Pump_No) || 0) - (Number(b.Pump_No) || 0);
+  });
+
   const isOwn=isUserAdmin();
   let h='';
   shifts.forEach(s=>{
