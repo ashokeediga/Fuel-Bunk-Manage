@@ -81,6 +81,8 @@ export default {
           return await handleChangeShiftDate(body, kv, ctx);
         case 'getDashboardData':
           return await handleGetDashboardData(kv);
+        case 'getReportData':
+          return await handleGetReportData(body, kv);
         default:
           // Transparent fallback to Google Sheets for any unhandled action
           return await proxyToGoogleSheets(body);
@@ -529,4 +531,94 @@ async function handleGetDashboardData(kv) {
     },
     recentShifts: shifts.slice(0, 10),
   });
+}
+
+
+async function handleGetReportData(body, kv) {
+  if (!kv) return await proxyToGoogleSheets(body);
+  const data = await kv.get('shifts', 'json');
+  let shifts = (data && data.shifts) || [];
+
+  const from = String(body.from || '').slice(0, 10);
+  const to = String(body.to || '').slice(0, 10);
+  const type = String(body.type || 'daily').toLowerCase();
+
+  if (from) {
+    shifts = shifts.filter(r => String(r.Date || '').slice(0, 10) >= from);
+  }
+  if (to) {
+    shifts = shifts.filter(r => String(r.Date || '').slice(0, 10) <= to);
+  }
+  if (body.pump) {
+    shifts = shifts.filter(r => String(r.Pump_No) === String(body.pump));
+  }
+  if (body.staff) {
+    const sId = String(body.staff).trim().toUpperCase();
+    shifts = shifts.filter(r => String(r.Staff_ID).trim().toUpperCase() === sId);
+  }
+
+  const num = (v) => Number(v) || 0;
+
+  const sumGroup = (keyFn) => {
+    const m = {};
+    shifts.forEach(r => {
+      const k = keyFn(r);
+      if (!m[k]) m[k] = [];
+      m[k].push(r);
+    });
+    return Object.keys(m).sort().map(k => {
+      const rs = m[k];
+      const z = { count: rs.length, petrolL: 0, dieselL: 0, cngL: 0, sales: 0, cash: 0, online: 0, otp: 0, diff: 0 };
+      rs.forEach(r => {
+        z.petrolL += num(r.Petrol_Total_Litres || r.Petrol_Litres);
+        z.dieselL += num(r.Diesel_Total_Litres || r.Diesel_Litres);
+        z.cngL += num(r.CNG_Total_Kg || r.CNG_KG);
+        z.sales += num(r.Total_Sales_Amount || r.Total_Sales);
+        z.cash += num(r.Cash_Collected || r.Cash_Total);
+        z.online += num(r.Online_Total || r.Online_Amount);
+        z.otp += num(r.OTP_Sale || r.OTP_Amount);
+        z.diff += num(r.Short_Excess || r.Difference);
+      });
+      return { key: k, ...z };
+    });
+  };
+
+  let rows = [];
+  if (type === 'daily') {
+    rows = sumGroup(r => String(r.Date || '').slice(0, 10)).map(x => ({
+      date: x.key, count: x.count, petrolL: x.petrolL, dieselL: x.dieselL, cngL: x.cngL, sales: x.sales, cash: x.cash, online: x.online, otp: x.otp, diff: x.diff
+    }));
+  } else if (type === 'pump') {
+    rows = sumGroup(r => 'Pump ' + (r.Pump_No || 1)).map(x => ({
+      pump: x.key, count: x.count, petrolL: x.petrolL, dieselL: x.dieselL, cngL: x.cngL, sales: x.sales, diff: x.diff
+    }));
+  } else if (type === 'employee') {
+    rows = sumGroup(r => String(r.Staff_ID)).map(x => ({
+      name: (shifts.find(r => String(r.Staff_ID) === x.key) || {}).Staff_Name || x.key,
+      count: x.count, sales: x.sales, cash: x.cash, diff: x.diff
+    }));
+  } else if (type === 'difference') {
+    rows = shifts.map(r => ({
+      date: String(r.Date || '').slice(0, 10),
+      pump: r.Pump_No,
+      staff: r.Staff_Name || r.Staff_ID,
+      sales: num(r.Total_Sales_Amount || r.Total_Sales),
+      collected: num(r.Cash_Collected || r.Total_Collected),
+      exp: num(r.Expenses_Total || r.Expenditure),
+      diff: num(r.Short_Excess || r.Difference)
+    }));
+  } else {
+    rows = shifts.map(r => ({
+      date: String(r.Date || '').slice(0, 10),
+      shiftId: r.Shift_ID,
+      pump: r.Pump_No,
+      staff: r.Staff_Name || r.Staff_ID,
+      sales: num(r.Total_Sales_Amount || r.Total_Sales),
+      cash: num(r.Cash_Collected || r.Cash_Total),
+      online: num(r.Online_Total || r.Online_Amount),
+      diff: num(r.Short_Excess || r.Difference)
+    }));
+  }
+
+  return json({ ok: true, rows });
 }

@@ -608,12 +608,37 @@ const today=()=>{const d=new Date();return new Date(d.getTime()-d.getTimezoneOff
 const yesterday=()=>{const d=new Date();d.setDate(d.getDate()-1);return new Date(d.getTime()-d.getTimezoneOffset()*60000).toISOString().slice(0,10);};
 const monthNow=()=>today().slice(0,7);
 
+function isUserAdmin(){
+  if(!me) return false;
+  const role = String(me.Role || '').trim().toLowerCase();
+  const id = String(me.Staff_ID || '').trim().toUpperCase();
+  return role === 'owner' || role === 'manager' || id === 'ADMIN' || id === 'OWN001' || id === 'MGR001';
+}
+
+function isUserOwner(){
+  if(!me) return false;
+  const role = String(me.Role || '').trim().toLowerCase();
+  const id = String(me.Staff_ID || '').trim().toUpperCase();
+  return role === 'owner' || id === 'ADMIN' || id === 'OWN001';
+}
+
 function toast(msg,type='ok'){$('toastM').textContent=msg;$('toastI').textContent=type==='ok'?'✅':type==='err'?'⚠️':'ℹ️';$('toast').className='toast '+type+' show';clearTimeout(window.__tt);window.__tt=setTimeout(()=>$('toast').classList.remove('show'),2600);}
 function loading(on,txt){$('loaderTxt').textContent=txt||'Loading...';$('loader').classList.toggle('show',on);}
 async function sha256(t){const b=new TextEncoder().encode(t);const h=await crypto.subtle.digest('SHA-256',b);return Array.from(new Uint8Array(h)).map(x=>x.toString(16).padStart(2,'0')).join('');}
 async function api(action,extra={}){try{const res=await fetch(getApiUrl(),{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify({action,currentUser:me,...extra})});return await res.json();}catch(e){return{ok:false,error:'Network: '+e.message};}}
 
 function nav(id,el){
+  if(['reports', 'dashboard', 'dsr', 'staff', 'salary', 'otp'].includes(id) && !isUserOwner()){
+    toast('Access restricted to Owner/Admin', 'err');
+    nav('home', document.querySelector('[data-nav="home"]'));
+    return;
+  }
+  if(['stock', 'book'].includes(id) && !isUserAdmin()){
+    toast('Access restricted to Manager/Admin', 'err');
+    nav('home', document.querySelector('[data-nav="home"]'));
+    return;
+  }
+
   document.querySelectorAll('.sec').forEach(s=>s.classList.remove('active'));
   const t=$('sec'+id.charAt(0).toUpperCase()+id.slice(1));
   if(t)t.classList.add('active');
@@ -631,6 +656,7 @@ function nav(id,el){
   if(id==='otp')loadOtp();
   if(id==='home')loadHome();
   if(id==='entry')initEntry();
+  if(id==='reports')initReports();
   $('sidebar').classList.remove('open');
 }
 
@@ -665,12 +691,18 @@ async function doLogin(bgId, bgPin){
   $('sideRole').textContent=me.Role+' · '+me.Staff_ID;
   // Show/hide nav by role
   const isMgr=isUserAdmin();
-  const isOwn=isUserAdmin();
+  const isOwn=isUserOwner();
   document.querySelectorAll('.nav-item').forEach(n=>{
     const r=n.dataset.role;
     if(!r)n.style.display='';
     else if(r==='owner')n.style.display=isOwn?'':'none';
     else if(r==='mgr')n.style.display=isMgr?'':'none';
+  });
+  document.querySelectorAll('.nav-sect').forEach(ns=>{
+    const txt = ns.textContent.trim();
+    if(txt === 'Administration' || txt === 'Analytics'){
+      ns.style.display = isOwn ? '' : 'none';
+    }
   });
   if(isMgr)loadEmployees();
   nav('home',document.querySelector('[data-nav="home"]'));
@@ -722,7 +754,7 @@ async function loadHome(){
     <div class="kpi purple"><div class="kl">Total Entries</div><div class="kv">${shifts.length}</div></div>`;
 
   const isMgr=isUserAdmin();
-  const isOwn=isUserAdmin();
+  const isOwn=isUserOwner();
   let tiles=`
     <div class="tile primary" onclick="nav('entry',document.querySelector('[data-nav=\\'entry\\']'))"><div class="ti">➕</div><div><div class="tt">New Entry</div><div class="ts">Record sales</div></div></div>
     <div class="tile green" onclick="nav('entries',document.querySelector('[data-nav=\\'entries\\']'))"><div class="ti">📋</div><div><div class="tt">View Entries</div><div class="ts">Recent records</div></div></div>`;
@@ -1382,11 +1414,32 @@ function exportDsr(){
 
 /* ═════ REPORTS ═════ */
 async function loadRepStaff(){
-  const r=await api('getStaff',{activeOnly:true});
-  const sel=$('repStaff');sel.innerHTML='<option value="">All</option>';
+  const staffList = window.staffCache || [];
+  const r = staffList.length ? { ok: true, staff: staffList } : await api('getStaff', { activeOnly: true });
+  const sel=$('repStaff');
+  if(!sel) return;
+  sel.innerHTML='<option value="">All</option>';
   (r.staff||[]).forEach(x=>{const o=document.createElement('option');o.value=x.Staff_ID;o.textContent=x.Staff_Name;sel.appendChild(o);});
 }
-function pickRep(t,el){repType=t;document.querySelectorAll('#repTabs .tab').forEach(x=>x.classList.remove('active'));el.classList.add('active');$('repOut').innerHTML='';}
+
+async function initReports(){
+  if(!isUserOwner()){
+    toast('Access restricted to Owner/Admin', 'err');
+    nav('home', document.querySelector('[data-nav="home"]'));
+    return;
+  }
+  if(!$('repFrom').value) $('repFrom').value = monthNow() + '-01';
+  if(!$('repTo').value) $('repTo').value = today();
+  await loadRepStaff();
+  runReport();
+}
+
+function pickRep(t,el){
+  repType=t;
+  document.querySelectorAll('#repTabs .tab').forEach(x=>x.classList.remove('active'));
+  if(el) el.classList.add('active');
+  runReport();
+}
 async function runReport(){
   const from=$('repFrom').value,to=$('repTo').value;
   if(!from||!to){toast('Select dates','err');return;}

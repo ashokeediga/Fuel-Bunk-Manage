@@ -580,7 +580,36 @@ const today=()=>{const d=new Date();return new Date(d.getTime()-d.getTimezoneOff
 const yesterday=()=>{const d=new Date();d.setDate(d.getDate()-1);return new Date(d.getTime()-d.getTimezoneOffset()*60000).toISOString().slice(0,10);};
 const monthNow=()=>today().slice(0,7);
 
-function show(id){document.querySelectorAll('.sec').forEach(s=>s.classList.remove('active'));const el=$(id);if(el)el.classList.add('active');window.scrollTo(0,0);}
+function isUserAdmin(){
+  if(!me) return false;
+  const role = String(me.Role || '').trim().toLowerCase();
+  const id = String(me.Staff_ID || '').trim().toUpperCase();
+  return role === 'owner' || role === 'manager' || id === 'ADMIN' || id === 'OWN001' || id === 'MGR001';
+}
+
+function isUserOwner(){
+  if(!me) return false;
+  const role = String(me.Role || '').trim().toLowerCase();
+  const id = String(me.Staff_ID || '').trim().toUpperCase();
+  return role === 'owner' || id === 'ADMIN' || id === 'OWN001';
+}
+
+function show(id){
+  if(['dashSec', 'dsrSec', 'reportsSec', 'staffSec', 'salarySec', 'otpSec'].includes(id) && !isUserOwner()){
+    toast('Access restricted to Owner/Admin', 'err');
+    show('homeSec');
+    return;
+  }
+  if(['stockSec'].includes(id) && !isUserAdmin()){
+    toast('Access restricted to Manager/Admin', 'err');
+    show('homeSec');
+    return;
+  }
+  document.querySelectorAll('.sec').forEach(s=>s.classList.remove('active'));
+  const el=$(id);
+  if(el) el.classList.add('active');
+  window.scrollTo(0,0);
+}
 function toast(msg,type='ok'){$('toastM').textContent=msg;$('toastI').textContent=type==='ok'?'✅':type==='err'?'⚠️':'ℹ️';$('toast').className='toast '+type+' show';clearTimeout(window.__tt);window.__tt=setTimeout(()=>$('toast').classList.remove('show'),2400);}
 function loading(on,txt){$('loaderTxt').textContent=txt||'Loading...';$('loader').classList.toggle('show',on);}
 function vibrate(p){if(navigator.vibrate)try{navigator.vibrate(p||10);}catch(e){}}
@@ -637,7 +666,7 @@ function setupHome(){
   const d=new Date();
   $('helloDate').textContent=d.toLocaleDateString('en-IN',{weekday:'long',day:'numeric',month:'long',year:'numeric'});
   const isMgr=isUserAdmin();
-  const isOwn=isUserAdmin();
+  const isOwn=isUserOwner();
   $('mgrPickBox').style.display='none';/* employee dropdown moved to entry page */
   $('tileDash').style.display=isOwn?'flex':'none';
   $('tileDSR').style.display=isOwn?'flex':'none';
