@@ -538,16 +538,18 @@ td{padding:9px 8px;border-bottom:1px solid var(--line);font-variant-numeric:tabu
 
 <script>
 /* ═════ CONFIG ═════ */
+const CLOUDFLARE_API_URL = "https://fuel-bunk-api.hp-nlkpump.workers.dev";
 const DEFAULT_GAS_URL = "https://script.google.com/macros/s/AKfycby3RCm-KbT1_YUA3BCapzEiNxekRSbOjNKxoxQwFx_qgKufeTVCPyERQ8VHuU7GFuErtw/exec";
-function getApiUrl(){ return localStorage.getItem('CUSTOM_API_URL') || DEFAULT_GAS_URL; }
+function getApiUrl(){ return localStorage.getItem('CUSTOM_API_URL') || CLOUDFLARE_API_URL; }
 const API_URL = getApiUrl();
 
 
 function updateServerBadgeUi(){
-  const isCustom = !!localStorage.getItem('CUSTOM_API_URL');
+  const currUrl = getApiUrl();
+  const isCloudflare = currUrl.includes('workers.dev');
   const d = $('srvBadgeDesk'), m = $('srvBadgeMob');
-  const txt = isCustom ? '⚡ Cloudflare Edge (<50ms)' : '🐢 Google Sheets';
-  const color = isCustom ? '#16a34a' : '#ea580c';
+  const txt = isCloudflare ? '⚡ Cloudflare Edge (<50ms)' : '🐢 Google Sheets';
+  const color = isCloudflare ? '#16a34a' : '#ea580c';
   if(d){ d.innerHTML = txt; d.style.color = color; }
   if(m){ m.innerHTML = txt; m.style.color = color; }
 }
