@@ -562,7 +562,7 @@ async function doLogin(bgId, bgPin){
   if(!bgId) loading(true,'Signing in...');
   const r=await api('loginUser',{staffId:id,pin});
   if(!bgId) loading(false);
-  if(!r.ok){if(!bgId)toast(r.error||'Login failed','err'); else {doLogout();} return;}
+  if(!r.ok){if(!bgId)toast(r.error||'Login failed','err'); return;}
   me=r.user;pickedStaffId=me.Staff_ID;
   localStorage.setItem('me',JSON.stringify(me));
   localStorage.setItem('pin',pin);
