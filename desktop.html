@@ -856,7 +856,7 @@ async function onPumpChange(){
         <div class="f"><label>CNG N1 Closing</label><input id="cClose1" type="number" oninput="calc()"></div>
         <div class="f"><label>CNG N2 Opening</label><input id="cOpen2" type="number" value="${(c.CNG_2&&c.CNG_2.closing)||0}" oninput="calc()"></div>
         <div class="f"><label>CNG N2 Closing</label><input id="cClose2" type="number" oninput="calc()"></div>
-        <div class="f"><label>CNG Rate ₹/KG</label><input id="cRate" type="number" value="0" oninput="calc()"></div>
+        <div class="f"><label>CNG Rate ₹/KG</label><input id="cRate" type="number" value="" placeholder="0" oninput="calc()"></div>
       </div>`}
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:14px">
         <div class="card" style="margin:0;background:#f8fafc">
@@ -868,12 +868,12 @@ async function onPumpChange(){
         </div>
         <div class="card" style="margin:0;background:#f8fafc">
           <div style="font-size:11px;font-weight:700;color:var(--t2);text-transform:uppercase;margin-bottom:10px">Payments</div>
-          <div class="f" style="margin-bottom:10px"><label>Online / UPI ₹</label><input id="online" type="number" value="0" oninput="calcPay()"></div>
-          <div class="f" style="margin-bottom:10px"><label>OTP / Fleet ₹</label><input id="otp" type="number" value="0" oninput="calcPay()"></div>
-          <div class="f" style="margin-bottom:10px"><label>Cash ₹</label><input id="cash" type="number" value="0" oninput="calcPay()"></div>
-          <div class="f" style="margin-bottom:10px"><label>Testing Amt ₹</label><input id="testingAmt" type="number" value="0" oninput="calcPay()"></div>
+          <div class="f" style="margin-bottom:10px"><label>Online / UPI ₹</label><input id="online" type="number" value="" placeholder="0" oninput="calcPay()"></div>
+          <div class="f" style="margin-bottom:10px"><label>OTP / Fleet ₹</label><input id="otp" type="number" value="" placeholder="0" oninput="calcPay()"></div>
+          <div class="f" style="margin-bottom:10px"><label>Net Cash ₹</label><input id="cash" type="number" value="" placeholder="0" oninput="calcPay()"></div>
+          <div class="f" style="margin-bottom:10px"><label>Testing Amt ₹</label><input id="testingAmt" type="number" value="" placeholder="0" oninput="calcPay()"></div>
           <div class="f" style="margin-bottom:10px"><label>Exp/Test Type</label><input id="expType" placeholder="Tea / Testing / Repair"></div>
-          <div class="f" style="margin-bottom:0"><label>Expenditure ₹</label><input id="expenditure" type="number" value="0" oninput="calcPay()"></div>
+          <div class="f" style="margin-bottom:0"><label>Expenditure ₹</label><input id="expenditure" type="number" value="" placeholder="0" oninput="calcPay()"></div>
         </div>
       </div>
       <div id="validateAlert" style="margin-top:14px"></div>
@@ -967,7 +967,7 @@ function showSummary(){
     <div class="sm-line"><span class="sl">Diesel</span><span class="sv">${money(d.Diesel_Amount)}</span></div>
     ${d.CNG_Amount>0?`<div class="sm-line"><span class="sl">CNG</span><span class="sv">${money(d.CNG_Amount)}</span></div>`:''}
     <div class="sm-line hl"><span class="sl">Total Sales</span><span class="sv">${money(sales)}</span></div>
-    <div class="sm-line"><span class="sl">Cash</span><span class="sv">${money(d.Cash_Total)}</span></div>
+    <div class="sm-line"><span class="sl">Net Cash</span><span class="sv">${money(d.Cash_Total)}</span></div>
     <div class="sm-line"><span class="sl">Online</span><span class="sv">${money(d.Online_Amount)}</span></div>
     <div class="sm-line"><span class="sl">OTP</span><span class="sv">${money(d.OTP_Amount)}</span></div>
     <div class="sm-line"><span class="sl">Expenditure</span><span class="sv">${money(d.Expenditure)}</span></div>
@@ -1102,11 +1102,11 @@ let __edShift = null, __edStaffList = [];
 
 function calcNoz(openId, midId, closeId, rate1Id, rate2Id, isSplit){
   const o = num(openId), c = num(closeId), m = num(midId);
-  const r1 = num(rate1Id), r2 = num(rate2Id);
-  if(!isSplit || m <= o || m >= c || r2 <= 0){
+  const r1 = num(rate1Id), r2 = (num(rate2Id) > 0 ? num(rate2Id) : r1);
+  if(!isSplit || m <= o || m >= c){
     const lit = Math.max(0, c - o);
     const amt = lit * r1;
-    return { lit, amt, rate: r1, isSplit: false, l1: lit, a1: amt, l2: 0, a2: 0, r1, r2: 0, mid: 0, open: o, close: c };
+    return { lit, amt, rate: r1, isSplit: false, l1: lit, a1: amt, l2: 0, a2: 0, r1, r2: 0, mid: (m > 0 ? m : 0), open: o, close: c };
   }
   const l1 = Math.max(0, m - o);
   const a1 = l1 * r1;
@@ -1124,50 +1124,50 @@ function renderEdNozzleFields(isCNG, p1, p2, d1, d2, c1, c2, pRate, pRate2, dRat
       <div style="font-size:12px;font-weight:800;color:var(--pri);margin-bottom:8px">⛽ MS Petrol Nozzles</div>
       <div style="display:grid;grid-template-columns:${isSplit?'1fr 1fr 1fr':'1fr 1fr'};gap:10px;margin-bottom:10px">
         <div class="f"><label>MS N1 Open</label><input type="number" step="0.01" class="num" id="edPOpen1" value="${p1.Opening_Reading||0}" oninput="calcEditTally()"></div>
-        ${isSplit ? `<div class="f"><label style="color:#d97706;font-weight:800">⚡ MS N1 Mid Reading</label><input type="number" step="0.01" class="num" id="edPMid1" value="${p1.Mid_Reading||0}" style="border-color:#f59e0b;background:#fffbeb" oninput="calcEditTally()"></div>` : ''}
+        ${isSplit ? `<div class="f"><label style="color:#d97706;font-weight:800">⚡ MS N1 Mid Reading</label><input type="number" step="0.01" class="num" id="edPMid1" value="${p1.Mid_Reading>0?p1.Mid_Reading:''}" placeholder="0" style="border-color:#f59e0b;background:#fffbeb" oninput="calcEditTally()"></div>` : ''}
         <div class="f"><label>MS N1 Close</label><input type="number" step="0.01" class="num" id="edPClose1" value="${p1.Closing_Reading||0}" oninput="calcEditTally()"></div>
       </div>
       <div style="display:grid;grid-template-columns:${isSplit?'1fr 1fr 1fr':'1fr 1fr'};gap:10px;margin-bottom:10px">
         <div class="f"><label>MS N2 Open</label><input type="number" step="0.01" class="num" id="edPOpen2" value="${p2.Opening_Reading||0}" oninput="calcEditTally()"></div>
-        ${isSplit ? `<div class="f"><label style="color:#d97706;font-weight:800">⚡ MS N2 Mid Reading</label><input type="number" step="0.01" class="num" id="edPMid2" value="${p2.Mid_Reading||0}" style="border-color:#f59e0b;background:#fffbeb" oninput="calcEditTally()"></div>` : ''}
+        ${isSplit ? `<div class="f"><label style="color:#d97706;font-weight:800">⚡ MS N2 Mid Reading</label><input type="number" step="0.01" class="num" id="edPMid2" value="${p2.Mid_Reading>0?p2.Mid_Reading:''}" placeholder="0" style="border-color:#f59e0b;background:#fffbeb" oninput="calcEditTally()"></div>` : ''}
         <div class="f"><label>MS N2 Close</label><input type="number" step="0.01" class="num" id="edPClose2" value="${p2.Closing_Reading||0}" oninput="calcEditTally()"></div>
       </div>
       <div style="display:grid;grid-template-columns:${isSplit?'1fr 1fr':'1fr'};gap:10px;margin-bottom:16px">
         <div class="f"><label>MS Rate 1 ₹/L</label><input type="number" step="0.01" class="num" id="edPRate" value="${pRate}" oninput="calcEditTally()"></div>
-        ${isSplit ? `<div class="f"><label style="color:#d97706;font-weight:800">⚡ MS Rate 2 (₹/L)</label><input type="number" step="0.01" class="num" id="edPRate2" value="${pRate2}" style="border-color:#f59e0b;background:#fffbeb" oninput="calcEditTally()"></div>` : ''}
+        ${isSplit ? `<div class="f"><label style="color:#d97706;font-weight:800">⚡ MS Rate 2 (₹/L)</label><input type="number" step="0.01" class="num" id="edPRate2" value="${pRate2>0?pRate2:''}" placeholder="Rate 2" style="border-color:#f59e0b;background:#fffbeb" oninput="calcEditTally()"></div>` : ''}
       </div>
 
       <div style="font-size:12px;font-weight:800;color:var(--ok);margin-bottom:8px">⛽ HSD Diesel Nozzles</div>
       <div style="display:grid;grid-template-columns:${isSplit?'1fr 1fr 1fr':'1fr 1fr'};gap:10px;margin-bottom:10px">
         <div class="f"><label>HSD N1 Open</label><input type="number" step="0.01" class="num" id="edDOpen1" value="${d1.Opening_Reading||0}" oninput="calcEditTally()"></div>
-        ${isSplit ? `<div class="f"><label style="color:#d97706;font-weight:800">⚡ HSD N1 Mid Reading</label><input type="number" step="0.01" class="num" id="edDMid1" value="${d1.Mid_Reading||0}" style="border-color:#f59e0b;background:#fffbeb" oninput="calcEditTally()"></div>` : ''}
+        ${isSplit ? `<div class="f"><label style="color:#d97706;font-weight:800">⚡ HSD N1 Mid Reading</label><input type="number" step="0.01" class="num" id="edDMid1" value="${d1.Mid_Reading>0?d1.Mid_Reading:''}" placeholder="0" style="border-color:#f59e0b;background:#fffbeb" oninput="calcEditTally()"></div>` : ''}
         <div class="f"><label>HSD N1 Close</label><input type="number" step="0.01" class="num" id="edDClose1" value="${d1.Closing_Reading||0}" oninput="calcEditTally()"></div>
       </div>
       <div style="display:grid;grid-template-columns:${isSplit?'1fr 1fr 1fr':'1fr 1fr'};gap:10px;margin-bottom:10px">
         <div class="f"><label>HSD N2 Open</label><input type="number" step="0.01" class="num" id="edDOpen2" value="${d2.Opening_Reading||0}" oninput="calcEditTally()"></div>
-        ${isSplit ? `<div class="f"><label style="color:#d97706;font-weight:800">⚡ HSD N2 Mid Reading</label><input type="number" step="0.01" class="num" id="edDMid2" value="${d2.Mid_Reading||0}" style="border-color:#f59e0b;background:#fffbeb" oninput="calcEditTally()"></div>` : ''}
+        ${isSplit ? `<div class="f"><label style="color:#d97706;font-weight:800">⚡ HSD N2 Mid Reading</label><input type="number" step="0.01" class="num" id="edDMid2" value="${d2.Mid_Reading>0?d2.Mid_Reading:''}" placeholder="0" style="border-color:#f59e0b;background:#fffbeb" oninput="calcEditTally()"></div>` : ''}
         <div class="f"><label>HSD N2 Close</label><input type="number" step="0.01" class="num" id="edDClose2" value="${d2.Closing_Reading||0}" oninput="calcEditTally()"></div>
       </div>
       <div style="display:grid;grid-template-columns:${isSplit?'1fr 1fr':'1fr'};gap:10px;margin-bottom:12px">
         <div class="f"><label>HSD Rate 1 ₹/L</label><input type="number" step="0.01" class="num" id="edDRate" value="${dRate}" oninput="calcEditTally()"></div>
-        ${isSplit ? `<div class="f"><label style="color:#d97706;font-weight:800">⚡ HSD Rate 2 (₹/L)</label><input type="number" step="0.01" class="num" id="edDRate2" value="${dRate2}" style="border-color:#f59e0b;background:#fffbeb" oninput="calcEditTally()"></div>` : ''}
+        ${isSplit ? `<div class="f"><label style="color:#d97706;font-weight:800">⚡ HSD Rate 2 (₹/L)</label><input type="number" step="0.01" class="num" id="edDRate2" value="${dRate2>0?dRate2:''}" placeholder="Rate 2" style="border-color:#f59e0b;background:#fffbeb" oninput="calcEditTally()"></div>` : ''}
       </div>`;
   } else {
     return `
       <div style="font-size:12px;font-weight:800;color:var(--pur);margin-bottom:8px">⛽ CNG Nozzles</div>
       <div style="display:grid;grid-template-columns:${isSplit?'1fr 1fr 1fr':'1fr 1fr'};gap:10px;margin-bottom:10px">
         <div class="f"><label>CNG N1 Open</label><input type="number" step="0.01" class="num" id="edCOpen1" value="${c1.Opening_Reading||0}" oninput="calcEditTally()"></div>
-        ${isSplit ? `<div class="f"><label style="color:#d97706;font-weight:800">⚡ CNG N1 Mid Reading</label><input type="number" step="0.01" class="num" id="edCMid1" value="${c1.Mid_Reading||0}" style="border-color:#f59e0b;background:#fffbeb" oninput="calcEditTally()"></div>` : ''}
+        ${isSplit ? `<div class="f"><label style="color:#d97706;font-weight:800">⚡ CNG N1 Mid Reading</label><input type="number" step="0.01" class="num" id="edCMid1" value="${c1.Mid_Reading>0?c1.Mid_Reading:''}" placeholder="0" style="border-color:#f59e0b;background:#fffbeb" oninput="calcEditTally()"></div>` : ''}
         <div class="f"><label>CNG N1 Close</label><input type="number" step="0.01" class="num" id="edCClose1" value="${c1.Closing_Reading||0}" oninput="calcEditTally()"></div>
       </div>
       <div style="display:grid;grid-template-columns:${isSplit?'1fr 1fr 1fr':'1fr 1fr'};gap:10px;margin-bottom:10px">
         <div class="f"><label>CNG N2 Open</label><input type="number" step="0.01" class="num" id="edCOpen2" value="${c2.Opening_Reading||0}" oninput="calcEditTally()"></div>
-        ${isSplit ? `<div class="f"><label style="color:#d97706;font-weight:800">⚡ CNG N2 Mid Reading</label><input type="number" step="0.01" class="num" id="edCMid2" value="${c2.Mid_Reading||0}" style="border-color:#f59e0b;background:#fffbeb" oninput="calcEditTally()"></div>` : ''}
+        ${isSplit ? `<div class="f"><label style="color:#d97706;font-weight:800">⚡ CNG N2 Mid Reading</label><input type="number" step="0.01" class="num" id="edCMid2" value="${c2.Mid_Reading>0?c2.Mid_Reading:''}" placeholder="0" style="border-color:#f59e0b;background:#fffbeb" oninput="calcEditTally()"></div>` : ''}
         <div class="f"><label>CNG N2 Close</label><input type="number" step="0.01" class="num" id="edCClose2" value="${c2.Closing_Reading||0}" oninput="calcEditTally()"></div>
       </div>
       <div style="display:grid;grid-template-columns:${isSplit?'1fr 1fr':'1fr'};gap:10px;margin-bottom:12px">
         <div class="f"><label>CNG Rate 1 ₹/KG</label><input type="number" step="0.01" class="num" id="edCRate" value="${cRate}" oninput="calcEditTally()"></div>
-        ${isSplit ? `<div class="f"><label style="color:#d97706;font-weight:800">⚡ CNG Rate 2 (₹/KG)</label><input type="number" step="0.01" class="num" id="edCRate2" value="${cRate2}" style="border-color:#f59e0b;background:#fffbeb" oninput="calcEditTally()"></div>` : ''}
+        ${isSplit ? `<div class="f"><label style="color:#d97706;font-weight:800">⚡ CNG Rate 2 (₹/KG)</label><input type="number" step="0.01" class="num" id="edCRate2" value="${cRate2>0?cRate2:''}" placeholder="Rate 2" style="border-color:#f59e0b;background:#fffbeb" oninput="calcEditTally()"></div>` : ''}
       </div>`;
   }
 }
@@ -1198,6 +1198,26 @@ async function openFullEditShift(shiftId){
   const p1 = getNz('Petrol', 1), p2 = getNz('Petrol', 2);
   const d1 = getNz('Diesel', 1), d2 = getNz('Diesel', 2);
   const c1 = getNz('CNG', 1), c2 = getNz('CNG', 2);
+  if(isCNG){
+    if(!c1.Mid_Reading && s.CNG_Nozzle_1_Mid) c1.Mid_Reading = Number(s.CNG_Nozzle_1_Mid);
+    if(!c2.Mid_Reading && s.CNG_Nozzle_2_Mid) c2.Mid_Reading = Number(s.CNG_Nozzle_2_Mid);
+    if(!c2.Opening_Reading && s.CNG_Nozzle_2_Open) c2.Opening_Reading = Number(s.CNG_Nozzle_2_Open);
+    if(!c2.Closing_Reading && s.CNG_Nozzle_2_Close) c2.Closing_Reading = Number(s.CNG_Nozzle_2_Close);
+  }
+  if(!p1.Mid_Reading && s.Petrol_Nozzle_1_Mid) p1.Mid_Reading = Number(s.Petrol_Nozzle_1_Mid);
+  if(!p2.Mid_Reading && s.Petrol_Nozzle_2_Mid) p2.Mid_Reading = Number(s.Petrol_Nozzle_2_Mid);
+  if(!d1.Mid_Reading && s.Diesel_Nozzle_1_Mid) d1.Mid_Reading = Number(s.Diesel_Nozzle_1_Mid);
+  if(!d2.Mid_Reading && s.Diesel_Nozzle_2_Mid) d2.Mid_Reading = Number(s.Diesel_Nozzle_2_Mid);
+  if(isCNG){
+    if(!c1.Mid_Reading && s.CNG_Nozzle_1_Mid) c1.Mid_Reading = Number(s.CNG_Nozzle_1_Mid);
+    if(!c2.Mid_Reading && s.CNG_Nozzle_2_Mid) c2.Mid_Reading = Number(s.CNG_Nozzle_2_Mid);
+    if(!c2.Opening_Reading && s.CNG_Nozzle_2_Open) c2.Opening_Reading = Number(s.CNG_Nozzle_2_Open);
+    if(!c2.Closing_Reading && s.CNG_Nozzle_2_Close) c2.Closing_Reading = Number(s.CNG_Nozzle_2_Close);
+  }
+  if(!p1.Mid_Reading && s.Petrol_Nozzle_1_Mid) p1.Mid_Reading = Number(s.Petrol_Nozzle_1_Mid);
+  if(!p2.Mid_Reading && s.Petrol_Nozzle_2_Mid) p2.Mid_Reading = Number(s.Petrol_Nozzle_2_Mid);
+  if(!d1.Mid_Reading && s.Diesel_Nozzle_1_Mid) d1.Mid_Reading = Number(s.Diesel_Nozzle_1_Mid);
+  if(!d2.Mid_Reading && s.Diesel_Nozzle_2_Mid) d2.Mid_Reading = Number(s.Diesel_Nozzle_2_Mid);
   
   // If shift has CNG but nozzle reading closing is 0, populate from CNG_KG
   const cngTotal = Number(s.CNG_KG || s.CNG_Total_Kg || 0);
@@ -1243,17 +1263,17 @@ async function openFullEditShift(shiftId){
         ${renderEdNozzleFields(isCNG, p1, p2, d1, d2, c1, c2, pRateVal, pRate2Val, dRateVal, dRate2Val, cRateVal, cRate2Val, hasSplit)}
       </div>
       <div class="f-row" style="margin-top:10px">
-        <div class="f"><label>Testing Amount (₹)</label><input type="number" step="0.01" class="num" id="edTestAmt" value="${s.Testing_Amount||0}" oninput="calcEditTally()"></div>
+        <div class="f"><label>Testing Amount (₹)</label><input type="number" step="0.01" class="num" id="edTestAmt" value="${s.Testing_Amount>0?s.Testing_Amount:''}" placeholder="0" oninput="calcEditTally()"></div>
       </div>
     </div>
     
     <div class="card" style="margin-bottom:14px;background:#f8fafc">
       <div style="font-size:11px;font-weight:700;color:var(--t2);text-transform:uppercase;margin-bottom:10px">3. Collections & Expenses</div>
       <div class="f-row">
-        <div class="f"><label>Cash Total</label><input type="number" step="0.01" class="num" id="edCash" value="${s.Cash_Total||0}" oninput="calcEditTally()"></div>
-        <div class="f"><label>Online (PhonePe/Card)</label><input type="number" step="0.01" class="num" id="edOnline" value="${s.Online_Amount||0}" oninput="calcEditTally()"></div>
-        <div class="f"><label>HPCL OTP Amount</label><input type="number" step="0.01" class="num" id="edOtp" value="${s.OTP_Amount||0}" oninput="calcEditTally()"></div>
-        <div class="f"><label>Expenditure</label><input type="number" step="0.01" class="num" id="edExp" value="${s.Expenditure||0}" oninput="calcEditTally()"></div>
+        <div class="f"><label>Net Cash</label><input type="number" step="0.01" class="num" id="edCash" value="${s.Cash_Total>0?s.Cash_Total:''}" placeholder="0" oninput="calcEditTally()"></div>
+        <div class="f"><label>Online (PhonePe/Card)</label><input type="number" step="0.01" class="num" id="edOnline" value="${s.Online_Amount>0?s.Online_Amount:''}" placeholder="0" oninput="calcEditTally()"></div>
+        <div class="f"><label>HPCL OTP Amount</label><input type="number" step="0.01" class="num" id="edOtp" value="${s.OTP_Amount>0?s.OTP_Amount:''}" placeholder="0" oninput="calcEditTally()"></div>
+        <div class="f"><label>Expenditure</label><input type="number" step="0.01" class="num" id="edExp" value="${s.Expenditure>0?s.Expenditure:''}" placeholder="0" oninput="calcEditTally()"></div>
       </div>
     </div>
     
@@ -1498,7 +1518,7 @@ async function loadDashboard(){
   $('dashKpis').innerHTML=`
     <div class="kpi primary"><div class="kl">Today</div><div class="kv">${money(td.Total_Sales||0)}</div></div>
     <div class="kpi green"><div class="kl">30-day Sales</div><div class="kv">${money(t.Total_Sales||0)}</div></div>
-    <div class="kpi orange"><div class="kl">Cash in Hand</div><div class="kv">${money(t.Cash_Total||0)}</div></div>
+    <div class="kpi orange"><div class="kl">Net Cash</div><div class="kv">${money(t.Cash_Total||0)}</div></div>
     <div class="kpi purple"><div class="kl">Online+OTP</div><div class="kv">${money((t.Online_Amount||0)+(t.OTP_Amount||0))}</div></div>
     <div class="kpi red"><div class="kl">Difference</div><div class="kv">${money(Math.abs(t.Difference||0))}</div></div>
     <div class="kpi primary"><div class="kl">Petrol Sold</div><div class="kv">${(t.Petrol_Litres||0).toFixed(0)} L</div></div>
@@ -2449,6 +2469,20 @@ function importBookCSV(e){
   };
   reader.readAsText(file);
 }
+
+
+// Auto-clear 0 on focus so user never has to backspace
+document.addEventListener('focus', function(e){
+  if(e.target && (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA')){
+    if(e.target.type === 'number' || e.target.classList.contains('num')){
+      if(e.target.value === '0' || e.target.value === '0.00' || e.target.value === '0.0'){
+        e.target.value = '';
+      } else {
+        setTimeout(function(){ if(e.target.select) e.target.select(); }, 10);
+      }
+    }
+  }
+}, true);
 
 </script>
 </body>
