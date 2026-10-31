@@ -1046,7 +1046,7 @@ function showEntries(){$('entriesDate').value='';loadEntries();show('entriesSec'
 async function loadEntries(){
   loading(true,'Loading...');
   const params={};
-  if(me.Role==='Employee') params.staffId=me.Staff_ID;
+  if($('entriesStaff')&&$('entriesStaff').value) params.staffId=$('entriesStaff').value;
   if($('entriesDate')&&$('entriesDate').value) params.date=$('entriesDate').value;
   const r=await api('getShifts',params);
   loading(false);
@@ -1548,7 +1548,7 @@ async function runReport(){
   loading(true,'Generating...');
   const r=await api('getReportData',{from,to,type:repType,pump:$('repPump').value,staff:$('repStaff').value});loading(false);
   if(!r.ok){toast(r.error,'err');return;}
-  const rows=r.rows||[];
+  const rows=r.rows||(r.data&&r.data.rows)||[];
   if(!rows.length){$('repOut').innerHTML='<div class="card tbl-empty">No data</div>';return;}
   const cols=Object.keys(rows[0]);
   let h='<div class="tbl-wrap"><table><thead><tr>';cols.forEach(c=>h+='<th>'+c+'</th>');h+='</tr></thead><tbody>';
@@ -1667,7 +1667,7 @@ async function openOtp(){
   show('otpSec');loading(true);
   const r=await api('getOTPPending',{});loading(false);
   if(!r.ok){$('otpOut').innerHTML='<div class="card">Failed</div>';return;}
-  const rows=r.rows||[];
+  const rows=r.rows||(r.data&&r.data.rows)||[];
   if(!rows.length){$('otpOut').innerHTML='<div class="card tbl-empty">All settled 🎉</div>';return;}
   let h='<div class="tbl-wrap"><table><thead><tr><th>Date</th><th>Pump</th><th>OTP ₹</th><th>Status</th><th></th></tr></thead><tbody>';
   rows.forEach(x=>{h+=`<tr><td>${x.date}</td><td>P${x.pump}</td><td>${money(x.otp)}</td><td><span class="b warn">${x.status}</span></td><td><button class="btn btn-success btn-sm" onclick="settleOtp('${x.id}',${x.otp})">Settle</button></td></tr>`;});

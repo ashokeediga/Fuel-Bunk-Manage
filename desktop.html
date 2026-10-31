@@ -309,6 +309,12 @@ tbody tr:hover td{background:#f8fafc}
         <div class="card">
           <div class="card-hdr"><div><h3>Saved Entries</h3><div class="h-sub">Recent shift records</div></div>
             <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">
+              <select id="entriesStaff" onchange="loadEntries()" style="border:1.5px solid var(--line);border-radius:9px;padding:8px 12px;font-size:13px;font-weight:600;font-family:inherit">
+                <option value="">All Staff</option>
+                <option value="EMP001">Shankar</option>
+                <option value="EMP002">Pavani</option>
+                <option value="EMP003">RAMU</option>
+              </select>
               <select id="entriesPump" onchange="loadEntries()" style="border:1.5px solid var(--line);border-radius:9px;padding:8px 12px;font-size:13px;font-weight:600;font-family:inherit">
                 <option value="">All Pumps (MS, HSD & CNG)</option>
                 <option value="1">Pump 1 (Petrol + Diesel)</option>
@@ -316,7 +322,7 @@ tbody tr:hover td{background:#f8fafc}
                 <option value="3">Pump 3 (CNG Only)</option>
               </select>
               <input type="date" id="entriesDate" onchange="loadEntries()" style="border:1.5px solid var(--line);border-radius:9px;padding:8px 12px;font-size:13px;font-weight:600;font-family:inherit">
-              <button class="btn btn-ghost btn-sm" onclick="$('entriesDate').value='';$('entriesPump').value='';loadEntries();" style="border:1.5px solid var(--line);padding:7px 12px;font-size:12px;font-weight:600">Clear</button>
+              <button class="btn btn-ghost btn-sm" onclick="$('entriesDate').value='';$('entriesPump').value='';if($('entriesStaff'))$('entriesStaff').value='';loadEntries();" style="border:1.5px solid var(--line);padding:7px 12px;font-size:12px;font-weight:600">Clear</button>
             </div>
           </div>
           <div id="entriesOut"></div>
@@ -989,7 +995,7 @@ function setEntriesView(mode){
 async function loadEntries(){
   loading(true,'Loading...');
   const params={};
-  if(me.Role==='Employee') params.staffId=me.Staff_ID;
+  if($('entriesStaff')&&$('entriesStaff').value) params.staffId=$('entriesStaff').value;
   if($('entriesDate')&&$('entriesDate').value) params.date=$('entriesDate').value;
   if($('entriesPump')&&$('entriesPump').value) params.pump=$('entriesPump').value;
 
@@ -1610,7 +1616,7 @@ async function runReport(){
   loading(true,'Generating...');
   const r=await api('getReportData',{from,to,type:repType,pump:$('repPump').value,staff:$('repStaff').value});loading(false);
   if(!r.ok){toast(r.error,'err');return;}
-  const rows=r.rows||[];
+  const rows=r.rows||(r.data&&r.data.rows)||[];
   if(!rows.length){$('repOut').innerHTML='<div class="card"><div class="tbl-empty">No data</div></div>';return;}
   const cols=Object.keys(rows[0]);
   let h='<div class="card"><div class="tbl-wrap"><table><thead><tr>';cols.forEach(c=>h+='<th>'+c+'</th>');h+='</tr></thead><tbody>';
@@ -1733,7 +1739,7 @@ async function loadOtp(){
   loading(true);
   const r=await api('getOTPPending',{});loading(false);
   if(!r.ok){$('otpOut').innerHTML='<div class="tbl-empty">Failed</div>';return;}
-  const rows=r.rows||[];
+  const rows=r.rows||(r.data&&r.data.rows)||[];
   if(!rows.length){$('otpOut').innerHTML='<div class="tbl-empty">All settled 🎉</div>';return;}
   let h='<div class="tbl-wrap"><table><thead><tr><th>Date</th><th>Pump</th><th>Staff</th><th>OTP ₹</th><th>Status</th><th></th></tr></thead><tbody>';
   rows.forEach(x=>{h+=`<tr><td>${x.date}</td><td>Pump ${x.pump}</td><td>${x.staff}</td><td><b>${money(x.otp)}</b></td><td><span class="b warn">${x.status}</span></td><td><button class="btn btn-success btn-sm" onclick="settleOtp('${x.id}',${x.otp})">Settle</button></td></tr>`;});
