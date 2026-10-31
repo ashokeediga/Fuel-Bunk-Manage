@@ -504,6 +504,53 @@ async function handleUpdateShift(body, kv, db) {
   };
 
   await kv.put('shifts', JSON.stringify({ shifts }));
+
+  if (db) {
+    try {
+      const us = shifts[idx];
+      await db.prepare(`
+        INSERT OR REPLACE INTO Shifts (
+          Shift_ID, Date, Shift, Staff_ID, Staff_Name, Pump_No,
+          Petrol_Litres, Petrol_Amount, Diesel_Litres, Diesel_Amount,
+          CNG_KG, CNG_Amount, Total_Sales, Online_Amount, OTP_Amount,
+          Cash_Total, Change_Amount, Expenditure, Expenditure_Type,
+          Expenditure_Remarks, Testing_Amount, Total_Collected, Difference,
+          Status, Entered_By, Entered_By_Name, Created_At, Updated_At
+        ) VALUES (
+          ?, ?, ?, ?, ?, ?,
+          ?, ?, ?, ?,
+          ?, ?, ?, ?, ?,
+          ?, ?, ?, ?,
+          ?, ?, ?, ?,
+          ?, ?, ?, ?, ?
+        )
+      `).bind(
+        us.Shift_ID, us.Date, us.Shift || 'S1', us.Staff_ID, us.Staff_Name, Number(us.Pump_No) || 1,
+        Number(us.Petrol_Litres) || 0, Number(us.Petrol_Amount) || 0, Number(us.Diesel_Litres) || 0, Number(us.Diesel_Amount) || 0,
+        Number(us.CNG_KG) || 0, Number(us.CNG_Amount) || 0, Number(us.Total_Sales) || 0, Number(us.Online_Amount) || 0, Number(us.OTP_Amount) || 0,
+        Number(us.Cash_Total) || 0, Number(us.Change_Amount) || 0, Number(us.Expenditure) || 0, String(us.Expenditure_Type || ''),
+        String(us.Expenditure_Remarks || ''), Number(us.Testing_Amount) || 0, Number(us.Total_Collected) || 0, Number(us.Difference) || 0,
+        String(us.Status || 'Saved'), String(us.Staff_ID), String(us.Staff_Name), us.Created_At || new Date().toISOString(), us.Updated_At || new Date().toISOString()
+      ).run();
+
+      if (Array.isArray(d.Nozzle_Readings)) {
+        for (const nz of d.Nozzle_Readings) {
+          const rid = nz.Reading_ID || ('NZ-' + shiftId + '-' + nz.Nozzle_No);
+          await db.prepare(`
+            INSERT OR REPLACE INTO Nozzle_Readings (
+              Reading_ID, Shift_ID, Date, Staff_ID, Pump_No, Nozzle_No,
+              Fuel_Type, Opening_Reading, Closing_Reading, Litres, Rate, Amount
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+          `).bind(
+            rid, shiftId, us.Date, us.Staff_ID, Number(us.Pump_No) || 1, Number(nz.Nozzle_No) || 1,
+            String(nz.Fuel_Type || 'Petrol'), Number(nz.Opening_Reading) || 0, Number(nz.Closing_Reading) || 0,
+            Number(nz.Litres) || 0, Number(nz.Rate) || 0, Number(nz.Amount) || 0
+          ).run();
+        }
+      }
+    } catch (e) { console.error('D1 updateShift error:', e); }
+  }
+
   return json({ ok: true, shiftId, message: 'Shift updated successfully' });
 }
 
