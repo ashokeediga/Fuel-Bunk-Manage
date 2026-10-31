@@ -753,32 +753,67 @@ function onEntryDateChange(){
   if(isEmp&&d<yesterday()){toast('Employee can only enter yesterday or today','err');$('entryDate').value=yesterday();return;}
 }
 async function pickPump(p){
-  if(me.Role!=='Employee'&&!pickedStaffId){toast('Select employee first','err');return;}
-  pickedPump=p;
-  document.querySelectorAll('.pump-btn').forEach(b=>b.classList.toggle('active',Number(b.dataset.p)===p));
-  vibrate(15);
-  const ed=$('entryDate').value||today();
-  loading(true,'Loading openings...');
-  const r=await api('getLastClosing',{pumpNo:p,date:ed});
-  loading(false);
-  window.nextOpening=r.nextOpening||{};
-  const c=r.closing||{};
-  $('pOpen1').value=(c.Petrol_1&&c.Petrol_1.closing)?c.Petrol_1.closing:'';
-  $('pOpen2').value=(c.Petrol_2&&c.Petrol_2.closing)?c.Petrol_2.closing:'';
-  $('dOpen1').value=(c.Diesel_1&&c.Diesel_1.closing)?c.Diesel_1.closing:'';
-  $('dOpen2').value=(c.Diesel_2&&c.Diesel_2.closing)?c.Diesel_2.closing:'';
-  $('cOpen1').value=(c.CNG_1&&c.CNG_1.closing)?c.CNG_1.closing:'';
-  $('cOpen2').value=(c.CNG_2&&c.CNG_2.closing)?c.CNG_2.closing:'';
-  ['pClose1','pClose2','dClose1','dClose2','cClose1','cClose2','pMid1','pMid2','dMid1','dMid2','cMid1','cMid2','pRate2','dRate2','cRate2'].forEach(id=>{const el=$(id);if(el)el.value='';});
-  if($('splitRateToggle')){$('splitRateToggle').checked=false;toggleSplitRate();}
-  $('online').value='';$('otp').value='';$('cash').value='';$('expenditure').value='';$('expType').value='';$('expRemarks').value='';
-  const isCNG=p===3;
-  ['petrolCard','petrolCard2','dieselCard','dieselCard2'].forEach(id=>$(id).style.display=isCNG?'none':'block');
-  ['cngCard','cngCard2'].forEach(id=>$(id).style.display=isCNG?'block':'none');
-  $('sumCngRow').style.display=isCNG?'flex':'none';
-  $('saleTitle').textContent=isCNG?'CNG Pump':'Pump '+p;
-  $('saleSub').textContent='Date: '+ed+' · '+pickedStaffId;
-  calc();show('saleSec');
+  try {
+    pickedStaffId = pickedStaffId || ($('empPick') && $('empPick').value) || (me && me.Staff_ID) || 'OWN001';
+    pickedPump = p;
+    document.querySelectorAll('.pump-btn').forEach(b => b.classList.toggle('active', Number(b.dataset.p) === p));
+    vibrate(15);
+    const ed = $('entryDate').value || today();
+    loading(true, 'Loading openings...');
+    const r = await api('getLastClosing', { pumpNo: p, date: ed });
+    loading(false);
+    window.nextOpening = r.nextOpening || {};
+    
+    let c = r.closing || {};
+    if((!c || !c.Petrol_1) && r.lastClosing && Array.isArray(r.lastClosing.closingReadings)) {
+      c = { Petrol_1:{}, Petrol_2:{}, Diesel_1:{}, Diesel_2:{}, CNG_1:{}, CNG_2:{} };
+      r.lastClosing.closingReadings.forEach(nr => {
+        const f = (nr.Fuel_Type || '').toLowerCase();
+        const n = Number(nr.Nozzle_No) || 1;
+        const cl = Number(nr.Closing_Reading) || 0;
+        if(f.includes('petrol') || f === 'ms') {
+          if(n === 1) c.Petrol_1.closing = cl;
+          if(n === 2) c.Petrol_2.closing = cl;
+        } else if(f.includes('diesel') || f === 'hsd') {
+          if(n === 1) c.Diesel_1.closing = cl;
+          if(n === 2) c.Diesel_2.closing = cl;
+        } else if(f.includes('cng')) {
+          if(n === 1) c.CNG_1.closing = cl;
+          if(n === 2) c.CNG_2.closing = cl;
+        }
+      });
+    }
+
+    if($('pOpen1')) $('pOpen1').value = (c.Petrol_1 && c.Petrol_1.closing) ? c.Petrol_1.closing : '';
+    if($('pOpen2')) $('pOpen2').value = (c.Petrol_2 && c.Petrol_2.closing) ? c.Petrol_2.closing : '';
+    if($('dOpen1')) $('dOpen1').value = (c.Diesel_1 && c.Diesel_1.closing) ? c.Diesel_1.closing : '';
+    if($('dOpen2')) $('dOpen2').value = (c.Diesel_2 && c.Diesel_2.closing) ? c.Diesel_2.closing : '';
+    if($('cOpen1')) $('cOpen1').value = (c.CNG_1 && c.CNG_1.closing) ? c.CNG_1.closing : '';
+    if($('cOpen2')) $('cOpen2').value = (c.CNG_2 && c.CNG_2.closing) ? c.CNG_2.closing : '';
+
+    ['pClose1','pClose2','dClose1','dClose2','cClose1','cClose2','pMid1','pMid2','dMid1','dMid2','cMid1','cMid2','pRate2','dRate2','cRate2'].forEach(id => {
+      const el = $(id); if(el) el.value = '';
+    });
+    if($('splitRateToggle')) { $('splitRateToggle').checked = false; toggleSplitRate(); }
+    ['online','otp','hpPay','cash','expenditure','expType','testingAmt'].forEach(id => {
+      const el = $(id); if(el) el.value = '';
+    });
+    if($('expRemarks')) $('expRemarks').value = '';
+    if(typeof resetMobExpenseRows === 'function') resetMobExpenseRows();
+
+    const isCNG = p === 3;
+    ['petrolCard','petrolCard2','dieselCard','dieselCard2'].forEach(id => { const el = $(id); if(el) el.style.display = isCNG ? 'none' : 'block'; });
+    ['cngCard','cngCard2'].forEach(id => { const el = $(id); if(el) el.style.display = isCNG ? 'block' : 'none'; });
+    if($('sumCngRow')) $('sumCngRow').style.display = isCNG ? 'flex' : 'none';
+    if($('saleTitle')) $('saleTitle').textContent = isCNG ? 'CNG Pump' : 'Pump ' + p;
+    if($('saleSub')) $('saleSub').textContent = 'Date: ' + ed + ' · ' + pickedStaffId;
+    calc();
+    show('saleSec');
+  } catch(err) {
+    loading(false);
+    console.error('pickPump error:', err);
+    toast('Error selecting pump: ' + (err.message || err), 'err');
+  }
 }
 function toggleSplitRate(){
   const on = $('splitRateToggle') && $('splitRateToggle').checked;
