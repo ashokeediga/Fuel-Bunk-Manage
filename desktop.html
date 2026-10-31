@@ -210,6 +210,106 @@ tbody tr:hover td{background:#f8fafc}
   .dsr-tbl td{color:#000!important}
   .dsr-tbl td.rct,.dsr-tbl td.net,.dsr-tbl td.cum{background:#f5f5f5!important;color:#000!important}
 }
+
+/* SHIFT CALENDAR */
+.cal-grid-hdr {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 8px;
+  text-align: center;
+  font-weight: 800;
+  font-size: 11px;
+  color: var(--t2);
+  text-transform: uppercase;
+  margin-bottom: 8px;
+}
+.cal-grid-body {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 8px;
+}
+.cal-cell {
+  min-height: 74px;
+  border-radius: 12px;
+  padding: 8px 10px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  border: 1.5px solid var(--line);
+  transition: all .15s ease;
+  position: relative;
+  cursor: pointer;
+}
+.cal-cell.empty {
+  visibility: hidden;
+  pointer-events: none;
+}
+.cal-cell.entered {
+  background: #f0fdf4;
+  border-color: #86efac;
+}
+.cal-cell.entered:hover {
+  border-color: #22c55e;
+  box-shadow: 0 4px 14px rgba(34,197,94,.2);
+  transform: translateY(-1px);
+}
+.cal-cell.missing {
+  background: #fef2f2;
+  border-color: #fca5a5;
+}
+.cal-cell.missing:hover {
+  border-color: #ef4444;
+  box-shadow: 0 4px 14px rgba(239,68,68,.2);
+  transform: translateY(-1px);
+}
+.cal-cell.upcoming {
+  background: #f8fafc;
+  border-color: #e2e8f0;
+  opacity: 0.65;
+  cursor: default;
+}
+.cal-cell.today-cell {
+  box-shadow: 0 0 0 2.5px #2563eb !important;
+}
+.cal-date-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.cal-date-num {
+  font-weight: 800;
+  font-size: 13.5px;
+}
+.cal-cell.entered .cal-date-num { color: #15803d; }
+.cal-cell.missing .cal-date-num { color: #b91c1c; }
+.cal-cell.upcoming .cal-date-num { color: #94a3b8; }
+.cal-badge {
+  font-size: 10px;
+  font-weight: 800;
+  padding: 2px 6px;
+  border-radius: 6px;
+  display: inline-block;
+  white-space: nowrap;
+}
+.cal-badge.green {
+  background: #22c55e;
+  color: #fff;
+}
+.cal-badge.red {
+  background: #ef4444;
+  color: #fff;
+}
+.cal-badge.dull {
+  background: #e2e8f0;
+  color: #64748b;
+}
+.cal-sales {
+  font-size: 11px;
+  font-weight: 800;
+  color: #166534;
+  margin-top: 2px;
+}
+
 </style>
 </head>
 <body>
@@ -288,6 +388,29 @@ tbody tr:hover td{background:#f8fafc}
         <div class="card">
           <div class="card-hdr"><div><h3>Quick Actions</h3><div class="h-sub">Click a tile to get started</div></div></div>
           <div class="tile-grid" id="homeTiles"></div>
+        </div>
+        <!-- MONTHLY SHIFT CALENDAR (Admin / Owner) -->
+        <div class="card" id="calCardDesk" style="display:none;margin-top:20px">
+          <div class="card-hdr" style="margin-bottom:14px">
+            <div>
+              <h3 style="display:flex;align-items:center;gap:8px">📅 Shift Entry Calendar <span style="font-size:11px;font-weight:700;color:var(--pri);background:#eff6ff;padding:3px 8px;border-radius:8px">Monthly Compliance</span></h3>
+              <div class="h-sub">Track entered shifts (green), missed days (red), and upcoming days (dull) at a single glance</div>
+            </div>
+            <div style="display:flex;align-items:center;gap:10px">
+              <button class="btn btn-ghost btn-sm" onclick="navCalMonth(-1)">◀ Prev</button>
+              <span id="calMonthLabelDesk" style="font-weight:800;font-size:15px;color:var(--t);min-width:130px;text-align:center">October 2026</span>
+              <button class="btn btn-ghost btn-sm" onclick="navCalMonth(1)">Next ▶</button>
+              <button class="btn btn-primary btn-sm" onclick="resetCalToday()">Today</button>
+            </div>
+          </div>
+          <!-- Legend Bar -->
+          <div style="display:flex;gap:16px;align-items:center;font-size:12px;font-weight:700;margin-bottom:16px;flex-wrap:wrap;padding:10px 14px;background:#f8fafc;border-radius:10px;border:1px solid var(--line)">
+            <span style="display:flex;align-items:center;gap:6px;color:#166534"><span style="width:12px;height:12px;border-radius:4px;background:#22c55e;display:inline-block"></span> Entered (గ్రీన్)</span>
+            <span style="display:flex;align-items:center;gap:6px;color:#991b1b"><span style="width:12px;height:12px;border-radius:4px;background:#ef4444;display:inline-block"></span> Missing (రెడ్)</span>
+            <span style="display:flex;align-items:center;gap:6px;color:#64748b"><span style="width:12px;height:12px;border-radius:4px;background:#e2e8f0;display:inline-block"></span> Remaining (డల్)</span>
+            <span id="calSummaryStatsDesk" style="margin-left:auto;color:var(--t2);font-weight:700"></span>
+          </div>
+          <div id="calGridDesk"></div>
         </div>
       </div>
 
@@ -675,6 +798,7 @@ function nav(id,el){
   $('pageTitle').textContent=t2[0];$('pageSub').textContent=t2[1];
   if(id==='dashboard')loadDashboard();
   if(id==='dsr')loadDSR();
+  if(id==='home')loadShiftCalendar();
   if(id==='entries')loadEntries();
   if(id==='staff')loadStaffList();
   if(id==='salary')loadSalary();
@@ -732,6 +856,7 @@ async function doLogin(bgId, bgPin){
     }
   });
   if(isMgr)loadEmployees();
+  if(isMgr || isOwn) loadShiftCalendar();
   nav('home',document.querySelector('[data-nav="home"]'));
 }
 
@@ -840,21 +965,21 @@ async function onPumpChange(){
       <div class="card-hdr"><div><h3>Pump ${p}${isCNG?' (CNG)':''} — Nozzle Readings</h3><div class="h-sub">Date: ${ed} · Employee: ${pickedStaffId||me.Staff_ID}</div></div></div>
       ${!isCNG?`
       <div class="f-row" style="margin-bottom:14px">
-        <div class="f"><label>MS N1 Opening</label><input id="pOpen1" type="number" value="${(c.Petrol_1&&c.Petrol_1.closing)||0}" oninput="calc()"></div>
+        <div class="f"><label>MS N1 Opening</label><input id="pOpen1" type="number" value="${(c.Petrol_1&&c.Petrol_1.closing)?c.Petrol_1.closing:''}" placeholder="0" oninput="calc()"></div>
         <div class="f"><label>MS N1 Closing</label><input id="pClose1" type="number" oninput="calc()"></div>
-        <div class="f"><label>MS N2 Opening</label><input id="pOpen2" type="number" value="${(c.Petrol_2&&c.Petrol_2.closing)||0}" oninput="calc()"></div>
+        <div class="f"><label>MS N2 Opening</label><input id="pOpen2" type="number" value="${(c.Petrol_2&&c.Petrol_2.closing)?c.Petrol_2.closing:''}" placeholder="0" oninput="calc()"></div>
         <div class="f"><label>MS N2 Closing</label><input id="pClose2" type="number" oninput="calc()"></div>
-        <div class="f"><label>HSD N1 Opening</label><input id="dOpen1" type="number" value="${(c.Diesel_1&&c.Diesel_1.closing)||0}" oninput="calc()"></div>
+        <div class="f"><label>HSD N1 Opening</label><input id="dOpen1" type="number" value="${(c.Diesel_1&&c.Diesel_1.closing)?c.Diesel_1.closing:''}" placeholder="0" oninput="calc()"></div>
         <div class="f"><label>HSD N1 Closing</label><input id="dClose1" type="number" oninput="calc()"></div>
-        <div class="f"><label>HSD N2 Opening</label><input id="dOpen2" type="number" value="${(c.Diesel_2&&c.Diesel_2.closing)||0}" oninput="calc()"></div>
+        <div class="f"><label>HSD N2 Opening</label><input id="dOpen2" type="number" value="${(c.Diesel_2&&c.Diesel_2.closing)?c.Diesel_2.closing:''}" placeholder="0" oninput="calc()"></div>
         <div class="f"><label>HSD N2 Closing</label><input id="dClose2" type="number" oninput="calc()"></div>
         <div class="f"><label>MS Rate ₹/L</label><input id="pRate" type="number" value="116.96" oninput="calc()"></div>
         <div class="f"><label>HSD Rate ₹/L</label><input id="dRate" type="number" value="105.01" oninput="calc()"></div>
       </div>`:`
       <div class="f-row" style="margin-bottom:14px">
-        <div class="f"><label>CNG N1 Opening</label><input id="cOpen1" type="number" value="${(c.CNG_1&&c.CNG_1.closing)||0}" oninput="calc()"></div>
+        <div class="f"><label>CNG N1 Opening</label><input id="cOpen1" type="number" value="${(c.CNG_1&&c.CNG_1.closing)?c.CNG_1.closing:''}" placeholder="0" oninput="calc()"></div>
         <div class="f"><label>CNG N1 Closing</label><input id="cClose1" type="number" oninput="calc()"></div>
-        <div class="f"><label>CNG N2 Opening</label><input id="cOpen2" type="number" value="${(c.CNG_2&&c.CNG_2.closing)||0}" oninput="calc()"></div>
+        <div class="f"><label>CNG N2 Opening</label><input id="cOpen2" type="number" value="${(c.CNG_2&&c.CNG_2.closing)?c.CNG_2.closing:''}" placeholder="0" oninput="calc()"></div>
         <div class="f"><label>CNG N2 Closing</label><input id="cClose2" type="number" oninput="calc()"></div>
         <div class="f"><label>CNG Rate ₹/KG</label><input id="cRate" type="number" value="" placeholder="0" oninput="calc()"></div>
       </div>`}
@@ -2483,6 +2608,182 @@ document.addEventListener('focus', function(e){
     }
   }
 }, true);
+
+
+/* ═════ MONTHLY SHIFT CALENDAR (ADMIN / OWNER) ═════ */
+let __calYear = new Date().getFullYear();
+let __calMonth = new Date().getMonth() + 1;
+let __shiftsCache = null;
+
+async function loadShiftCalendar(){
+  if(!isUserAdmin() && !isUserOwner()) return;
+  const cDesk = $('calCardDesk'), cMob = $('calCardMob');
+  if(cDesk) cDesk.style.display = 'block';
+  if(cMob) cMob.style.display = 'block';
+
+  if(!__shiftsCache){
+    const r = await api('getShifts', {});
+    if(r.ok && r.shifts) __shiftsCache = r.shifts;
+  }
+  renderShiftCalendar(__calYear, __calMonth);
+}
+
+function navCalMonth(delta){
+  __calMonth += delta;
+  if(__calMonth > 12){ __calMonth = 1; __calYear += 1; }
+  if(__calMonth < 1){ __calMonth = 12; __calYear -= 1; }
+  renderShiftCalendar(__calYear, __calMonth);
+}
+
+function resetCalToday(){
+  const n = new Date();
+  __calYear = n.getFullYear();
+  __calMonth = n.getMonth() + 1;
+  renderShiftCalendar(__calYear, __calMonth);
+}
+
+function renderShiftCalendar(yr, mo){
+  const shifts = __shiftsCache || [];
+  const mName = new Date(yr, mo - 1, 1).toLocaleString('en-IN', { month: 'long', year: 'numeric' });
+  if($('calMonthLabelDesk')) $('calMonthLabelDesk').textContent = mName;
+  if($('calMonthLabelMob')) $('calMonthLabelMob').textContent = mName;
+
+  const byDate = {};
+  shifts.forEach(s => {
+    let d = String(s.Date || '').slice(0, 10);
+    if(d){
+      if(!byDate[d]) byDate[d] = { count: 0, sales: 0, pumps: new Set() };
+      byDate[d].count += 1;
+      byDate[d].sales += Number(s.Total_Sales || 0);
+      byDate[d].pumps.add(s.Pump_No);
+    }
+  });
+
+  const todayStr = today();
+  const daysInMonth = new Date(yr, mo, 0).getDate();
+  const firstDayOfWeek = new Date(yr, mo - 1, 1).getDay();
+  const dayNames = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+
+  if($('calGridDesk')){
+    let h = '<div class="cal-grid-hdr">';
+    dayNames.forEach(dn => h += `<div>${dn}</div>`);
+    h += '</div><div class="cal-grid-body">';
+
+    for(let i = 0; i < firstDayOfWeek; i++){
+      h += '<div class="cal-cell empty"></div>';
+    }
+
+    let enteredDays = 0, missingDays = 0, upcomingDays = 0;
+
+    for(let d = 1; d <= daysInMonth; d++){
+      const dStr = `${yr}-${String(mo).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+      const isToday = dStr === todayStr;
+      const isPastOrToday = dStr <= todayStr;
+      const entry = byDate[dStr];
+
+      if(!isPastOrToday){
+        upcomingDays++;
+        h += `
+          <div class="cal-cell upcoming ${isToday?'today-cell':''}">
+            <div class="cal-date-row">
+              <span class="cal-date-num">${d}</span>
+              <span class="cal-badge dull">Upcoming</span>
+            </div>
+            <div style="font-size:10px;color:#94a3b8;margin-top:6px">—</div>
+          </div>
+        `;
+      } else if(entry && entry.count > 0){
+        enteredDays++;
+        const pList = Array.from(entry.pumps).sort().map(p => 'P'+p).join(', ');
+        h += `
+          <div class="cal-cell entered ${isToday?'today-cell':''}" onclick="onCalDateClick('${dStr}', true)" title="Click to view ${entry.count} shifts">
+            <div class="cal-date-row">
+              <span class="cal-date-num">${d} ${isToday?'<span style="font-size:9.5px;color:#2563eb;font-weight:900">TODAY</span>':''}</span>
+              <span class="cal-badge green">✅ ${entry.count} Shift${entry.count>1?'s':''}</span>
+            </div>
+            <div class="cal-sales">${money(entry.sales)}</div>
+            <div style="font-size:10px;color:#166534;font-weight:700">${pList}</div>
+          </div>
+        `;
+      } else {
+        missingDays++;
+        h += `
+          <div class="cal-cell missing ${isToday?'today-cell':''}" onclick="onCalDateClick('${dStr}', false)" title="No shift recorded! Click to enter">
+            <div class="cal-date-row">
+              <span class="cal-date-num">${d} ${isToday?'<span style="font-size:9.5px;color:#dc2626;font-weight:900">TODAY</span>':''}</span>
+              <span class="cal-badge red">⚠️ Not Entered</span>
+            </div>
+            <div style="font-size:10.5px;color:#b91c1c;font-weight:800;margin-top:6px">+ Enter Shift</div>
+          </div>
+        `;
+      }
+    }
+    h += '</div>';
+    $('calGridDesk').innerHTML = h;
+
+    if($('calSummaryStatsDesk')){
+      $('calSummaryStatsDesk').innerHTML = `Days: <b>${daysInMonth}</b> · <span style="color:#16a34a">✅ Entered: <b>${enteredDays}</b></span> · <span style="color:#dc2626">⚠️ Missing: <b>${missingDays}</b></span> · <span style="color:#64748b">⏳ Upcoming: <b>${upcomingDays}</b></span>`;
+    }
+  }
+
+  if($('calGridMob')){
+    let hm = '<div style="display:grid;grid-template-columns:repeat(7,1fr);gap:4px;text-align:center;font-size:10px;font-weight:800;color:var(--t2);margin-bottom:6px">';
+    dayNames.forEach(dn => hm += `<div>${dn.slice(0,2)}</div>`);
+    hm += '</div><div style="display:grid;grid-template-columns:repeat(7,1fr);gap:4px">';
+
+    for(let i = 0; i < firstDayOfWeek; i++){
+      hm += '<div style="min-height:46px;visibility:hidden"></div>';
+    }
+
+    let mEntered = 0, mMissing = 0, mUpcoming = 0;
+
+    for(let d = 1; d <= daysInMonth; d++){
+      const dStr = `${yr}-${String(mo).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+      const isToday = dStr === todayStr;
+      const isPastOrToday = dStr <= todayStr;
+      const entry = byDate[dStr];
+
+      if(!isPastOrToday){
+        mUpcoming++;
+        hm += `<div style="min-height:48px;border-radius:8px;background:var(--bg2);border:1px solid var(--line);opacity:0.5;display:flex;flex-direction:column;align-items:center;justify-content:center"><span style="font-size:11px;font-weight:700;color:var(--t2)">${d}</span></div>`;
+      } else if(entry && entry.count > 0){
+        mEntered++;
+        hm += `<div onclick="onCalDateClick('${dStr}', true)" style="min-height:48px;border-radius:8px;background:rgba(34,197,94,.12);border:1.5px solid #22c55e;display:flex;flex-direction:column;align-items:center;justify-content:center;cursor:pointer;${isToday?'box-shadow:0 0 0 2px #3b82f6;':''}"><span style="font-size:11px;font-weight:900;color:#15803d">${d}</span><span style="font-size:8px;font-weight:800;background:#22c55e;color:#fff;padding:1px 3px;border-radius:4px;margin-top:2px">✅ ${entry.count}</span></div>`;
+      } else {
+        mMissing++;
+        hm += `<div onclick="onCalDateClick('${dStr}', false)" style="min-height:48px;border-radius:8px;background:rgba(239,68,68,.12);border:1.5px solid #ef4444;display:flex;flex-direction:column;align-items:center;justify-content:center;cursor:pointer;${isToday?'box-shadow:0 0 0 2px #ef4444;':''}"><span style="font-size:11px;font-weight:900;color:#b91c1c">${d}</span><span style="font-size:8px;font-weight:800;background:#ef4444;color:#fff;padding:1px 3px;border-radius:4px;margin-top:2px">⚠️ 0</span></div>`;
+      }
+    }
+    hm += '</div>';
+    $('calGridMob').innerHTML = hm;
+
+    if($('calSummaryStatsMob')){
+      $('calSummaryStatsMob').innerHTML = `<span style="color:#22c55e">✅ Entered: ${mEntered}</span> &nbsp;|&nbsp; <span style="color:#ef4444">⚠️ Missing: ${mMissing}</span> &nbsp;|&nbsp; <span style="color:#94a3b8">⏳ Remaining: ${mUpcoming}</span>`;
+    }
+  }
+}
+
+function onCalDateClick(dateStr, hasEntries){
+  if(hasEntries){
+    if(typeof nav === 'function'){
+      $('entriesDate').value = dateStr;
+      nav('entries', document.querySelector('[data-nav="entries"]'));
+    } else if(typeof showEntries === 'function'){
+      $('entriesDate').value = dateStr;
+      showEntries();
+    }
+  } else {
+    if(typeof nav === 'function'){
+      $('entryDate').value = dateStr;
+      nav('entry', document.querySelector('[data-nav="entry"]'));
+      toast('Selected missing date: ' + dateStr);
+    } else if(typeof show === 'function'){
+      $('entryDate').value = dateStr;
+      show('pumpSec');
+      toast('Selected missing date: ' + dateStr);
+    }
+  }
+}
 
 </script>
 </body>
