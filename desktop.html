@@ -405,9 +405,11 @@ tbody tr:hover td{background:#f8fafc}
           </div>
           <!-- Legend Bar -->
           <div style="display:flex;gap:16px;align-items:center;font-size:12px;font-weight:700;margin-bottom:16px;flex-wrap:wrap;padding:10px 14px;background:#f8fafc;border-radius:10px;border:1px solid var(--line)">
-            <span style="display:flex;align-items:center;gap:6px;color:#166534"><span style="width:12px;height:12px;border-radius:4px;background:#22c55e;display:inline-block"></span> Entered (గ్రీన్)</span>
-            <span style="display:flex;align-items:center;gap:6px;color:#991b1b"><span style="width:12px;height:12px;border-radius:4px;background:#ef4444;display:inline-block"></span> Missing (రెడ్)</span>
-            <span style="display:flex;align-items:center;gap:6px;color:#64748b"><span style="width:12px;height:12px;border-radius:4px;background:#e2e8f0;display:inline-block"></span> Remaining (డల్)</span>
+            <span style="display:flex;align-items:center;gap:6px;color:#166534"><span style="width:12px;height:12px;border-radius:4px;background:#22c55e;display:inline-block"></span> Entered</span>
+            <span style="display:flex;align-items:center;gap:6px;color:#991b1b"><span style="width:12px;height:12px;border-radius:4px;background:#ef4444;display:inline-block"></span> Missing</span>
+            <span style="display:flex;align-items:center;gap:6px;color:#64748b"><span style="width:12px;height:12px;border-radius:4px;background:#e2e8f0;display:inline-block"></span> Upcoming</span>
+            <span style="display:flex;align-items:center;gap:6px;color:#1e40af"><span style="font-size:13px">⚡</span> Multi-Shift</span>
+            <span style="display:flex;align-items:center;gap:6px;color:#b45309"><span style="font-size:13px">⚠️</span> Reading Mismatch</span> 
             <span id="calSummaryStatsDesk" style="margin-left:auto;color:var(--t2);font-weight:700"></span>
           </div>
           <div id="calGridDesk"></div>
@@ -991,14 +993,32 @@ async function onPumpChange(){
           <div class="sm-line" id="sumCngRow" style="display:${isCNG?'flex':'none'}"><span class="sl">CNG</span><span class="sv" id="sumC">₹ 0.00</span></div>
           <div class="sm-line hl"><span class="sl">Total Sales</span><span class="sv" id="totalSales">₹ 0.00</span></div>
         </div>
-        <div class="card" style="margin:0;background:#f8fafc">
-          <div style="font-size:11px;font-weight:700;color:var(--t2);text-transform:uppercase;margin-bottom:10px">Payments</div>
-          <div class="f" style="margin-bottom:10px"><label>Online / UPI ₹</label><input id="online" type="number" value="" placeholder="0" oninput="calcPay()"></div>
-          <div class="f" style="margin-bottom:10px"><label>OTP / Fleet ₹</label><input id="otp" type="number" value="" placeholder="0" oninput="calcPay()"></div>
-          <div class="f" style="margin-bottom:10px"><label>Net Cash ₹</label><input id="cash" type="number" value="" placeholder="0" oninput="calcPay()"></div>
-          <div class="f" style="margin-bottom:10px"><label>Testing Amt ₹</label><input id="testingAmt" type="number" value="" placeholder="0" oninput="calcPay()"></div>
-          <div class="f" style="margin-bottom:10px"><label>Exp/Test Type</label><input id="expType" placeholder="Tea / Testing / Repair"></div>
-          <div class="f" style="margin-bottom:0"><label>Expenditure ₹</label><input id="expenditure" type="number" value="" placeholder="0" oninput="calcPay()"></div>
+        <div class="card" style="margin:0 0 12px 0;background:#f8fafc">
+          <div style="font-size:11px;font-weight:700;color:var(--t2);text-transform:uppercase;margin-bottom:10px">Digital & Testing Payments</div>
+          <div class="f" style="margin-bottom:10px"><label>📱 Online / UPI ₹</label><input id="online" type="number" step="0.01" value="" placeholder="0" oninput="calcPay()"></div>
+          <div class="f" style="margin-bottom:10px"><label>🔐 HPCL OTP / Fleet ₹</label><input id="otp" type="number" step="0.01" value="" placeholder="0" oninput="calcPay()"></div>
+          <div class="f" style="margin-bottom:10px"><label>⛽ HP Pay ₹</label><input id="hpPay" type="number" step="0.01" value="" placeholder="0" oninput="calcPay()"></div>
+          <div class="f" style="margin-bottom:0"><label>🧪 Testing Amt ₹</label><input id="testingAmt" type="number" step="0.01" value="" placeholder="0" oninput="calcPay()"></div>
+        </div>
+        <div class="card" style="margin:0 0 12px 0;background:#f8fafc">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
+            <div style="font-size:11px;font-weight:700;color:var(--t2);text-transform:uppercase">💸 Expenditures (Multiple)</div>
+            <button type="button" class="btn btn-ghost btn-sm" onclick="addExpenseRow()" style="padding:4px 10px;font-size:11px;color:var(--pri);font-weight:700">+ Add Expense</button>
+          </div>
+          <div id="expenseRowsContainer" style="display:flex;flex-direction:column;gap:8px"></div>
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-top:10px;padding-top:8px;border-top:1px dashed var(--line);font-size:12px;font-weight:700">
+            <span>Total Expenditure:</span>
+            <span id="expTotalDisplay" style="color:var(--warn);font-size:14px;font-weight:900">₹ 0.00</span>
+          </div>
+          <input type="hidden" id="expenditure" value="0">
+          <input type="hidden" id="expType" value="">
+        </div>
+        <div class="card" style="margin:0;border:1.5px solid var(--pri);background:#eff6ff">
+          <div style="font-size:11px;font-weight:800;color:var(--pri);text-transform:uppercase;margin-bottom:6px">💵 Final Net Cash Collection</div>
+          <div class="f" style="margin-bottom:0">
+            <label style="font-weight:800;color:var(--t)">Net Cash ₹ (After All Expenses)</label>
+            <input id="cash" type="number" step="0.01" value="" placeholder="0" oninput="calcPay()" style="font-size:16px;font-weight:800;background:#fff">
+          </div>
         </div>
       </div>
       <div id="validateAlert" style="margin-top:14px"></div>
@@ -1038,12 +1058,85 @@ function calc(){
   const va=$('validateAlert');if(va)va.innerHTML=errs.length?'<div class="alert err">'+errs.join('<br>')+'</div>':'';
   calcPay();
 }
+
+const EXPENSE_CATEGORIES = [
+  'Tea & Snacks',
+  'Staff Food / Mess',
+  'Generator Diesel',
+  'Stationery / Printing',
+  'Electricity / Utility',
+  'Bunk Maintenance',
+  'Staff Advance / Salary',
+  'Transportation / Conveyance',
+  'Miscellaneous / Other'
+];
+
+function addExpenseRow(type = '', amt = '', rem = '') {
+  const container = $('expenseRowsContainer');
+  if(!container) return;
+  const rowId = 'expRow_' + Math.random().toString(36).substring(2, 9);
+  const div = document.createElement('div');
+  div.id = rowId;
+  div.className = 'exp-row-item';
+  div.style = 'display:grid;grid-template-columns:130px 90px 1fr 30px;gap:6px;align-items:center;background:#fff;padding:6px;border:1px solid var(--line);border-radius:6px';
+  
+  let optHtml = `<option value="">Category</option>` + EXPENSE_CATEGORIES.map(cat => `<option value="${cat}" ${cat===type?'selected':''}>${cat}</option>`).join('');
+  
+  div.innerHTML = `
+    <select class="exp-cat-sel" style="padding:5px 6px;font-size:12px;border:1px solid var(--line);border-radius:6px;background:var(--bg)" onchange="calcExpenses()">${optHtml}</select>
+    <input type="number" step="0.01" class="exp-amt-inp num" placeholder="₹ Amt" value="${amt>0?amt:''}" style="padding:5px 6px;font-size:12px;border:1px solid var(--line);border-radius:6px" oninput="calcExpenses()">
+    <input type="text" class="exp-rem-inp" placeholder="Remarks" value="${rem||''}" style="padding:5px 6px;font-size:12px;border:1px solid var(--line);border-radius:6px">
+    <button type="button" onclick="removeExpenseRow('${rowId}')" style="background:#fee2e2;color:#dc2626;border:none;border-radius:6px;width:30px;height:28px;cursor:pointer;font-weight:700" title="Delete">✕</button>
+  `;
+  container.appendChild(div);
+  calcExpenses();
+}
+
+function removeExpenseRow(rowId) {
+  const el = $(rowId);
+  if(el) el.remove();
+  calcExpenses();
+}
+
+function getExpenseDetails() {
+  const container = $('expenseRowsContainer');
+  if(!container) return [];
+  const rows = container.querySelectorAll('.exp-row-item');
+  const details = [];
+  rows.forEach(r => {
+    const sel = r.querySelector('.exp-cat-sel');
+    const amtInp = r.querySelector('.exp-amt-inp');
+    const remInp = r.querySelector('.exp-rem-inp');
+    const type = sel ? sel.value.trim() : '';
+    const amt = amtInp ? (Number(amtInp.value) || 0) : 0;
+    const rem = remInp ? remInp.value.trim() : '';
+    if(amt > 0 || type || rem) {
+      details.push({ Expense_Type: type || 'General', Amount: amt, Remarks: rem });
+    }
+  });
+  return details;
+}
+
+function calcExpenses() {
+  const details = getExpenseDetails();
+  const total = details.reduce((acc, d) => acc + (Number(d.Amount) || 0), 0);
+  if($('expenditure')) $('expenditure').value = total > 0 ? total : '';
+  if($('expTotalDisplay')) $('expTotalDisplay').textContent = money(total);
+  calcPay();
+}
+
+function resetExpenseRows() {
+  if($('expenseRowsContainer')) $('expenseRowsContainer').innerHTML = '';
+  if($('expenditure')) $('expenditure').value = '';
+  if($('expTotalDisplay')) $('expTotalDisplay').textContent = '₹ 0.00';
+}
+
 function calcPay(){
   const isCNG=pickedPump===3;
   const salesVal=isCNG?Math.max(0,num('cClose1')-num('cOpen1'))*num('cRate')+Math.max(0,num('cClose2')-num('cOpen2'))*num('cRate'):
     Math.max(0,num('pClose1')-num('pOpen1'))*num('pRate')+Math.max(0,num('pClose2')-num('pOpen2'))*num('pRate')+Math.max(0,num('dClose1')-num('dOpen1'))*num('dRate')+Math.max(0,num('dClose2')-num('dOpen2'))*num('dRate');
-  const cash=num('cash'),online=num('online'),otp=num('otp'),exp=num('expenditure'),testAmt=num('testingAmt');
-  const col=cash+online+otp;const diff=col+exp+testAmt-salesVal;
+  const cash=num('cash'),online=num('online'),otp=num('otp'),hpPay=num('hpPay'),exp=num('expenditure'),testAmt=num('testingAmt');
+  const col=cash+online+otp+hpPay;const diff=col+exp+testAmt-salesVal;
   const t=$('tally');if(!t)return;
   if(salesVal===0&&col===0){t.className='tally idle';$('tallyAmt').textContent='₹ 0.00';$('tallyMsg').textContent='Enter payments';}
   else if(Math.abs(diff)<0.5){t.className='tally ok';$('tallyAmt').textContent='₹ 0.00';$('tallyMsg').textContent='✅ Balanced';}
@@ -1062,11 +1155,13 @@ function collectData(){
     cA=cL*num('cRate');
   }
   const sales=pA+dA+cA;
-  const cash=num('cash'),online=num('online'),otp=num('otp'),exp=num('expenditure'),testAmt=num('testingAmt');
-  const col=cash+online+otp;
+  const cash=num('cash'),online=num('online'),otp=num('otp'),hpPay=num('hpPay'),exp=num('expenditure'),testAmt=num('testingAmt');
+  const col=cash+online+otp+hpPay;
+  const expDetails=getExpenseDetails();
   return{Date:$('entryDate').value||today(),Shift:'S1',Staff_ID:pickedStaffId||me.Staff_ID,Staff_Name:pickedStaffId||me.Staff_ID,Pump_No:pickedPump,
     Petrol_Litres:pL,Petrol_Amount:pA,Diesel_Litres:dL,Diesel_Amount:dA,CNG_KG:cL,CNG_Amount:cA,Total_Sales:sales,
-    Online_Amount:online,OTP_Amount:otp,Cash_Total:cash,Change_Amount:0,Expenditure:exp,Expenditure_Type:$('expType').value.trim(),Expenditure_Remarks:'',
+    Online_Amount:online,OTP_Amount:otp,HP_Pay_Amount:hpPay,Cash_Total:cash,Change_Amount:0,
+    Expenditure:exp,Expenditure_Type:expDetails.length?expDetails[0].Expense_Type:'General',Expenditure_Remarks:'',Expenditure_Details:expDetails,
     Testing_Amount:testAmt,
     Total_Collected:col,Difference:col+exp+testAmt-sales,
     Nozzle_Readings:[
@@ -1184,7 +1279,11 @@ async function loadEntries(){
               <span>MS: <b>${fmt(s.Petrol_Litres||0)} L</b></span>
               <span>HSD: <b>${fmt(s.Diesel_Litres||0)} L</b></span>
             `}
-            <span>Collected: <b>${money(s.Total_Collected)}</b></span>
+            <span>Online: <b>${money(s.Online_Amount||0)}</b></span>
+            <span>OTP: <b>${money(s.OTP_Amount||0)}</b></span>
+            <span>HP Pay: <b>${money(s.HP_Pay_Amount||0)}</b></span>
+            <span>Exp: <b style="color:var(--warn)">${money(s.Expenditure||0)}</b></span>
+            <span>Net Cash: <b style="color:var(--pri)">${money(s.Cash_Total||0)}</b></span>
           </div>
           ${isOwn ? `
           <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:10px">
@@ -1198,7 +1297,7 @@ async function loadEntries(){
     $('entriesOut').innerHTML = h;
   } else {
     // Table View - now with dedicated CNG (KG) column!
-    let h = headerBar + '<div class="tbl-wrap"><table><thead><tr><th>Date</th><th>Pump</th><th>Staff</th><th>Petrol (L)</th><th>Diesel (L)</th><th>CNG (KG)</th><th>Total Sales</th><th>Collected</th><th>Difference</th>'+(isOwn?'<th style="text-align:center">Actions</th>':'')+'</tr></thead><tbody>';
+    let h = headerBar + '<div class="tbl-wrap"><table><thead><tr><th>Date</th><th>Pump</th><th>Staff</th><th>Petrol (L)</th><th>Diesel (L)</th><th>CNG (KG)</th><th>Total Sales</th><th>Online</th><th>OTP</th><th>HP Pay</th><th>Expenditure</th><th>Net Cash</th><th>Difference</th>'+(isOwn?'<th style="text-align:center">Actions</th>':'')+'</tr></thead><tbody>';
     shifts.forEach(s => {
       const d = Number(s.Difference || 0);
       const bc = Math.abs(d) < 0.5 ? 'ok' : (d < 0 ? 'bad' : 'warn');
@@ -1213,7 +1312,11 @@ async function loadEntries(){
         <td>${Number(s.Diesel_Litres||0) > 0 ? fmt(s.Diesel_Litres) : '-'}</td>
         <td><b style="color:#8b5cf6">${cngKg > 0 ? fmt(cngKg) : '-'}</b></td>
         <td><b>${money(s.Total_Sales)}</b></td>
-        <td>${money(s.Total_Collected)}</td>
+        <td>${money(s.Online_Amount||0)}</td>
+        <td>${money(s.OTP_Amount||0)}</td>
+        <td>${money(s.HP_Pay_Amount||0)}</td>
+        <td><span style="color:var(--warn);font-weight:700">${money(s.Expenditure||0)}</span></td>
+        <td><b style="color:var(--pri)">${money(s.Cash_Total||0)}</b></td>
         <td><span class="b ${bc}">${money(Math.abs(d))}</span></td>` + 
         (isOwn ? `<td style="text-align:center"><div style="display:flex;gap:6px;justify-content:center"><button class="btn btn-primary btn-sm" onclick="openFullEditShift('${s.Shift_ID}')" title="Full Edit">✏️ Edit</button><button class="btn btn-ghost btn-sm" onclick="changeShiftDate('${s.Shift_ID}','${dt}')" title="Edit Date Only">📅 Date</button></div></td>` : '') + 
         `</tr>`;
@@ -1295,6 +1398,60 @@ function renderEdNozzleFields(isCNG, p1, p2, d1, d2, c1, c2, pRate, pRate2, dRat
         ${isSplit ? `<div class="f"><label style="color:#d97706;font-weight:800">⚡ CNG Rate 2 (₹/KG)</label><input type="number" step="0.01" class="num" id="edCRate2" value="${cRate2>0?cRate2:''}" placeholder="Rate 2" style="border-color:#f59e0b;background:#fffbeb" oninput="calcEditTally()"></div>` : ''}
       </div>`;
   }
+}
+
+function addEdExpenseRow(type = '', amt = '', rem = '') {
+  const container = $('edExpenseRowsContainer');
+  if(!container) return;
+  const rowId = 'edExpRow_' + Math.random().toString(36).substring(2, 9);
+  const div = document.createElement('div');
+  div.id = rowId;
+  div.className = 'ed-exp-row-item';
+  div.style = 'display:grid;grid-template-columns:130px 90px 1fr 30px;gap:6px;align-items:center;background:#fff;padding:6px;border:1px solid var(--line);border-radius:6px';
+  
+  let optHtml = `<option value="">Category</option>` + EXPENSE_CATEGORIES.map(cat => `<option value="${cat}" ${cat===type?'selected':''}>${cat}</option>`).join('');
+  
+  div.innerHTML = `
+    <select class="ed-exp-cat-sel" style="padding:5px 6px;font-size:12px;border:1px solid var(--line);border-radius:6px;background:var(--bg)" onchange="calcEdExpenses()">${optHtml}</select>
+    <input type="number" step="0.01" class="ed-exp-amt-inp num" placeholder="₹ Amt" value="${amt>0?amt:''}" style="padding:5px 6px;font-size:12px;border:1px solid var(--line);border-radius:6px" oninput="calcEdExpenses()">
+    <input type="text" class="ed-exp-rem-inp" placeholder="Remarks" value="${rem||''}" style="padding:5px 6px;font-size:12px;border:1px solid var(--line);border-radius:6px">
+    <button type="button" onclick="removeEdExpenseRow('${rowId}')" style="background:#fee2e2;color:#dc2626;border:none;border-radius:6px;width:30px;height:28px;cursor:pointer;font-weight:700" title="Delete">✕</button>
+  `;
+  container.appendChild(div);
+  calcEdExpenses();
+}
+
+function removeEdExpenseRow(rowId) {
+  const el = $(rowId);
+  if(el) el.remove();
+  calcEdExpenses();
+}
+
+function getEdExpenseDetails() {
+  const container = $('edExpenseRowsContainer');
+  if(!container) return [];
+  const rows = container.querySelectorAll('.ed-exp-row-item');
+  const details = [];
+  rows.forEach(r => {
+    const sel = r.querySelector('.ed-exp-cat-sel');
+    const amtInp = r.querySelector('.ed-exp-amt-inp');
+    const remInp = r.querySelector('.ed-exp-rem-inp');
+    const type = sel ? sel.value.trim() : '';
+    const amt = amtInp ? (Number(amtInp.value) || 0) : 0;
+    const rem = remInp ? remInp.value.trim() : '';
+    if(amt > 0 || type || rem) {
+      details.push({ Expense_Type: type || 'General', Amount: amt, Remarks: rem });
+    }
+  });
+  return details;
+}
+
+function calcEdExpenses() {
+  const details = getEdExpenseDetails();
+  const total = details.reduce((acc, d) => acc + (Number(d.Amount) || 0), 0);
+  if($('edExp')) $('edExp').value = total > 0 ? total : '';
+  if($('edExpTotalDisplay')) $('edExpTotalDisplay').textContent = money(total);
+  calcEditTally();
 }
 
 async function openFullEditShift(shiftId){
@@ -1393,14 +1550,35 @@ async function openFullEditShift(shiftId){
     </div>
     
     <div class="card" style="margin-bottom:14px;background:#f8fafc">
-      <div style="font-size:11px;font-weight:700;color:var(--t2);text-transform:uppercase;margin-bottom:10px">3. Collections & Expenses</div>
+      <div style="font-size:11px;font-weight:700;color:var(--t2);text-transform:uppercase;margin-bottom:10px">3. Digital & Testing Payments</div>
       <div class="f-row">
-        <div class="f"><label>Net Cash</label><input type="number" step="0.01" class="num" id="edCash" value="${s.Cash_Total>0?s.Cash_Total:''}" placeholder="0" oninput="calcEditTally()"></div>
-        <div class="f"><label>Online (PhonePe/Card)</label><input type="number" step="0.01" class="num" id="edOnline" value="${s.Online_Amount>0?s.Online_Amount:''}" placeholder="0" oninput="calcEditTally()"></div>
-        <div class="f"><label>HPCL OTP Amount</label><input type="number" step="0.01" class="num" id="edOtp" value="${s.OTP_Amount>0?s.OTP_Amount:''}" placeholder="0" oninput="calcEditTally()"></div>
-        <div class="f"><label>Expenditure</label><input type="number" step="0.01" class="num" id="edExp" value="${s.Expenditure>0?s.Expenditure:''}" placeholder="0" oninput="calcEditTally()"></div>
+        <div class="f"><label>📱 Online (PhonePe/Card)</label><input type="number" step="0.01" class="num" id="edOnline" value="${s.Online_Amount>0?s.Online_Amount:''}" placeholder="0" oninput="calcEditTally()"></div>
+        <div class="f"><label>🔐 HPCL OTP Amount</label><input type="number" step="0.01" class="num" id="edOtp" value="${s.OTP_Amount>0?s.OTP_Amount:''}" placeholder="0" oninput="calcEditTally()"></div>
+        <div class="f"><label>⛽ HP Pay Amount</label><input type="number" step="0.01" class="num" id="edHpPay" value="${s.HP_Pay_Amount>0?s.HP_Pay_Amount:''}" placeholder="0" oninput="calcEditTally()"></div>
+        <div class="f"><label>🧪 Testing Amount</label><input type="number" step="0.01" class="num" id="edTestAmt" value="${s.Testing_Amount>0?s.Testing_Amount:''}" placeholder="0" oninput="calcEditTally()"></div>
       </div>
     </div>
+    
+    <div class="card" style="margin-bottom:14px;background:#f8fafc">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
+        <div style="font-size:11px;font-weight:700;color:var(--t2);text-transform:uppercase">💸 4. Expenditures (Multiple)</div>
+        <button type="button" class="btn btn-ghost btn-sm" onclick="addEdExpenseRow()" style="padding:4px 10px;font-size:11px;color:var(--pri);font-weight:700">+ Add Expense</button>
+      </div>
+      <div id="edExpenseRowsContainer" style="display:flex;flex-direction:column;gap:8px"></div>
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-top:10px;padding-top:8px;border-top:1px dashed var(--line);font-size:12px;font-weight:700">
+        <span>Total Expenditure:</span>
+        <span id="edExpTotalDisplay" style="color:var(--warn);font-size:14px;font-weight:900">₹ 0.00</span>
+      </div>
+      <input type="hidden" id="edExp" value="${s.Expenditure||0}">
+    </div>
+    
+    <div class="card" style="margin-bottom:14px;border:1.5px solid var(--pri);background:#eff6ff">
+      <div style="font-size:11px;font-weight:800;color:var(--pri);text-transform:uppercase;margin-bottom:6px">💵 5. Final Net Cash Collection</div>
+      <div class="f" style="margin-bottom:0">
+        <label style="font-weight:800;color:var(--t)">Net Cash (After All Expenses)</label>
+        <input type="number" step="0.01" class="num" id="edCash" value="${s.Cash_Total>0?s.Cash_Total:''}" placeholder="0" oninput="calcEditTally()" style="font-size:16px;font-weight:800;background:#fff">
+      </div>
+    </div>div>
     
     <div class="card" style="margin-bottom:14px;background:#eff6ff;border-color:#bfdbfe">
       <div style="font-size:11px;font-weight:700;color:var(--pri);text-transform:uppercase;margin-bottom:10px">4. Live Summary & Tally</div>
@@ -1419,6 +1597,12 @@ async function openFullEditShift(shiftId){
   `;
   
   $('edShiftBody').innerHTML = html;
+  if(Array.isArray(s.Expenditure_Details) && s.Expenditure_Details.length > 0) {
+    s.Expenditure_Details.forEach(ed => addEdExpenseRow(ed.Expense_Type, ed.Amount, ed.Remarks));
+  } else if(Number(s.Expenditure) > 0) {
+    addEdExpenseRow(s.Expenditure_Type || 'General', s.Expenditure, s.Expenditure_Remarks || '');
+  }
+  calcEdExpenses();
   calcEditTally();
   $('editShiftMask').classList.add('show');
 }
@@ -1505,9 +1689,10 @@ function calcEditTally(){
   const cash = num('edCash');
   const online = num('edOnline');
   const otp = num('edOtp');
+  const hpPay = num('edHpPay');
   const exp = num('edExp');
   const testAmt = num('edTestAmt');
-  const col = cash + online + otp;
+  const col = cash + online + otp + hpPay;
   const diff = col + exp + testAmt - totalSales;
   
   $('edSumSales').textContent = money(totalSales);
@@ -1558,14 +1743,16 @@ async function submitFullEditShift(){
   const cash = num('edCash');
   const online = num('edOnline');
   const otp = num('edOtp');
+  const hpPay = num('edHpPay');
   const exp = num('edExp');
   const testAmt = num('edTestAmt');
-  const col = cash + online + otp;
+  const col = cash + online + otp + hpPay;
   const diff = col + exp + testAmt - totalSales;
   
   const stObj = __edStaffList.find(x => String(x.Staff_ID).toUpperCase() === String(staffIdVal).toUpperCase());
   const staffNameVal = stObj ? stObj.Staff_Name : staffIdVal;
   
+  const edExpDetails = getEdExpenseDetails();
   const payload = {
     Shift_ID: __edShift.Shift_ID,
     Date: dateVal,
@@ -1580,14 +1767,18 @@ async function submitFullEditShift(){
     CNG_Amount: cAmt,
     Total_Sales: totalSales,
     Total_Sales_Amount: totalSales,
-    Cash_Total: cash,
-    Cash_Collected: cash,
     Online_Amount: online,
     Online_Total: online,
     OTP_Amount: otp,
     OTP_Sale: otp,
+    HP_Pay_Amount: hpPay,
     Expenditure: exp,
     Expenses_Total: exp,
+    Expenditure_Type: edExpDetails.length ? edExpDetails[0].Expense_Type : 'General',
+    Expenditure_Remarks: '',
+    Expenditure_Details: edExpDetails,
+    Cash_Total: cash,
+    Cash_Collected: cash,
     Testing_Amount: testAmt,
     Total_Collected: col,
     Difference: diff,
@@ -2648,14 +2839,65 @@ function renderShiftCalendar(yr, mo){
   if($('calMonthLabelDesk')) $('calMonthLabelDesk').textContent = mName;
   if($('calMonthLabelMob')) $('calMonthLabelMob').textContent = mName;
 
+  // Helper to extract nozzle readings from either Nozzle_Readings array or flat columns
+  function getNozzles(s){
+    if(Array.isArray(s.Nozzle_Readings) && s.Nozzle_Readings.length > 0) return s.Nozzle_Readings;
+    const nz = [];
+    const p = Number(s.Pump_No) || 1;
+    if(p === 3 || Number(s.CNG_KG || 0) > 0){
+      if(s.CNG_Nozzle_1_Close || s.CNG_Nozzle_1_Open) nz.push({ Fuel_Type: 'CNG', Nozzle_No: 1, Opening_Reading: Number(s.CNG_Nozzle_1_Open)||0, Closing_Reading: Number(s.CNG_Nozzle_1_Close)||0 });
+      if(s.CNG_Nozzle_2_Close || s.CNG_Nozzle_2_Open) nz.push({ Fuel_Type: 'CNG', Nozzle_No: 2, Opening_Reading: Number(s.CNG_Nozzle_2_Open)||0, Closing_Reading: Number(s.CNG_Nozzle_2_Close)||0 });
+    } else {
+      if(s.Petrol_Nozzle_1_Close || s.Petrol_Nozzle_1_Open) nz.push({ Fuel_Type: 'Petrol', Nozzle_No: 1, Opening_Reading: Number(s.Petrol_Nozzle_1_Open)||0, Closing_Reading: Number(s.Petrol_Nozzle_1_Close)||0 });
+      if(s.Petrol_Nozzle_2_Close || s.Petrol_Nozzle_2_Open) nz.push({ Fuel_Type: 'Petrol', Nozzle_No: 2, Opening_Reading: Number(s.Petrol_Nozzle_2_Open)||0, Closing_Reading: Number(s.Petrol_Nozzle_2_Close)||0 });
+      if(s.Diesel_Nozzle_1_Close || s.Diesel_Nozzle_1_Open) nz.push({ Fuel_Type: 'Diesel', Nozzle_No: 1, Opening_Reading: Number(s.Diesel_Nozzle_1_Open)||0, Closing_Reading: Number(s.Diesel_Nozzle_1_Close)||0 });
+      if(s.Diesel_Nozzle_2_Close || s.Diesel_Nozzle_2_Open) nz.push({ Fuel_Type: 'Diesel', Nozzle_No: 2, Opening_Reading: Number(s.Diesel_Nozzle_2_Open)||0, Closing_Reading: Number(s.Diesel_Nozzle_2_Close)||0 });
+    }
+    return nz;
+  }
+
+  // 1. Compute reading mismatches: Previous shift closing must equal next shift opening for the same pump
+  const mismatchByDate = {};
+  [1, 2, 3].forEach(p => {
+    const pShifts = shifts.filter(s => Number(s.Pump_No) === p);
+    // Sort chronologically ascending
+    pShifts.sort((a, b) => String(a.Date || '').localeCompare(String(b.Date || '')));
+    for(let i = 1; i < pShifts.length; i++) {
+      const prevS = pShifts[i - 1];
+      const currS = pShifts[i];
+      const currD = String(currS.Date || '').slice(0, 10);
+      const prevNzList = getNozzles(prevS);
+      const prevNz = prevNzList.reduce((acc, n) => {
+        acc[`${n.Fuel_Type}_${n.Nozzle_No}`] = Number(n.Closing_Reading) || 0;
+        return acc;
+      }, {});
+      
+      const currNzList = getNozzles(currS);
+      currNzList.forEach(n => {
+        const k = `${n.Fuel_Type}_${n.Nozzle_No}`;
+        const cOpen = Number(n.Opening_Reading) || 0;
+        if(prevNz[k] !== undefined) {
+          const pClose = prevNz[k];
+          if(pClose > 0 && cOpen > 0 && Math.abs(pClose - cOpen) > 0.05) {
+            if(!mismatchByDate[currD]) mismatchByDate[currD] = [];
+            const diff = (cOpen - pClose).toFixed(2);
+            mismatchByDate[currD].push(`Pump ${p} (${n.Fuel_Type} N${n.Nozzle_No}): Prev Close ${pClose} != Open ${cOpen} (Diff: ${diff})`);
+          }
+        }
+      });
+    }
+  });
+
+  // 2. Group shifts by date, and track shift count PER PUMP to find real double entries
   const byDate = {};
   shifts.forEach(s => {
     let d = String(s.Date || '').slice(0, 10);
     if(d){
-      if(!byDate[d]) byDate[d] = { count: 0, sales: 0, pumps: new Set() };
+      if(!byDate[d]) byDate[d] = { count: 0, sales: 0, pumps: new Set(), pumpCounts: {} };
       byDate[d].count += 1;
       byDate[d].sales += Number(s.Total_Sales || 0);
       byDate[d].pumps.add(s.Pump_No);
+      byDate[d].pumpCounts[s.Pump_No] = (byDate[d].pumpCounts[s.Pump_No] || 0) + 1;
     }
   });
 
@@ -2680,6 +2922,8 @@ function renderShiftCalendar(yr, mo){
       const isToday = dStr === todayStr;
       const isPastOrToday = dStr <= todayStr;
       const entry = byDate[dStr];
+      const hasMismatch = !!mismatchByDate[dStr];
+      const mismatchTip = hasMismatch ? mismatchByDate[dStr].join('\n') : '';
 
       if(!isPastOrToday){
         upcomingDays++;
@@ -2695,11 +2939,19 @@ function renderShiftCalendar(yr, mo){
       } else if(entry && entry.count > 0){
         enteredDays++;
         const pList = Array.from(entry.pumps).sort().map(p => 'P'+p).join(', ');
+        // Multiple entries: ONLY when a single pump is entered more than once on the same date!
+        const dupPumps = Object.entries(entry.pumpCounts).filter(([p, cnt]) => cnt > 1).map(([p]) => 'P' + p);
+        const isDoubleEntry = dupPumps.length > 0;
+        
         h += `
-          <div class="cal-cell entered ${isToday?'today-cell':''}" onclick="onCalDateClick('${dStr}', true)" title="Click to view ${entry.count} shifts">
+          <div class="cal-cell entered ${isToday?'today-cell':''} ${hasMismatch?'mismatch-cell':''}" onclick="onCalDateClick('${dStr}', true)" title="Click to view ${entry.count} shifts">
             <div class="cal-date-row">
               <span class="cal-date-num">${d} ${isToday?'<span style="font-size:9.5px;color:#2563eb;font-weight:900">TODAY</span>':''}</span>
-              <span class="cal-badge green">✅ ${entry.count} Shift${entry.count>1?'s':''}</span>
+              <div style="display:flex;gap:3px;align-items:center;flex-wrap:wrap;justify-content:flex-end">
+                <span class="cal-badge green">✅ ${entry.count} Shift${entry.count>1?'s':''}</span>
+                ${isDoubleEntry ? `<span class="cal-badge" style="background:#dbeafe;color:#1e40af;font-size:9px;font-weight:800;padding:2px 4px;border-radius:4px" title="Double Entry: ${dupPumps.join(', ')} entered more than once on this date!">⚡ Double (${dupPumps.join(',')})</span>` : ''}
+                ${hasMismatch ? `<span class="cal-badge" style="background:#fef3c7;color:#b45309;border:1px solid #fde68a;font-size:9px;font-weight:800;padding:2px 4px;border-radius:4px;cursor:help" title="${mismatchTip.replace(/"/g, '&quot;')}">⚠️ Mismatch</span>` : ''}
+              </div>
             </div>
             <div class="cal-sales">${money(entry.sales)}</div>
             <div style="font-size:10px;color:#166534;font-weight:700">${pList}</div>
@@ -2742,13 +2994,25 @@ function renderShiftCalendar(yr, mo){
       const isToday = dStr === todayStr;
       const isPastOrToday = dStr <= todayStr;
       const entry = byDate[dStr];
+      const hasMismatch = !!mismatchByDate[dStr];
+      const mismatchTip = hasMismatch ? mismatchByDate[dStr].join('\n') : '';
 
       if(!isPastOrToday){
         mUpcoming++;
         hm += `<div style="min-height:48px;border-radius:8px;background:var(--bg2);border:1px solid var(--line);opacity:0.5;display:flex;flex-direction:column;align-items:center;justify-content:center"><span style="font-size:11px;font-weight:700;color:var(--t2)">${d}</span></div>`;
       } else if(entry && entry.count > 0){
         mEntered++;
-        hm += `<div onclick="onCalDateClick('${dStr}', true)" style="min-height:48px;border-radius:8px;background:rgba(34,197,94,.12);border:1.5px solid #22c55e;display:flex;flex-direction:column;align-items:center;justify-content:center;cursor:pointer;${isToday?'box-shadow:0 0 0 2px #3b82f6;':''}"><span style="font-size:11px;font-weight:900;color:#15803d">${d}</span><span style="font-size:8px;font-weight:800;background:#22c55e;color:#fff;padding:1px 3px;border-radius:4px;margin-top:2px">✅ ${entry.count}</span></div>`;
+        const dupPumps = Object.entries(entry.pumpCounts).filter(([p, cnt]) => cnt > 1).map(([p]) => 'P' + p);
+        const isDoubleEntry = dupPumps.length > 0;
+        
+        hm += `<div onclick="onCalDateClick('${dStr}', true)" style="min-height:48px;border-radius:8px;background:rgba(34,197,94,.12);border:1.5px solid ${hasMismatch?'#f59e0b':'#22c55e'};display:flex;flex-direction:column;align-items:center;justify-content:center;cursor:pointer;position:relative;${isToday?'box-shadow:0 0 0 2px #3b82f6;':''}">
+          <span style="font-size:11px;font-weight:900;color:#15803d">${d}</span>
+          <div style="display:flex;gap:2px;align-items:center;margin-top:2px">
+            <span style="font-size:8px;font-weight:800;background:#22c55e;color:#fff;padding:1px 3px;border-radius:3px">✅${entry.count}</span>
+            ${isDoubleEntry ? `<span style="font-size:8px;font-weight:800;background:#3b82f6;color:#fff;padding:1px 3px;border-radius:3px" title="Double Entry: ${dupPumps.join(', ')} entered multiple times">⚡${dupPumps.join(',')}</span>` : ''}
+            ${hasMismatch ? `<span style="font-size:8px;font-weight:800;background:#f59e0b;color:#fff;padding:1px 3px;border-radius:3px" title="${mismatchTip.replace(/"/g, '&quot;')}">⚠️</span>` : ''}
+          </div>
+        </div>`;
       } else {
         mMissing++;
         hm += `<div onclick="onCalDateClick('${dStr}', false)" style="min-height:48px;border-radius:8px;background:rgba(239,68,68,.12);border:1.5px solid #ef4444;display:flex;flex-direction:column;align-items:center;justify-content:center;cursor:pointer;${isToday?'box-shadow:0 0 0 2px #ef4444;':''}"><span style="font-size:11px;font-weight:900;color:#b91c1c">${d}</span><span style="font-size:8px;font-weight:800;background:#ef4444;color:#fff;padding:1px 3px;border-radius:4px;margin-top:2px">⚠️ 0</span></div>`;
@@ -2758,7 +3022,7 @@ function renderShiftCalendar(yr, mo){
     $('calGridMob').innerHTML = hm;
 
     if($('calSummaryStatsMob')){
-      $('calSummaryStatsMob').innerHTML = `<span style="color:#22c55e">✅ Entered: ${mEntered}</span> &nbsp;|&nbsp; <span style="color:#ef4444">⚠️ Missing: ${mMissing}</span> &nbsp;|&nbsp; <span style="color:#94a3b8">⏳ Remaining: ${mUpcoming}</span>`;
+      $('calSummaryStatsMob').innerHTML = `<span style="color:#22c55e">✅ Entered: ${mEntered}</span> &nbsp;|&nbsp; <span style="color:#ef4444">⚠️ Missing: ${mMissing}</span> &nbsp;|&nbsp; <span style="color:#94a3b8">⏳ Upcoming: ${mUpcoming}</span>`;
     }
   }
 }
