@@ -36,6 +36,7 @@ export default {
 
     const url = new URL(request.url);
     const kv = env.KV;
+    const db = env.DB;
     const path = url.pathname.toLowerCase();
 
     // Static Web App Routes (GET)
@@ -64,7 +65,7 @@ export default {
       try {
         const body = await request.json();
         const action = body.action || url.searchParams.get('action');
-        return await handleApiAction(action, body, kv);
+        return await handleApiAction(action, body, kv, db);
       } catch (err) {
         return json({ ok: false, error: err.message || 'Server error' }, 500);
       }
@@ -74,12 +75,18 @@ export default {
   }
 };
 
-async function handleApiAction(action, body, kv) {
+async function handleApiAction(action, body, kv, db) {
   if (!kv) {
     return json({ ok: false, error: 'KV Namespace not configured.' }, 500);
   }
 
   switch (action) {
+    case 'syncD1':
+      return await handleSyncD1(kv, db);
+
+    case 'queryD1':
+      return await handleQueryD1(body, db);
+
     case 'loginUser':
       return await handleLogin(body, kv);
 
@@ -96,7 +103,7 @@ async function handleApiAction(action, body, kv) {
       return await handleGetLastClosing(body, kv);
 
     case 'saveShift':
-      return await handleSaveShift(body, kv);
+      return await handleSaveShift(body, kv, db);
 
     case 'getShifts':
       return await handleGetShifts(body, kv);
@@ -105,7 +112,7 @@ async function handleApiAction(action, body, kv) {
       return await handleGetShift(body, kv);
 
     case 'updateShift':
-      return await handleUpdateShift(body, kv);
+      return await handleUpdateShift(body, kv, db);
 
     case 'changeShiftDate':
       return await handleChangeShiftDate(body, kv);
@@ -126,7 +133,7 @@ async function handleApiAction(action, body, kv) {
       return await handleGetStockPurchases(kv);
 
     case 'saveStockPurchase':
-      return await handleSaveStockPurchase(body, kv);
+      return await handleSaveStockPurchase(body, kv, db);
 
     case 'getOTPPending':
       return await handleGetOTPPending(kv);
@@ -141,10 +148,10 @@ async function handleApiAction(action, body, kv) {
       return await handleSaveDSRDip(body, kv);
 
     case 'saveDSRDipReading':
-      return await handleSaveDSRDipReading(body, kv);
+      return await handleSaveDSRDipReading(body, kv, db);
 
     case 'saveDSROpening':
-      return await handleSaveDSROpening(body, kv);
+      return await handleSaveDSROpening(body, kv, db);
 
     case 'saveSetting':
       return await handleSaveSetting(body, kv);
@@ -391,7 +398,7 @@ async function handleGetShift(body, kv) {
   return json({ ok: true, shift: found });
 }
 
-async function handleSaveShift(body, kv) {
+async function handleSaveShift(body, kv, db) {
   const d = body.data || body;
   const shiftId = d.Shift_ID || ('SH-' + Math.random().toString(36).substring(2, 10).toUpperCase());
 
@@ -445,10 +452,39 @@ async function handleSaveShift(body, kv) {
     await kv.put('otp_settlements', JSON.stringify({ settlements }));
   }
 
+  if (db) {
+    try {
+      await db.prepare(`
+        INSERT OR REPLACE INTO Shifts (
+          Shift_ID, Date, Shift, Staff_ID, Staff_Name, Pump_No,
+          Petrol_Litres, Petrol_Amount, Diesel_Litres, Diesel_Amount,
+          CNG_KG, CNG_Amount, Total_Sales, Online_Amount, OTP_Amount,
+          Cash_Total, Change_Amount, Expenditure, Expenditure_Type,
+          Expenditure_Remarks, Testing_Amount, Total_Collected, Difference,
+          Status, Entered_By, Entered_By_Name, Created_At, Updated_At
+        ) VALUES (
+          ?, ?, ?, ?, ?, ?,
+          ?, ?, ?, ?,
+          ?, ?, ?, ?, ?,
+          ?, ?, ?, ?,
+          ?, ?, ?, ?,
+          ?, ?, ?, ?, ?
+        )
+      `).bind(
+        newShift.Shift_ID, newShift.Date, newShift.Shift || 'S1', newShift.Staff_ID, newShift.Staff_Name, Number(newShift.Pump_No) || 1,
+        Number(newShift.Petrol_Litres) || 0, Number(newShift.Petrol_Amount) || 0, Number(newShift.Diesel_Litres) || 0, Number(newShift.Diesel_Amount) || 0,
+        Number(newShift.CNG_KG) || 0, Number(newShift.CNG_Amount) || 0, Number(newShift.Total_Sales) || 0, Number(newShift.Online_Amount) || 0, Number(newShift.OTP_Amount) || 0,
+        Number(newShift.Cash_Total) || 0, Number(newShift.Change_Amount) || 0, Number(newShift.Expenditure) || 0, String(newShift.Expenditure_Type || ''),
+        String(newShift.Expenditure_Remarks || ''), Number(newShift.Testing_Amount) || 0, Number(newShift.Total_Collected) || 0, Number(newShift.Difference) || 0,
+        String(newShift.Status || 'Saved'), String(newShift.Staff_ID), String(newShift.Staff_Name), newShift.Created_At, newShift.Updated_At
+      ).run();
+    } catch (e) { console.error('D1 saveShift error:', e); }
+  }
+
   return json({ ok: true, shiftId, message: 'Shift saved successfully' });
 }
 
-async function handleUpdateShift(body, kv) {
+async function handleUpdateShift(body, kv, db) {
   const d = body.data || body;
   const shiftId = String(body.shiftId || d.Shift_ID || '').trim();
 
@@ -1178,6 +1214,270 @@ async function handleSaveSetting(body, kv) {
 async function sha256(str) {
   const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(str));
   return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2, '0')).join('');
+}
+
+// -------------------------------------------------------------
+// Cloudflare D1 SQL Database Integration
+// -------------------------------------------------------------
+async function initD1Tables(db) {
+  if (!db) return;
+  const schema = `
+    CREATE TABLE IF NOT EXISTS shifts (
+      shift_id TEXT PRIMARY KEY,
+      date TEXT,
+      shift TEXT,
+      staff_id TEXT,
+      staff_name TEXT,
+      pump_no INTEGER,
+      petrol_litres REAL,
+      petrol_amount REAL,
+      diesel_litres REAL,
+      diesel_amount REAL,
+      cng_kg REAL,
+      cng_amount REAL,
+      total_sales REAL,
+      online_amount REAL,
+      otp_amount REAL,
+      cash_total REAL,
+      change_amount REAL,
+      expenditure REAL,
+      expenditure_type TEXT,
+      expenditure_remarks TEXT,
+      testing_amount REAL,
+      total_collected REAL,
+      difference REAL,
+      status TEXT,
+      created_at TEXT,
+      updated_at TEXT,
+      raw_json TEXT
+    );
+
+    CREATE TABLE IF NOT EXISTS staff (
+      staff_id TEXT PRIMARY KEY,
+      name TEXT,
+      role TEXT,
+      phone TEXT,
+      pin TEXT,
+      active INTEGER,
+      created_at TEXT
+    );
+
+    CREATE TABLE IF NOT EXISTS stock_purchases (
+      purchase_id TEXT PRIMARY KEY,
+      purchase_date TEXT,
+      fuel_type TEXT,
+      quantity_kg REAL,
+      rate REAL,
+      total_amount REAL,
+      supplier TEXT,
+      invoice_no TEXT,
+      payment_type TEXT,
+      remarks TEXT,
+      entered_by TEXT,
+      entered_by_name TEXT,
+      created_at TEXT
+    );
+
+    CREATE TABLE IF NOT EXISTS dsr_opening (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      date TEXT,
+      fuel_type TEXT,
+      opening_stock REAL,
+      created_at TEXT,
+      updated_at TEXT
+    );
+
+    CREATE TABLE IF NOT EXISTS dsr_dip (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      date TEXT,
+      fuel_type TEXT,
+      closing_dip REAL,
+      remarks TEXT,
+      created_at TEXT,
+      updated_at TEXT
+    );
+
+    CREATE TABLE IF NOT EXISTS settings (
+      key TEXT PRIMARY KEY,
+      value TEXT,
+      updated_at TEXT
+    );
+  `;
+  try {
+    await db.exec(schema);
+  } catch (e) {
+    console.error("D1 schema init error:", e);
+  }
+}
+
+async function handleSyncD1(kv, db) {
+  if (!db) return json({ ok: false, error: 'D1 binding not configured' }, 400);
+  await initD1Tables(db);
+
+  // 1. Sync Staff
+  const staffData = await kv.get('staff', 'json');
+  const staffList = (staffData && staffData.staff) || [];
+  for (const s of staffList) {
+    try {
+      await db.prepare(`
+        INSERT OR REPLACE INTO staff (staff_id, name, role, phone, pin, active, created_at)
+        VALUES (?, ?, ?, ?, ?, ?, ?)
+      `).bind(
+        String(s.Staff_ID || ''),
+        String(s.Staff_Name || s.name || ''),
+        String(s.Role || s.role || 'Employee'),
+        String(s.Phone || s.phone || ''),
+        String(s.PIN || s.pin || '1234'),
+        s.Active !== false ? 1 : 0,
+        new Date().toISOString()
+      ).run();
+    } catch(err) { console.error("Error inserting staff into D1:", err); }
+  }
+
+  // 2. Sync Shifts
+  const shiftsData = await kv.get('shifts', 'json');
+  const shifts = (shiftsData && shiftsData.shifts) || [];
+  let shiftsSynced = 0;
+  for (const r of shifts) {
+    try {
+      const num = (v) => Number(v) || 0;
+      await db.prepare(`
+        INSERT OR REPLACE INTO shifts (
+          shift_id, date, shift, staff_id, staff_name, pump_no,
+          petrol_litres, petrol_amount, diesel_litres, diesel_amount,
+          cng_kg, cng_amount, total_sales, online_amount, otp_amount,
+          cash_total, change_amount, expenditure, expenditure_type,
+          expenditure_remarks, testing_amount, total_collected, difference,
+          status, created_at, updated_at, raw_json
+        ) VALUES (
+          ?, ?, ?, ?, ?, ?,
+          ?, ?, ?, ?,
+          ?, ?, ?, ?, ?,
+          ?, ?, ?, ?,
+          ?, ?, ?, ?,
+          ?, ?, ?, ?
+        )
+      `).bind(
+        String(r.Shift_ID || ''),
+        String(r.Date || ''),
+        String(r.Shift || 'S1'),
+        String(r.Staff_ID || ''),
+        String(r.Staff_Name || ''),
+        Number(r.Pump_No) || 1,
+        num(r.Petrol_Litres || r.Petrol_Total_Litres),
+        num(r.Petrol_Amount),
+        num(r.Diesel_Litres || r.Diesel_Total_Litres),
+        num(r.Diesel_Amount),
+        num(r.CNG_KG || r.CNG_Total_Kg),
+        num(r.CNG_Amount),
+        num(r.Total_Sales),
+        num(r.Online_Amount),
+        num(r.OTP_Amount),
+        num(r.Cash_Total),
+        num(r.Change_Amount),
+        num(r.Expenditure),
+        String(r.Expenditure_Type || ''),
+        String(r.Expenditure_Remarks || ''),
+        num(r.Testing_Amount),
+        num(r.Total_Collected),
+        num(r.Difference),
+        String(r.Status || 'Saved'),
+        String(r.Created_At || new Date().toISOString()),
+        String(r.Updated_At || new Date().toISOString()),
+        JSON.stringify(r)
+      ).run();
+      shiftsSynced++;
+    } catch (err) { console.error("Error inserting shift into D1:", err); }
+  }
+
+  // 3. Sync Stock Purchases
+  const stockData = await kv.get('stock_purchases', 'json');
+  const purchases = (stockData && stockData.purchases) || [];
+  for (const p of purchases) {
+    try {
+      await db.prepare(`
+        INSERT OR REPLACE INTO stock_purchases (
+          purchase_id, purchase_date, fuel_type, quantity_kg, rate, total_amount,
+          supplier, invoice_no, payment_type, remarks, entered_by, entered_by_name, created_at
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      `).bind(
+        String(p.Purchase_ID || ''),
+        String(p.Purchase_Date || p.Date || ''),
+        String(p.Fuel_Type || ''),
+        Number(p.Quantity_KG || p.Quantity || p.Litres) || 0,
+        Number(p.Rate) || 0,
+        Number(p.Total_Amount) || 0,
+        String(p.Supplier || 'HPCL'),
+        String(p.Invoice_No || ''),
+        String(p.Payment_Type || ''),
+        String(p.Remarks || ''),
+        String(p.Entered_By || ''),
+        String(p.Entered_By_Name || ''),
+        String(p.Created_At || new Date().toISOString())
+      ).run();
+    } catch (err) { console.error("Error inserting stock purchase into D1:", err); }
+  }
+
+  // 4. Sync DSR Openings
+  const openData = await kv.get('dsr_opening', 'json');
+  const openings = (openData && openData.openings) || [];
+  for (const o of openings) {
+    try {
+      await db.prepare(`
+        INSERT INTO dsr_opening (date, fuel_type, opening_stock, created_at, updated_at)
+        VALUES (?, ?, ?, ?, ?)
+      `).bind(
+        String(o.Date || ''),
+        String(o.Fuel_Type || ''),
+        Number(o.Opening_Stock) || 0,
+        String(o.Created_At || new Date().toISOString()),
+        new Date().toISOString()
+      ).run();
+    } catch (err) { console.error("Error inserting dsr_opening into D1:", err); }
+  }
+
+  // 5. Sync DSR Dips
+  const dipData = await kv.get('dsr_dip', 'json');
+  const dips = (dipData && dipData.dips) || [];
+  for (const d of dips) {
+    try {
+      await db.prepare(`
+        INSERT INTO dsr_dip (date, fuel_type, closing_dip, remarks, created_at, updated_at)
+        VALUES (?, ?, ?, ?, ?)
+      `).bind(
+        String(d.Date || ''),
+        String(d.Fuel_Type || ''),
+        Number(d.Closing_Dip) || 0,
+        String(d.Remarks || ''),
+        String(d.Created_At || new Date().toISOString()),
+        new Date().toISOString()
+      ).run();
+    } catch (err) { console.error("Error inserting dsr_dip into D1:", err); }
+  }
+
+  return json({
+    ok: true,
+    message: 'Cloudflare D1 SQL Database synchronized successfully!',
+    database_id: '998c1e4d-53f8-4a22-820d-9509f563ef11',
+    synced: {
+      shifts: shiftsSynced,
+      staff: staffList.length,
+      stock_purchases: purchases.length,
+      dsr_openings: openings.length,
+      dsr_dips: dips.length
+    }
+  });
+}
+
+async function handleQueryD1(body, db) {
+  if (!db) return json({ ok: false, error: 'D1 database binding missing' }, 400);
+  const sql = String(body.sql || 'SELECT name FROM sqlite_master WHERE type="table"');
+  try {
+    const res = await db.prepare(sql).all();
+    return json({ ok: true, results: res.results });
+  } catch (err) {
+    return json({ ok: false, error: err.message }, 500);
+  }
 }
 
 // Embedded Web Frontend
