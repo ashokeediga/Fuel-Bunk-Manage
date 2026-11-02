@@ -1,0 +1,1338 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Fuel Bunk Manager · 100% Offline Edition</title>
+<style>
+  :root {
+    --bg: #0b1329;
+    --bg-card: #131f37;
+    --bg-card-hover: #192847;
+    --line: #223458;
+    --pri: #3b82f6;
+    --pri-hover: #2563eb;
+    --suc: #10b981;
+    --war: #f59e0b;
+    --dan: #ef4444;
+    --pur: #8b5cf6;
+    --t1: #f1f5f9;
+    --t2: #94a3b8;
+    --t3: #64748b;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; }
+  body { background: var(--bg); color: var(--t1); min-height: 100vh; display: flex; flex-direction: column; }
+  
+  /* Topbar */
+  header { background: #0f172a; border-bottom: 1px solid var(--line); padding: 12px 24px; display: flex; justify-content: space-between; align-items: center; position: sticky; top: 0; z-index: 100; }
+  .logo-area { display: flex; align-items: center; gap: 12px; }
+  .logo-icon { width: 36px; height: 36px; border-radius: 10px; background: linear-gradient(135deg, var(--pri), var(--pur)); display: grid; place-items: center; font-size: 18px; font-weight: 900; }
+  .logo-title h1 { font-size: 16px; font-weight: 800; letter-spacing: 0.5px; }
+  .logo-title p { font-size: 11px; color: var(--t2); }
+  .offline-badge { font-size: 10.5px; font-weight: 800; background: rgba(16,185,129,.15); color: #34d399; border: 1px solid rgba(16,185,129,.3); padding: 4px 10px; border-radius: 20px; display: flex; align-items: center; gap: 5px; }
+  .pulse-dot { width: 7px; height: 7px; border-radius: 50%; background: #10b981; box-shadow: 0 0 8px #10b981; }
+
+  /* Navigation Bar */
+  nav { background: #111e38; border-bottom: 1px solid var(--line); display: flex; gap: 4px; padding: 0 24px; overflow-x: auto; }
+  .nav-btn { background: none; border: none; color: var(--t2); padding: 14px 18px; font-size: 13px; font-weight: 700; cursor: pointer; border-bottom: 3px solid transparent; transition: all .15s; display: flex; align-items: center; gap: 8px; white-space: nowrap; }
+  .nav-btn:hover { color: var(--t1); background: rgba(255,255,255,.03); }
+  .nav-btn.active { color: #60a5fa; border-bottom-color: var(--pri); background: rgba(59,130,246,.08); }
+
+  /* Content Container */
+  main { flex: 1; padding: 24px; max-width: 1300px; margin: 0 auto; width: 100%; }
+  .tab-pane { display: none; }
+  .tab-pane.active { display: block; animation: fadeIn .2s ease-in; }
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: translateY(0); } }
+
+  /* Cards & Grid */
+  .grid-4 { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 16px; margin-bottom: 24px; }
+  .kpi-card { background: var(--bg-card); border: 1px solid var(--line); border-radius: 12px; padding: 18px; position: relative; overflow: hidden; }
+  .kpi-card::before { content: ''; position: absolute; top: 0; left: 0; width: 4px; height: 100%; background: var(--pri); }
+  .kpi-card.green::before { background: var(--suc); }
+  .kpi-card.orange::before { background: var(--war); }
+  .kpi-card.purple::before { background: var(--pur); }
+  .kpi-title { font-size: 12px; font-weight: 700; color: var(--t2); text-transform: uppercase; margin-bottom: 6px; }
+  .kpi-val { font-size: 24px; font-weight: 900; color: #fff; }
+  .kpi-sub { font-size: 11px; color: var(--t3); margin-top: 4px; }
+
+  .card { background: var(--bg-card); border: 1px solid var(--line); border-radius: 14px; padding: 20px; margin-bottom: 20px; box-shadow: 0 4px 16px rgba(0,0,0,.2); }
+  .card-hdr { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; padding-bottom: 12px; border-bottom: 1px solid var(--line); }
+  .card-hdr h3 { font-size: 15px; font-weight: 800; }
+
+  /* Form Elements */
+  .f-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 14px; margin-bottom: 14px; }
+  .f-group { display: flex; flex-direction: column; gap: 6px; }
+  .f-group label { font-size: 11.5px; font-weight: 700; color: var(--t2); text-transform: uppercase; }
+  .f-group input, .f-group select, .f-group textarea { background: #0c1527; border: 1.5px solid var(--line); color: #fff; padding: 10px 12px; border-radius: 8px; font-size: 13.5px; font-weight: 600; outline: none; transition: border .15s; }
+  .f-group input:focus, .f-group select:focus, .f-group textarea:focus { border-color: var(--pri); box-shadow: 0 0 0 3px rgba(59,130,246,.15); }
+
+  /* Buttons */
+  .btn { padding: 9px 16px; font-size: 12.5px; font-weight: 700; border-radius: 8px; border: none; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; transition: all .15s; text-decoration: none; }
+  .btn-pri { background: var(--pri); color: #fff; }
+  .btn-pri:hover { background: var(--pri-hover); }
+  .btn-suc { background: var(--suc); color: #fff; }
+  .btn-suc:hover { background: #059669; }
+  .btn-dan { background: var(--dan); color: #fff; }
+  .btn-dan:hover { background: #dc2626; }
+  .btn-ghost { background: transparent; border: 1px solid var(--line); color: var(--t2); }
+  .btn-ghost:hover { background: rgba(255,255,255,.05); color: var(--t1); border-color: var(--t3); }
+  .btn-sm { padding: 5px 10px; font-size: 11.5px; }
+
+  /* Table */
+  .tbl-wrap { overflow-x: auto; border-radius: 10px; border: 1px solid var(--line); }
+  table { width: 100%; border-collapse: collapse; font-size: 12.5px; text-align: left; }
+  th { background: #0e182e; color: var(--t2); font-weight: 800; padding: 12px 14px; text-transform: uppercase; font-size: 11px; letter-spacing: 0.5px; border-bottom: 1px solid var(--line); }
+  td { padding: 11px 14px; border-bottom: 1px solid var(--line); color: var(--t1); }
+  tr:hover td { background: var(--bg-card-hover); }
+
+  /* Tally Badge */
+  .tally-badge { padding: 12px 16px; border-radius: 10px; font-size: 14px; font-weight: 800; display: flex; justify-content: space-between; align-items: center; margin-top: 14px; }
+  .tally-ok { background: rgba(16,185,129,.15); color: #34d399; border: 1.5px solid #10b981; }
+  .tally-short { background: rgba(239,68,68,.15); color: #f87171; border: 1.5px solid #ef4444; }
+  .tally-excess { background: rgba(245,158,11,.15); color: #fbbf24; border: 1.5px solid #f59e0b; }
+
+  /* Modal */
+  .modal-mask { position: fixed; inset: 0; background: rgba(0,0,0,.75); backdrop-filter: blur(4px); display: none; place-items: center; z-index: 200; padding: 20px; }
+  .modal-mask.show { display: grid; }
+  .modal-box { background: var(--bg-card); border: 1px solid var(--line); border-radius: 16px; width: 100%; max-width: 850px; max-height: 90vh; overflow-y: auto; padding: 24px; box-shadow: 0 10px 40px rgba(0,0,0,.5); }
+
+  /* Calendar Grid */
+  .cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 6px; }
+  .cal-day-hdr { text-align: center; font-size: 11px; font-weight: 800; color: var(--t2); padding: 6px; }
+  .cal-cell { min-height: 78px; background: #0d1629; border: 1px solid var(--line); border-radius: 8px; padding: 6px; display: flex; flex-direction: column; justify-content: space-between; cursor: pointer; transition: transform .1s; }
+  .cal-cell:hover { border-color: var(--pri); transform: scale(1.02); }
+  .cal-cell.entered { background: rgba(16,185,129,.08); border-color: rgba(16,185,129,.4); }
+  .cal-cell.missing { background: rgba(239,68,68,.08); border-color: rgba(239,68,68,.4); }
+  .cal-cell.has-mismatch { border-color: var(--war) !important; box-shadow: 0 0 0 1px var(--war); }
+  .cal-cell-num { font-size: 12px; font-weight: 800; }
+  .cal-badge { font-size: 9px; font-weight: 800; padding: 1px 4px; border-radius: 4px; }
+
+  /* Toast Notification */
+  #toast { position: fixed; bottom: 24px; right: 24px; background: #1e293b; color: #fff; padding: 12px 20px; border-radius: 10px; border: 1px solid var(--line); font-size: 13px; font-weight: 700; box-shadow: 0 8px 24px rgba(0,0,0,.4); display: none; z-index: 999; }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo-area">
+    <div class="logo-icon">⛽</div>
+    <div class="logo-title">
+      <h1 id="hdrBunkName">NLK Filling Station · HPCL</h1>
+      <p>100% Offline Python Edition · Zero Cloud Dependency</p>
+    </div>
+  </div>
+  <div style="display:flex;align-items:center;gap:14px">
+    <div class="offline-badge">
+      <div class="pulse-dot"></div>
+      <span>OFFLINE SQLITE ENGINE</span>
+    </div>
+    <button class="btn btn-ghost btn-sm" onclick="quickBackup()">💾 1-Click Backup</button>
+  </div>
+</header>
+
+<nav>
+  <button class="nav-btn active" onclick="tab('dash')">📊 Dashboard & KPIs</button>
+  <button class="nav-btn" onclick="tab('entry')">⛽ New Shift Entry</button>
+  <button class="nav-btn" onclick="tab('shifts')">📋 Shift History & Edit</button>
+  <button class="nav-btn" onclick="tab('cal')">📅 Monthly Shift Calendar</button>
+  <button class="nav-btn" onclick="tab('stock')">🛢️ Fuel Stock Purchases</button>
+  <button class="nav-btn" onclick="tab('staff')">👥 Staff & Settings</button>
+  <button class="nav-btn" onclick="tab('backup')">💾 Database Backup & Restore</button>
+</nav>
+
+<main>
+
+  <!-- TAB 1: DASHBOARD -->
+  <section id="pane-dash" class="tab-pane active">
+    <div class="grid-4">
+      <div class="kpi-card green">
+        <div class="kpi-title">Today's Total Sales</div>
+        <div class="kpi-val" id="kpiTodaySales">₹ 0.00</div>
+        <div class="kpi-sub" id="kpiTodayDate">Date: -</div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-title">This Month Sales</div>
+        <div class="kpi-val" id="kpiMonthSales">₹ 0.00</div>
+        <div class="kpi-sub" id="kpiMonthCount">0 Shifts Recorded</div>
+      </div>
+      <div class="kpi-card orange">
+        <div class="kpi-title">Monthly Expenses</div>
+        <div class="kpi-val" id="kpiMonthExp">₹ 0.00</div>
+        <div class="kpi-sub">Expenditures Total</div>
+      </div>
+      <div class="kpi-card purple">
+        <div class="kpi-title">Cash Difference Tally</div>
+        <div class="kpi-val" id="kpiMonthDiff">₹ 0.00</div>
+        <div class="kpi-sub" id="kpiDiffStatus">Status: Balanced</div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-hdr">
+        <h3>⚡ Quick Actions & Overview</h3>
+        <button class="btn btn-pri btn-sm" onclick="tab('entry')">+ Enter Shift Record</button>
+      </div>
+      <p style="font-size:13px;color:var(--t2);line-height:1.6">
+        Welcome to the <b>100% Offline Fuel Bunk Management System</b>. All your data is stored locally in <code>fuel_bunk.db</code> (SQLite).
+        When entering shifts, the previous shift's closing meter readings are <b>automatically fetched and prefilled</b> as today's opening readings.
+      </p>
+    </div>
+
+    <div class="card">
+      <div class="card-hdr">
+        <h3>Recent Shift Records</h3>
+        <button class="btn btn-ghost btn-sm" onclick="tab('shifts')">View All Shifts →</button>
+      </div>
+      <div class="tbl-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Date</th>
+              <th>Pump</th>
+              <th>Staff</th>
+              <th>Sales (₹)</th>
+              <th>Net Cash (₹)</th>
+              <th>Online (₹)</th>
+              <th>OTP (₹)</th>
+              <th>HP Pay (₹)</th>
+              <th>Exp (₹)</th>
+              <th>Tally Diff</th>
+            </tr>
+          </thead>
+          <tbody id="dashRecentShiftsBody">
+            <tr><td colspan="10" style="text-align:center;padding:16px;color:var(--t3)">Loading records...</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <!-- TAB 2: NEW SHIFT ENTRY -->
+  <section id="pane-entry" class="tab-pane">
+    <div class="card">
+      <div class="card-hdr">
+        <h3>⛽ Shift Sale Entry Form</h3>
+        <span style="font-size:12px;color:#34d399;font-weight:700">⚡ Auto-Prefill Opening Readings Enabled</span>
+      </div>
+
+      <!-- 1. Header Information -->
+      <div class="f-row">
+        <div class="f-group">
+          <label>Shift Date</label>
+          <input type="date" id="entryDate" onchange="loadOpeningsForSelectedPump()">
+        </div>
+        <div class="f-group">
+          <label>Select Pump</label>
+          <select id="entryPump" onchange="loadOpeningsForSelectedPump()">
+            <option value="1">Pump 1 (Petrol & Diesel)</option>
+            <option value="2">Pump 2 (Petrol & Diesel)</option>
+            <option value="3">Pump 3 (CNG)</option>
+          </select>
+        </div>
+        <div class="f-group">
+          <label>Duty Staff / Employee</label>
+          <select id="entryStaff"></select>
+        </div>
+        <div class="f-group">
+          <label>Shift Batch</label>
+          <select id="entryShiftBatch">
+            <option value="S1">S1 (General Shift)</option>
+            <option value="S2">S2 (Night Shift)</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- Mid-shift rate toggle -->
+      <div style="background:#17233f;border:1px dashed var(--war);padding:10px 14px;border-radius:8px;margin-bottom:16px;display:flex;align-items:center;justify-content:space-between">
+        <div>
+          <b style="color:var(--war);font-size:12.5px">⚡ Mid-Shift Fuel Rate Change</b>
+          <div style="font-size:11px;color:var(--t2)">Enable only if rate changed in the middle of this shift</div>
+        </div>
+        <input type="checkbox" id="splitRateToggle" onchange="toggleSplitFields()" style="width:18px;height:18px;cursor:pointer">
+      </div>
+
+      <!-- 2. Nozzle Readings Section (Populated dynamically) -->
+      <div id="nozzleFieldsContainer"></div>
+
+      <!-- 3. Collections & Expenses -->
+      <div class="card" style="margin-top:16px;background:#0d1629">
+        <div class="card-hdr">
+          <h3>💰 Collections & Digital Payments</h3>
+        </div>
+        <div class="f-row">
+          <div class="f-group">
+            <label>📱 Online / UPI ₹</label>
+            <input type="number" step="0.01" id="inpOnline" placeholder="0" oninput="calcTally()">
+          </div>
+          <div class="f-group">
+            <label>🔐 HPCL OTP / Fleet ₹</label>
+            <input type="number" step="0.01" id="inpOtp" placeholder="0" oninput="calcTally()">
+          </div>
+          <div class="f-group">
+            <label>⛽ HP Pay ₹</label>
+            <input type="number" step="0.01" id="inpHpPay" placeholder="0" oninput="calcTally()">
+          </div>
+          <div class="f-group">
+            <label>🧪 Testing Litres / Amount ₹</label>
+            <input type="number" step="0.01" id="inpTesting" placeholder="0" oninput="calcTally()">
+          </div>
+        </div>
+      </div>
+
+      <!-- Multiple Expenditures -->
+      <div class="card" style="background:#0d1629;border:1.5px dashed var(--line)">
+        <div class="card-hdr">
+          <h3>💸 Multiple Shift Expenditures</h3>
+          <button type="button" class="btn btn-ghost btn-sm" onclick="addExpenseRow()">+ Add Expense</button>
+        </div>
+        <div id="expenseRowsBox" style="display:flex;flex-direction:column;gap:8px"></div>
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-top:10px;padding-top:8px;border-top:1px dashed var(--line);font-size:13px;font-weight:800">
+          <span>Total Expenditure:</span>
+          <span id="expTotalLabel" style="color:#ef4444;font-size:14px">₹ 0.00</span>
+        </div>
+      </div>
+
+      <!-- Net Cash at the End -->
+      <div class="f-row" style="margin-top:16px">
+        <div class="f-group" style="grid-column: span 2">
+          <label style="color:#60a5fa;font-size:13px;font-weight:900">💵 Net Cash Total (Collected from Hand) ₹</label>
+          <input type="number" step="0.01" id="inpCash" placeholder="0" style="font-size:18px;font-weight:900;border-color:var(--pri)" oninput="calcTally()">
+        </div>
+      </div>
+
+      <!-- Live Tally Status Banner -->
+      <div id="tallyBanner" class="tally-badge tally-ok">
+        <div>
+          <span style="font-size:12px;text-transform:uppercase;color:var(--t2)">Total Sales: </span>
+          <b id="lblTotalSales" style="font-size:16px;color:#fff">₹ 0.00</b>
+        </div>
+        <div>
+          <span style="font-size:12px;text-transform:uppercase;color:var(--t2)">Difference: </span>
+          <b id="lblDifference">₹ 0.00 (Balanced)</b>
+        </div>
+      </div>
+
+      <div style="display:flex;justify-content:flex-end;gap:10px;margin-top:20px">
+        <button type="button" class="btn btn-ghost" onclick="resetEntryForm()">Reset Form</button>
+        <button type="button" class="btn btn-suc" style="padding:12px 24px;font-size:14px" onclick="saveShiftEntry()">💾 Save Shift Record</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- TAB 3: SHIFTS LIST & EDIT -->
+  <section id="pane-shifts" class="tab-pane">
+    <div class="card">
+      <div class="card-hdr">
+        <h3>📋 Shift History & Management</h3>
+        <div style="display:flex;gap:8px">
+          <input type="date" id="filterFrom" style="background:#0c1527;border:1px solid var(--line);color:#fff;padding:4px 8px;border-radius:6px;font-size:12px" onchange="loadShiftsList()">
+          <input type="date" id="filterTo" style="background:#0c1527;border:1px solid var(--line);color:#fff;padding:4px 8px;border-radius:6px;font-size:12px" onchange="loadShiftsList()">
+          <select id="filterPump" style="background:#0c1527;border:1px solid var(--line);color:#fff;padding:4px 8px;border-radius:6px;font-size:12px" onchange="loadShiftsList()">
+            <option value="">All Pumps</option>
+            <option value="1">Pump 1</option>
+            <option value="2">Pump 2</option>
+            <option value="3">Pump 3 (CNG)</option>
+          </select>
+          <button class="btn btn-ghost btn-sm" onclick="loadShiftsList()">🔄 Refresh</button>
+        </div>
+      </div>
+
+      <div class="tbl-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Date</th>
+              <th>Pump</th>
+              <th>Staff</th>
+              <th>Petrol (L / ₹)</th>
+              <th>Diesel (L / ₹)</th>
+              <th>CNG (KG / ₹)</th>
+              <th>Total Sales</th>
+              <th>Net Cash</th>
+              <th>Online / Digital</th>
+              <th>Difference</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody id="shiftsTableBody">
+            <tr><td colspan="11" style="text-align:center;padding:16px;color:var(--t3)">Loading shifts...</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <!-- TAB 4: CALENDAR -->
+  <section id="pane-cal" class="tab-pane">
+    <div class="card">
+      <div class="card-hdr">
+        <div>
+          <h3>📅 Monthly Shift Calendar & Mismatch Overview</h3>
+          <div style="font-size:11.5px;color:var(--t2);margin-top:2px">🟢 Green: Entered · ⚠️ Red: Missing · ⚡ Double Shift · ⚠️ Orange: Reading Mismatch</div>
+        </div>
+        <div style="display:flex;align-items:center;gap:8px">
+          <button class="btn btn-ghost btn-sm" onclick="calPrev()">← Prev Month</button>
+          <b id="calMonthLabel" style="font-size:14px;color:#fff;min-width:130px;text-align:center">October 2026</b>
+          <button class="btn btn-ghost btn-sm" onclick="calNext()">Next Month →</button>
+        </div>
+      </div>
+
+      <div class="cal-grid" id="calContainer">
+        <!-- Calendar days injected by JS -->
+      </div>
+    </div>
+  </section>
+
+  <!-- TAB 5: STOCK PURCHASES -->
+  <section id="pane-stock" class="tab-pane">
+    <div class="card">
+      <div class="card-hdr">
+        <h3>🛢️ Inward Fuel Stock Purchase Entry</h3>
+      </div>
+      <div class="f-row">
+        <div class="f-group">
+          <label>Purchase Date</label>
+          <input type="date" id="purDate">
+        </div>
+        <div class="f-group">
+          <label>Fuel Type</label>
+          <select id="purFuel">
+            <option value="Petrol">MS Petrol</option>
+            <option value="Diesel">HSD Diesel</option>
+            <option value="CNG">CNG Gas</option>
+          </select>
+        </div>
+        <div class="f-group">
+          <label>Quantity (Litres / KG)</label>
+          <input type="number" step="0.01" id="purQty" placeholder="0" oninput="calcPurTotal()">
+        </div>
+        <div class="f-group">
+          <label>Invoice Rate ₹</label>
+          <input type="number" step="0.01" id="purRate" placeholder="0" oninput="calcPurTotal()">
+        </div>
+        <div class="f-group">
+          <label>Total Invoice Amount ₹</label>
+          <input type="number" step="0.01" id="purTotal" placeholder="0">
+        </div>
+      </div>
+      <div class="f-row">
+        <div class="f-group">
+          <label>Supplier / Oil Company</label>
+          <input type="text" id="purSupplier" value="HPCL Terminal">
+        </div>
+        <div class="f-group">
+          <label>Invoice Number</label>
+          <input type="text" id="purInvoice" placeholder="e.g. INV-10928">
+        </div>
+        <div class="f-group">
+          <label>Payment Method</label>
+          <select id="purPayType">
+            <option value="Bank Transfer">Bank Transfer / NEFT</option>
+            <option value="Cheque">Cheque</option>
+            <option value="Cash">Cash</option>
+          </select>
+        </div>
+      </div>
+      <div style="display:flex;justify-content:flex-end">
+        <button class="btn btn-suc" onclick="savePurchase()">Save Inward Stock Entry</button>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-hdr"><h3>Stock Delivery Log</h3></div>
+      <div class="tbl-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Date</th>
+              <th>Fuel</th>
+              <th>Qty (L/KG)</th>
+              <th>Rate (₹)</th>
+              <th>Total Amount (₹)</th>
+              <th>Supplier</th>
+              <th>Invoice</th>
+              <th>Payment</th>
+            </tr>
+          </thead>
+          <tbody id="purTableBody">
+            <tr><td colspan="8" style="text-align:center;padding:16px;color:var(--t3)">No inward stock records found</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <!-- TAB 6: STAFF & SETTINGS -->
+  <section id="pane-staff" class="tab-pane">
+    <div class="grid-4" style="grid-template-columns: 1fr 1fr">
+      <div class="card">
+        <div class="card-hdr"><h3>⚙️ Fuel Rates & Bunk Settings</h3></div>
+        <div class="f-group" style="margin-bottom:12px">
+          <label>Station Display Name</label>
+          <input type="text" id="setBunkName">
+        </div>
+        <div class="f-row">
+          <div class="f-group">
+            <label>MS Petrol Rate ₹/L</label>
+            <input type="number" step="0.01" id="setPRate">
+          </div>
+          <div class="f-group">
+            <label>HSD Diesel Rate ₹/L</label>
+            <input type="number" step="0.01" id="setDRate">
+          </div>
+          <div class="f-group">
+            <label>CNG Rate ₹/KG</label>
+            <input type="number" step="0.01" id="setCRate">
+          </div>
+        </div>
+        <button class="btn btn-pri btn-sm" onclick="saveSettings()">Save Rate Settings</button>
+      </div>
+
+      <div class="card">
+        <div class="card-hdr"><h3>👤 Add / Edit Staff Member</h3></div>
+        <div class="f-row">
+          <div class="f-group">
+            <label>Staff ID</label>
+            <input type="text" id="staffId" placeholder="e.g. EMP004">
+          </div>
+          <div class="f-group">
+            <label>Full Name</label>
+            <input type="text" id="staffName" placeholder="Staff Name">
+          </div>
+        </div>
+        <div class="f-row">
+          <div class="f-group">
+            <label>Role</label>
+            <select id="staffRole">
+              <option value="Employee">Employee</option>
+              <option value="Manager">Manager</option>
+              <option value="Owner">Owner</option>
+            </select>
+          </div>
+          <div class="f-group">
+            <label>4-Digit Login PIN</label>
+            <input type="password" maxlength="4" id="staffPin" placeholder="1234">
+          </div>
+        </div>
+        <button class="btn btn-suc btn-sm" onclick="saveNewStaff()">Save Staff Member</button>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-hdr"><h3>Staff Directory</h3></div>
+      <div class="tbl-wrap">
+        <table>
+          <thead>
+            <tr><th>Staff ID</th><th>Name</th><th>Role</th><th>Mobile</th><th>Status</th><th>PIN</th></tr>
+          </thead>
+          <tbody id="staffTableBody"></tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <!-- TAB 7: BACKUP & RESTORE -->
+  <section id="pane-backup" class="tab-pane">
+    <div class="card">
+      <div class="card-hdr">
+        <h3>💾 Local SQLite Database Backup & Restore</h3>
+      </div>
+      <p style="font-size:13px;color:var(--t2);margin-bottom:16px">
+        Your complete business database is stored at <code>fuel_bunk.db</code>.
+        You can create instant backup snapshots anytime or restore from a previously created snapshot.
+      </p>
+      <div style="display:flex;gap:12px;margin-bottom:20px">
+        <button class="btn btn-suc" onclick="quickBackup()">Create Instant Backup Snapshot</button>
+      </div>
+
+      <h4 style="font-size:13px;color:var(--t2);margin-bottom:10px">Available Local Backups:</h4>
+      <div class="tbl-wrap">
+        <table>
+          <thead>
+            <tr><th>Backup Filename</th><th>Location</th><th>Action</th></tr>
+          </thead>
+          <tbody id="backupListBody">
+            <tr><td colspan="3" style="text-align:center;padding:14px;color:var(--t3)">Loading backups...</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+</main>
+
+<!-- EDIT SHIFT MODAL -->
+<div id="editModal" class="modal-mask">
+  <div class="modal-box">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;border-bottom:1px solid var(--line);padding-bottom:10px">
+      <h3>✏️ Edit Shift Record</h3>
+      <button class="btn btn-ghost btn-sm" onclick="closeEditModal()">✕ Close</button>
+    </div>
+    <div id="editModalContent"></div>
+  </div>
+</div>
+
+<div id="toast">Notification message</div>
+
+<script>
+const EXP_CATS = [
+  'Electricity', 'Generator Diesel', 'Tea & Snacks', 'Staff Food', 
+  'Daily Wages', 'Machine Repair', 'Printing & Stationery', 'Local Transport', 'Advance', 'General'
+];
+
+let __settings = {};
+let __staff = [];
+let __calYear = new Date().getFullYear();
+let __calMonth = new Date().getMonth() + 1;
+
+async function api(action, data = {}) {
+  try {
+    const res = await fetch('/api', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ action, ...data })
+    });
+    return await res.json();
+  } catch(e) {
+    console.error('API Error:', e);
+    return { ok: false, error: e.message };
+  }
+}
+
+function toast(msg, isErr = false) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.style.borderColor = isErr ? '#ef4444' : '#10b981';
+  t.style.display = 'block';
+  setTimeout(() => { t.style.display = 'none'; }, 3000);
+}
+
+function money(v) {
+  return '₹ ' + (Number(v) || 0).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+}
+
+function tab(name) {
+  document.querySelectorAll('.tab-pane').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+  const targetPane = document.getElementById('pane-' + name);
+  if(targetPane) targetPane.classList.add('active');
+  const navBtn = Array.from(document.querySelectorAll('.nav-btn')).find(b => b.getAttribute('onclick')?.includes(name));
+  if(navBtn) navBtn.classList.add('active');
+
+  if(name === 'dash') loadDashboard();
+  if(name === 'shifts') loadShiftsList();
+  if(name === 'cal') loadCalendar();
+  if(name === 'stock') loadStock();
+  if(name === 'staff') loadStaffAndSettings();
+  if(name === 'backup') loadBackups();
+  if(name === 'entry') {
+    if(!document.getElementById('entryDate').value) {
+      document.getElementById('entryDate').value = new Date().toISOString().slice(0, 10);
+    }
+    loadOpeningsForSelectedPump();
+  }
+}
+
+// --- INIT ---
+window.onload = async () => {
+  document.getElementById('entryDate').value = new Date().toISOString().slice(0, 10);
+  document.getElementById('purDate').value = new Date().toISOString().slice(0, 10);
+  await loadStaffAndSettings();
+  loadDashboard();
+  loadOpeningsForSelectedPump();
+};
+
+async function loadStaffAndSettings() {
+  const rSet = await api('getSettings');
+  if(rSet.ok) {
+    __settings = rSet.settings || {};
+    document.getElementById('hdrBunkName').textContent = __settings.bunk_name || 'NLK Filling Station · HPCL';
+    document.getElementById('setBunkName').value = __settings.bunk_name || '';
+    document.getElementById('setPRate').value = __settings.pRate || '116.96';
+    document.getElementById('setDRate').value = __settings.dRate || '105.01';
+    document.getElementById('setCRate').value = __settings.cRate || '114.00';
+  }
+
+  const rStaff = await api('getStaff');
+  if(rStaff.ok) {
+    __staff = rStaff.staff || [];
+    const sel = document.getElementById('entryStaff');
+    sel.innerHTML = '';
+    __staff.forEach(s => {
+      const opt = document.createElement('option');
+      opt.value = s.staff_id;
+      opt.textContent = `${s.staff_id} · ${s.staff_name} (${s.role})`;
+      sel.appendChild(opt);
+    });
+
+    const tbody = document.getElementById('staffTableBody');
+    tbody.innerHTML = __staff.map(s => `
+      <tr>
+        <td><b>${s.staff_id}</b></td>
+        <td>${s.staff_name}</td>
+        <td><span class="cal-badge" style="background:#1e293b;border:1px solid var(--line)">${s.role}</span></td>
+        <td>${s.mobile || '—'}</td>
+        <td><span style="color:${s.status==='Active'?'#34d399':'#ef4444'}">${s.status}</span></td>
+        <td>••••</td>
+      </tr>
+    `).join('');
+  }
+}
+
+// --- TAB 1: DASHBOARD ---
+async function loadDashboard() {
+  const r = await api('getShifts');
+  if(!r.ok) return;
+  const shifts = r.shifts || [];
+  const todayStr = new Date().toISOString().slice(0, 10);
+  const curMonthStr = todayStr.slice(0, 7);
+
+  const todayShifts = shifts.filter(s => s.date === todayStr);
+  const monthShifts = shifts.filter(s => s.date.slice(0, 7) === curMonthStr);
+
+  const todaySales = todayShifts.reduce((a, s) => a + Number(s.total_sales || 0), 0);
+  const monthSales = monthShifts.reduce((a, s) => a + Number(s.total_sales || 0), 0);
+  const monthExp = monthShifts.reduce((a, s) => a + Number(s.expenditure || 0), 0);
+  const monthDiff = monthShifts.reduce((a, s) => a + Number(s.difference || 0), 0);
+
+  document.getElementById('kpiTodaySales').textContent = money(todaySales);
+  document.getElementById('kpiTodayDate').textContent = 'Date: ' + todayStr;
+  document.getElementById('kpiMonthSales').textContent = money(monthSales);
+  document.getElementById('kpiMonthCount').textContent = monthShifts.length + ' Shifts Recorded';
+  document.getElementById('kpiMonthExp').textContent = money(monthExp);
+  document.getElementById('kpiMonthDiff').textContent = money(Math.abs(monthDiff));
+  document.getElementById('kpiDiffStatus').textContent = Math.abs(monthDiff) < 0.5 ? 'Status: Balanced ✅' : (monthDiff < 0 ? 'Status: Short Cash ⚠️' : 'Status: Excess Cash ℹ️');
+
+  const recent = shifts.slice(0, 8);
+  const tbody = document.getElementById('dashRecentShiftsBody');
+  if(!recent.length) {
+    tbody.innerHTML = '<tr><td colspan="10" style="text-align:center;padding:16px;color:var(--t3)">No shift entries yet. Click "+ Enter Shift Record" above!</td></tr>';
+    return;
+  }
+  tbody.innerHTML = recent.map(s => `
+    <tr>
+      <td><b>${s.date}</b></td>
+      <td><span class="cal-badge" style="background:#2563eb;color:#fff">P${s.pump_no}</span></td>
+      <td>${s.staff_id}</td>
+      <td><b>${money(s.total_sales)}</b></td>
+      <td>${money(s.cash_total)}</td>
+      <td>${money(s.online_amount)}</td>
+      <td>${money(s.otp_amount)}</td>
+      <td>${money(s.hp_pay_amount)}</td>
+      <td>${money(s.expenditure)}</td>
+      <td><span style="color:${Math.abs(s.difference)<0.5?'#34d399':(s.difference<0?'#ef4444':'#f59e0b')}">${money(s.difference)}</span></td>
+    </tr>
+  `).join('');
+}
+
+// --- TAB 2: SHIFT ENTRY ---
+let __lastClosingCache = {};
+
+async function loadOpeningsForSelectedPump() {
+  const p = Number(document.getElementById('entryPump').value) || 1;
+  const d = document.getElementById('entryDate').value || new Date().toISOString().slice(0, 10);
+  
+  const r = await api('getLastClosing', { pumpNo: p, date: d });
+  const c = (r.ok && r.closing) ? r.closing : {};
+  __lastClosingCache = c;
+
+  renderNozzleInputs(p, c);
+  calcTally();
+}
+
+function renderNozzleInputs(pumpNo, c) {
+  const container = document.getElementById('nozzleFieldsContainer');
+  const isSplit = document.getElementById('splitRateToggle').checked;
+  const isCNG = pumpNo === 3;
+
+  const pRate = __settings.pRate || '116.96';
+  const dRate = __settings.dRate || '105.01';
+  const cRate = __settings.cRate || '114.00';
+
+  if(!isCNG) {
+    container.innerHTML = `
+      <div style="background:#0e172d;border:1px solid var(--line);border-radius:12px;padding:16px;margin-bottom:14px">
+        <h4 style="color:#60a5fa;margin-bottom:12px;font-size:13px">⛽ MS Petrol Nozzles (P${pumpNo})</h4>
+        <div class="f-row">
+          <div class="f-group">
+            <label>MS N1 Open (Auto)</label>
+            <input type="number" step="0.01" id="pOpen1" value="${c.Petrol_1?.closing || ''}" placeholder="0" oninput="calcTally()">
+          </div>
+          ${isSplit ? `<div class="f-group"><label style="color:var(--war)">MS N1 Mid</label><input type="number" step="0.01" id="pMid1" placeholder="0" oninput="calcTally()"></div>` : ''}
+          <div class="f-group">
+            <label>MS N1 Close</label>
+            <input type="number" step="0.01" id="pClose1" placeholder="0" oninput="calcTally()">
+          </div>
+          <div class="f-group">
+            <label>MS N2 Open (Auto)</label>
+            <input type="number" step="0.01" id="pOpen2" value="${c.Petrol_2?.closing || ''}" placeholder="0" oninput="calcTally()">
+          </div>
+          ${isSplit ? `<div class="f-group"><label style="color:var(--war)">MS N2 Mid</label><input type="number" step="0.01" id="pMid2" placeholder="0" oninput="calcTally()"></div>` : ''}
+          <div class="f-group">
+            <label>MS N2 Close</label>
+            <input type="number" step="0.01" id="pClose2" placeholder="0" oninput="calcTally()">
+          </div>
+          <div class="f-group">
+            <label>MS Rate 1 ₹/L</label>
+            <input type="number" step="0.01" id="pRate" value="${pRate}" oninput="calcTally()">
+          </div>
+          ${isSplit ? `<div class="f-group"><label style="color:var(--war)">MS Rate 2 ₹/L</label><input type="number" step="0.01" id="pRate2" placeholder="Rate 2" oninput="calcTally()"></div>` : ''}
+        </div>
+      </div>
+
+      <div style="background:#0e172d;border:1px solid var(--line);border-radius:12px;padding:16px">
+        <h4 style="color:#34d399;margin-bottom:12px;font-size:13px">⛽ HSD Diesel Nozzles (P${pumpNo})</h4>
+        <div class="f-row">
+          <div class="f-group">
+            <label>HSD N1 Open (Auto)</label>
+            <input type="number" step="0.01" id="dOpen1" value="${c.Diesel_1?.closing || ''}" placeholder="0" oninput="calcTally()">
+          </div>
+          ${isSplit ? `<div class="f-group"><label style="color:var(--war)">HSD N1 Mid</label><input type="number" step="0.01" id="dMid1" placeholder="0" oninput="calcTally()"></div>` : ''}
+          <div class="f-group">
+            <label>HSD N1 Close</label>
+            <input type="number" step="0.01" id="dClose1" placeholder="0" oninput="calcTally()">
+          </div>
+          <div class="f-group">
+            <label>HSD N2 Open (Auto)</label>
+            <input type="number" step="0.01" id="dOpen2" value="${c.Diesel_2?.closing || ''}" placeholder="0" oninput="calcTally()">
+          </div>
+          ${isSplit ? `<div class="f-group"><label style="color:var(--war)">HSD N2 Mid</label><input type="number" step="0.01" id="dMid2" placeholder="0" oninput="calcTally()"></div>` : ''}
+          <div class="f-group">
+            <label>HSD N2 Close</label>
+            <input type="number" step="0.01" id="dClose2" placeholder="0" oninput="calcTally()">
+          </div>
+          <div class="f-group">
+            <label>HSD Rate 1 ₹/L</label>
+            <input type="number" step="0.01" id="dRate" value="${dRate}" oninput="calcTally()">
+          </div>
+          ${isSplit ? `<div class="f-group"><label style="color:var(--war)">HSD Rate 2 ₹/L</label><input type="number" step="0.01" id="dRate2" placeholder="Rate 2" oninput="calcTally()"></div>` : ''}
+        </div>
+      </div>
+    `;
+  } else {
+    container.innerHTML = `
+      <div style="background:#0e172d;border:1px solid var(--line);border-radius:12px;padding:16px">
+        <h4 style="color:#c084fc;margin-bottom:12px;font-size:13px">⛽ CNG Gas Nozzles (Pump 3)</h4>
+        <div class="f-row">
+          <div class="f-group">
+            <label>CNG N1 Open (Auto)</label>
+            <input type="number" step="0.01" id="cOpen1" value="${c.CNG_1?.closing || ''}" placeholder="0" oninput="calcTally()">
+          </div>
+          ${isSplit ? `<div class="f-group"><label style="color:var(--war)">CNG N1 Mid</label><input type="number" step="0.01" id="cMid1" placeholder="0" oninput="calcTally()"></div>` : ''}
+          <div class="f-group">
+            <label>CNG N1 Close</label>
+            <input type="number" step="0.01" id="cClose1" placeholder="0" oninput="calcTally()">
+          </div>
+          <div class="f-group">
+            <label>CNG N2 Open (Auto)</label>
+            <input type="number" step="0.01" id="cOpen2" value="${c.CNG_2?.closing || ''}" placeholder="0" oninput="calcTally()">
+          </div>
+          ${isSplit ? `<div class="f-group"><label style="color:var(--war)">CNG N2 Mid</label><input type="number" step="0.01" id="cMid2" placeholder="0" oninput="calcTally()"></div>` : ''}
+          <div class="f-group">
+            <label>CNG N2 Close</label>
+            <input type="number" step="0.01" id="cClose2" placeholder="0" oninput="calcTally()">
+          </div>
+          <div class="f-group">
+            <label>CNG Rate 1 ₹/KG</label>
+            <input type="number" step="0.01" id="cRate" value="${cRate}" oninput="calcTally()">
+          </div>
+          ${isSplit ? `<div class="f-group"><label style="color:var(--war)">CNG Rate 2 ₹/KG</label><input type="number" step="0.01" id="cRate2" placeholder="Rate 2" oninput="calcTally()"></div>` : ''}
+        </div>
+      </div>
+    `;
+  }
+}
+
+function toggleSplitFields() {
+  const p = Number(document.getElementById('entryPump').value) || 1;
+  renderNozzleInputs(p, __lastClosingCache);
+}
+
+function calcNoz(oId, mId, cId, r1Id, r2Id, isSplit) {
+  const o = Number(document.getElementById(oId)?.value || 0);
+  const c = Number(document.getElementById(cId)?.value || 0);
+  const m = Number(document.getElementById(mId)?.value || 0);
+  const r1 = Number(document.getElementById(r1Id)?.value || 0);
+  const r2 = Number(document.getElementById(r2Id)?.value || r1);
+
+  if(!isSplit || m <= o || m >= c) {
+    const lit = Math.max(0, c - o);
+    const amt = lit * r1;
+    return { lit, amt, rate: r1, rate1: r1, rate2: 0, open: o, close: c, mid: 0, l1: lit, a1: amt, l2: 0, a2: 0 };
+  }
+  const l1 = Math.max(0, m - o);
+  const a1 = l1 * r1;
+  const l2 = Math.max(0, c - m);
+  const a2 = l2 * r2;
+  const lit = l1 + l2;
+  const amt = a1 + a2;
+  const rate = lit > 0 ? (amt / lit) : r1;
+  return { lit, amt, rate, rate1: r1, rate2: r2, open: o, close: c, mid: m, l1, a1, l2, a2 };
+}
+
+function calcTally() {
+  const p = Number(document.getElementById('entryPump').value) || 1;
+  const isSplit = document.getElementById('splitRateToggle').checked;
+  const isCNG = p === 3;
+
+  let totalSales = 0;
+  if(!isCNG) {
+    const pn1 = calcNoz('pOpen1', 'pMid1', 'pClose1', 'pRate', 'pRate2', isSplit);
+    const pn2 = calcNoz('pOpen2', 'pMid2', 'pClose2', 'pRate', 'pRate2', isSplit);
+    const dn1 = calcNoz('dOpen1', 'dMid1', 'dClose1', 'dRate', 'dRate2', isSplit);
+    const dn2 = calcNoz('dOpen2', 'dMid2', 'dClose2', 'dRate', 'dRate2', isSplit);
+    totalSales = pn1.amt + pn2.amt + dn1.amt + dn2.amt;
+  } else {
+    const cn1 = calcNoz('cOpen1', 'cMid1', 'cClose1', 'cRate', 'cRate2', isSplit);
+    const cn2 = calcNoz('cOpen2', 'cMid2', 'cClose2', 'cRate', 'cRate2', isSplit);
+    totalSales = cn1.amt + cn2.amt;
+  }
+
+  const online = Number(document.getElementById('inpOnline').value || 0);
+  const otp = Number(document.getElementById('inpOtp').value || 0);
+  const hpPay = Number(document.getElementById('inpHpPay').value || 0);
+  const cash = Number(document.getElementById('inpCash').value || 0);
+  const testAmt = Number(document.getElementById('inpTesting').value || 0);
+  const expTotal = getExpensesTotal();
+
+  const collected = cash + online + otp + hpPay;
+  const diff = collected + expTotal + testAmt - totalSales;
+
+  document.getElementById('lblTotalSales').textContent = money(totalSales);
+  const banner = document.getElementById('tallyBanner');
+  const lblDiff = document.getElementById('lblDifference');
+
+  if(Math.abs(diff) < 0.5) {
+    banner.className = 'tally-badge tally-ok';
+    lblDiff.textContent = '₹ 0.00 (Balanced ✅)';
+  } else if(diff < 0) {
+    banner.className = 'tally-badge tally-short';
+    lblDiff.textContent = `- ${money(Math.abs(diff))} (Short Cash ⚠️)`;
+  } else {
+    banner.className = 'tally-badge tally-excess';
+    lblDiff.textContent = `+ ${money(diff)} (Excess Cash ℹ️)`;
+  }
+}
+
+// Dynamic Expenses
+function addExpenseRow(type = '', amt = '', rem = '') {
+  const box = document.getElementById('expenseRowsBox');
+  const div = document.createElement('div');
+  div.style = 'display:grid;grid-template-columns:160px 140px 1fr 36px;gap:8px;align-items:center';
+  const optHtml = EXP_CATS.map(c => `<option value="${c}" ${c===type?'selected':''}>${c}</option>`).join('');
+  div.innerHTML = `
+    <select class="exp-cat" style="padding:7px;background:#0c1527;border:1px solid var(--line);color:#fff;border-radius:6px;font-size:12px" onchange="calcTally()">${optHtml}</select>
+    <input type="number" step="0.01" class="exp-amt" placeholder="Amount ₹" value="${amt}" style="padding:7px;background:#0c1527;border:1px solid var(--line);color:#fff;border-radius:6px;font-size:12px" oninput="calcTally()">
+    <input type="text" class="exp-rem" placeholder="Remarks" value="${rem}" style="padding:7px;background:#0c1527;border:1px solid var(--line);color:#fff;border-radius:6px;font-size:12px">
+    <button type="button" class="btn btn-dan btn-sm" onclick="this.parentElement.remove();calcTally()">✕</button>
+  `;
+  box.appendChild(div);
+  calcTally();
+}
+
+function getExpensesTotal() {
+  const box = document.getElementById('expenseRowsBox');
+  let total = 0;
+  box.querySelectorAll('.exp-amt').forEach(inp => {
+    total += Number(inp.value || 0);
+  });
+  document.getElementById('expTotalLabel').textContent = money(total);
+  return total;
+}
+
+function getExpensesDetails() {
+  const list = [];
+  document.querySelectorAll('#expenseRowsBox > div').forEach(div => {
+    const type = div.querySelector('.exp-cat').value;
+    const amt = Number(div.querySelector('.exp-amt').value || 0);
+    const rem = div.querySelector('.exp-rem').value.trim();
+    if(amt > 0) list.push({ Expense_Type: type, Amount: amt, Remarks: rem });
+  });
+  return list;
+}
+
+async function saveShiftEntry() {
+  const p = Number(document.getElementById('entryPump').value) || 1;
+  const dateVal = document.getElementById('entryDate').value;
+  const staffId = document.getElementById('entryStaff').value;
+  const isSplit = document.getElementById('splitRateToggle').checked;
+  const isCNG = p === 3;
+
+  if(!dateVal) { toast('Please choose shift date', true); return; }
+
+  let pL = 0, pA = 0, dL = 0, dA = 0, cL = 0, cA = 0;
+  let nozzleReadings = [];
+
+  if(!isCNG) {
+    const pn1 = calcNoz('pOpen1', 'pMid1', 'pClose1', 'pRate', 'pRate2', isSplit);
+    const pn2 = calcNoz('pOpen2', 'pMid2', 'pClose2', 'pRate', 'pRate2', isSplit);
+    const dn1 = calcNoz('dOpen1', 'dMid1', 'dClose1', 'dRate', 'dRate2', isSplit);
+    const dn2 = calcNoz('dOpen2', 'dMid2', 'dClose2', 'dRate', 'dRate2', isSplit);
+
+    pL = pn1.lit + pn2.lit; pA = pn1.amt + pn2.amt;
+    dL = dn1.lit + dn2.lit; dA = dn1.amt + dn2.amt;
+
+    nozzleReadings = [
+      { Nozzle_No: 1, Fuel_Type: 'Petrol', Opening_Reading: pn1.open, Closing_Reading: pn1.close, Mid_Reading: pn1.mid, Litres: pn1.lit, Rate: pn1.rate, Rate1: pn1.rate1, Rate2: pn1.rate2, Slot1_Litres: pn1.l1, Slot1_Amount: pn1.a1, Slot2_Litres: pn1.l2, Slot2_Amount: pn1.a2, Amount: pn1.amt },
+      { Nozzle_No: 2, Fuel_Type: 'Petrol', Opening_Reading: pn2.open, Closing_Reading: pn2.close, Mid_Reading: pn2.mid, Litres: pn2.lit, Rate: pn2.rate, Rate1: pn2.rate1, Rate2: pn2.rate2, Slot1_Litres: pn2.l1, Slot1_Amount: pn2.a1, Slot2_Litres: pn2.l2, Slot2_Amount: pn2.a2, Amount: pn2.amt },
+      { Nozzle_No: 1, Fuel_Type: 'Diesel', Opening_Reading: dn1.open, Closing_Reading: dn1.close, Mid_Reading: dn1.mid, Litres: dn1.lit, Rate: dn1.rate, Rate1: dn1.rate1, Rate2: dn1.rate2, Slot1_Litres: dn1.l1, Slot1_Amount: dn1.a1, Slot2_Litres: dn1.l2, Slot2_Amount: dn1.a2, Amount: dn1.amt },
+      { Nozzle_No: 2, Fuel_Type: 'Diesel', Opening_Reading: dn2.open, Closing_Reading: dn2.close, Mid_Reading: dn2.mid, Litres: dn2.lit, Rate: dn2.rate, Rate1: dn2.rate1, Rate2: dn2.rate2, Slot1_Litres: dn2.l1, Slot1_Amount: dn2.a1, Slot2_Litres: dn2.l2, Slot2_Amount: dn2.a2, Amount: dn2.amt }
+    ];
+  } else {
+    const cn1 = calcNoz('cOpen1', 'cMid1', 'cClose1', 'cRate', 'cRate2', isSplit);
+    const cn2 = calcNoz('cOpen2', 'cMid2', 'cClose2', 'cRate', 'cRate2', isSplit);
+    cL = cn1.lit + cn2.lit; cA = cn1.amt + cn2.amt;
+    nozzleReadings = [
+      { Nozzle_No: 1, Fuel_Type: 'CNG', Opening_Reading: cn1.open, Closing_Reading: cn1.close, Mid_Reading: cn1.mid, Litres: cn1.lit, Rate: cn1.rate, Rate1: cn1.rate1, Rate2: cn1.rate2, Slot1_Litres: cn1.l1, Slot1_Amount: cn1.a1, Slot2_Litres: cn1.l2, Slot2_Amount: cn1.a2, Amount: cn1.amt },
+      { Nozzle_No: 2, Fuel_Type: 'CNG', Opening_Reading: cn2.open, Closing_Reading: cn2.close, Mid_Reading: cn2.mid, Litres: cn2.lit, Rate: cn2.rate, Rate1: cn2.rate1, Rate2: cn2.rate2, Slot1_Litres: cn2.l1, Slot1_Amount: cn2.a1, Slot2_Litres: cn2.l2, Slot2_Amount: cn2.a2, Amount: cn2.amt }
+    ];
+  }
+
+  const payload = {
+    date: dateVal,
+    shift: document.getElementById('entryShiftBatch').value,
+    pump_no: p,
+    staff_id: staffId,
+    staff_name: staffId,
+    petrol_litres: pL, petrol_amount: pA,
+    diesel_litres: dL, diesel_amount: dA,
+    cng_kg: cL, cng_amount: cA,
+    total_sales: pA + dA + cA,
+    online_amount: Number(document.getElementById('inpOnline').value || 0),
+    otp_amount: Number(document.getElementById('inpOtp').value || 0),
+    hp_pay_amount: Number(document.getElementById('inpHpPay').value || 0),
+    cash_total: Number(document.getElementById('inpCash').value || 0),
+    testing_amount: Number(document.getElementById('inpTesting').value || 0),
+    expenditure_details: getExpensesDetails(),
+    nozzle_readings: nozzleReadings
+  };
+
+  const res = await api('saveShift', { data: payload });
+  if(res.ok) {
+    toast('✅ Shift saved successfully to offline database!');
+    resetEntryForm();
+    tab('dash');
+  } else {
+    toast('Error saving shift: ' + (res.error || 'Failed'), true);
+  }
+}
+
+function resetEntryForm() {
+  document.getElementById('expenseRowsBox').innerHTML = '';
+  document.getElementById('inpOnline').value = '';
+  document.getElementById('inpOtp').value = '';
+  document.getElementById('inpHpPay').value = '';
+  document.getElementById('inpCash').value = '';
+  document.getElementById('inpTesting').value = '';
+  loadOpeningsForSelectedPump();
+}
+
+// --- TAB 3: SHIFTS LIST & EDIT ---
+let __allShifts = [];
+async function loadShiftsList() {
+  const from = document.getElementById('filterFrom').value;
+  const to = document.getElementById('filterTo').value;
+  const pump = document.getElementById('filterPump').value;
+
+  const r = await api('getShifts', { dateFrom: from, dateTo: to, pumpNo: pump });
+  if(!r.ok) return;
+  __allShifts = r.shifts || [];
+
+  const tbody = document.getElementById('shiftsTableBody');
+  if(!__allShifts.length) {
+    tbody.innerHTML = '<tr><td colspan="11" style="text-align:center;padding:16px;color:var(--t3)">No shifts found for chosen criteria</td></tr>';
+    return;
+  }
+
+  tbody.innerHTML = __allShifts.map(s => `
+    <tr>
+      <td><b>${s.date}</b></td>
+      <td><span class="cal-badge" style="background:#2563eb;color:#fff">P${s.pump_no}</span></td>
+      <td>${s.staff_id}</td>
+      <td>${s.petrol_litres>0 ? `${s.petrol_litres.toFixed(1)}L<br><small style="color:var(--t2)">${money(s.petrol_amount)}</small>` : '—'}</td>
+      <td>${s.diesel_litres>0 ? `${s.diesel_litres.toFixed(1)}L<br><small style="color:var(--t2)">${money(s.diesel_amount)}</small>` : '—'}</td>
+      <td>${s.cng_kg>0 ? `${s.cng_kg.toFixed(1)}KG<br><small style="color:var(--t2)">${money(s.cng_amount)}</small>` : '—'}</td>
+      <td><b>${money(s.total_sales)}</b></td>
+      <td>${money(s.cash_total)}</td>
+      <td>${money((s.online_amount||0)+(s.otp_amount||0)+(s.hp_pay_amount||0))}</td>
+      <td><span style="color:${Math.abs(s.difference)<0.5?'#34d399':(s.difference<0?'#ef4444':'#f59e0b')}">${money(s.difference)}</span></td>
+      <td>
+        <div style="display:flex;gap:4px">
+          <button class="btn btn-ghost btn-sm" onclick="openEditModal('${s.shift_id}')">✏️ Edit</button>
+          <button class="btn btn-dan btn-sm" onclick="deleteShiftRecord('${s.shift_id}')">🗑️</button>
+        </div>
+      </td>
+    </tr>
+  `).join('');
+}
+
+async function deleteShiftRecord(shiftId) {
+  if(!confirm('Are you sure you want to delete this shift entry from offline database?')) return;
+  const res = await api('deleteShift', { shiftId });
+  if(res.ok) {
+    toast('Shift deleted.');
+    loadShiftsList();
+  } else {
+    toast(res.error || 'Delete failed', true);
+  }
+}
+
+// Full Edit Modal
+async function openEditModal(shiftId) {
+  const r = await api('getShift', { shiftId });
+  if(!r.ok) { toast('Error loading shift', true); return; }
+  const s = r.shift;
+  const modal = document.getElementById('editModal');
+  const content = document.getElementById('editModalContent');
+
+  content.innerHTML = `
+    <div class="f-row">
+      <div class="f-group"><label>Date</label><input type="date" id="edDate" value="${s.date}"></div>
+      <div class="f-group"><label>Pump</label><input type="text" id="edPump" value="Pump ${s.pump_no}" disabled style="opacity:.6"></div>
+      <div class="f-group"><label>Staff</label><input type="text" id="edStaff" value="${s.staff_id}" disabled style="opacity:.6"></div>
+    </div>
+    <div class="f-row">
+      <div class="f-group"><label>Online ₹</label><input type="number" step="0.01" id="edOnline" value="${s.online_amount}"></div>
+      <div class="f-group"><label>OTP ₹</label><input type="number" step="0.01" id="edOtp" value="${s.otp_amount}"></div>
+      <div class="f-group"><label>HP Pay ₹</label><input type="number" step="0.01" id="edHpPay" value="${s.hp_pay_amount}"></div>
+      <div class="f-group"><label>Net Cash ₹</label><input type="number" step="0.01" id="edCash" value="${s.cash_total}"></div>
+    </div>
+    <div style="display:flex;justify-content:flex-end;gap:10px;margin-top:16px">
+      <button class="btn btn-ghost" onclick="closeEditModal()">Cancel</button>
+      <button class="btn btn-suc" onclick="submitEditShift('${s.shift_id}')">Save Changes</button>
+    </div>
+  `;
+  modal.classList.add('show');
+}
+
+function closeEditModal() {
+  document.getElementById('editModal').classList.remove('show');
+}
+
+async function submitEditShift(shiftId) {
+  const r = await api('getShift', { shiftId });
+  if(!r.ok) return;
+  const s = r.shift;
+
+  s.date = document.getElementById('edDate').value;
+  s.online_amount = Number(document.getElementById('edOnline').value || 0);
+  s.otp_amount = Number(document.getElementById('edOtp').value || 0);
+  s.hp_pay_amount = Number(document.getElementById('edHpPay').value || 0);
+  s.cash_total = Number(document.getElementById('edCash').value || 0);
+
+  const res = await api('updateShift', { shiftId, data: s });
+  if(res.ok) {
+    toast('✅ Shift updated successfully!');
+    closeEditModal();
+    loadShiftsList();
+  } else {
+    toast(res.error || 'Update failed', true);
+  }
+}
+
+// --- TAB 4: CALENDAR ---
+const MONTH_NAMES = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+
+function calPrev() {
+  __calMonth--;
+  if(__calMonth < 1) { __calMonth = 12; __calYear--; }
+  loadCalendar();
+}
+
+function calNext() {
+  __calMonth++;
+  if(__calMonth > 12) { __calMonth = 1; __calYear++; }
+  loadCalendar();
+}
+
+async function loadCalendar() {
+  document.getElementById('calMonthLabel').textContent = `${MONTH_NAMES[__calMonth - 1]} ${__calYear}`;
+  const r = await api('getCalendarData', { year: __calYear, month: __calMonth });
+  if(!r.ok) return;
+  const cal = r.calendar || {};
+
+  const container = document.getElementById('calContainer');
+  let html = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map(d => `<div class="cal-day-hdr">${d}</div>`).join('');
+
+  const firstDay = new Date(__calYear, __calMonth - 1, 1).getDay();
+  for(let i = 0; i < firstDay; i++) {
+    html += '<div style="visibility:hidden"></div>';
+  }
+
+  const todayStr = new Date().toISOString().slice(0, 10);
+
+  Object.values(cal).forEach(c => {
+    const isPast = c.date <= todayStr;
+    const isEntered = c.count > 0;
+    const hasDouble = c.double_pumps && c.double_pumps.length > 0;
+    const hasMis = c.has_mismatch;
+
+    let cls = 'cal-cell';
+    if(isEntered) cls += ' entered';
+    else if(isPast) cls += ' missing';
+    if(hasMis) cls += ' has-mismatch';
+
+    const dayNum = parseInt(c.date.slice(8), 10);
+
+    html += `
+      <div class="${cls}" onclick="onCalCellClick('${c.date}', ${isEntered})" title="${hasMis ? c.mismatches.join('\\n') : ''}">
+        <div style="display:flex;justify-content:space-between;align-items:center">
+          <span class="cal-cell-num">${dayNum}</span>
+          ${isEntered ? `<span class="cal-badge" style="background:#10b981;color:#fff">✅ ${c.count}</span>` : (isPast ? `<span class="cal-badge" style="background:#ef4444;color:#fff">⚠️ 0</span>` : '')}
+        </div>
+        <div style="display:flex;gap:2px;flex-wrap:wrap;margin-top:4px">
+          ${hasDouble ? `<span class="cal-badge" style="background:#3b82f6;color:#fff">⚡ ${c.double_pumps.join(',')}</span>` : ''}
+          ${hasMis ? `<span class="cal-badge" style="background:#f59e0b;color:#fff">⚠️ Mis</span>` : ''}
+        </div>
+        <div style="font-size:10px;color:var(--t2);margin-top:2px">${isEntered ? money(c.total_sales) : ''}</div>
+      </div>
+    `;
+  });
+
+  container.innerHTML = html;
+}
+
+function onCalCellClick(dateStr, hasEntries) {
+  if(hasEntries) {
+    document.getElementById('filterFrom').value = dateStr;
+    document.getElementById('filterTo').value = dateStr;
+    tab('shifts');
+  } else {
+    document.getElementById('entryDate').value = dateStr;
+    tab('entry');
+    toast('Selected missing date: ' + dateStr);
+  }
+}
+
+// --- TAB 5: STOCK PURCHASES ---
+async function loadStock() {
+  const r = await api('getStockPurchases');
+  if(!r.ok) return;
+  const purchases = r.purchases || [];
+  const tbody = document.getElementById('purTableBody');
+  if(!purchases.length) {
+    tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;padding:16px;color:var(--t3)">No inward stock records logged yet</td></tr>';
+    return;
+  }
+  tbody.innerHTML = purchases.map(p => `
+    <tr>
+      <td><b>${p.purchase_date}</b></td>
+      <td>${p.fuel_type}</td>
+      <td>${Number(p.quantity_kg).toFixed(1)}</td>
+      <td>₹ ${Number(p.rate).toFixed(2)}</td>
+      <td><b>${money(p.total_amount)}</b></td>
+      <td>${p.supplier || '—'}</td>
+      <td>${p.invoice_no || '—'}</td>
+      <td>${p.payment_type || '—'}</td>
+    </tr>
+  `).join('');
+}
+
+function calcPurTotal() {
+  const q = Number(document.getElementById('purQty').value || 0);
+  const r = Number(document.getElementById('purRate').value || 0);
+  document.getElementById('purTotal').value = (q * r).toFixed(2);
+}
+
+async function savePurchase() {
+  const payload = {
+    purchase_date: document.getElementById('purDate').value,
+    fuel_type: document.getElementById('purFuel').value,
+    quantity_kg: Number(document.getElementById('purQty').value || 0),
+    rate: Number(document.getElementById('purRate').value || 0),
+    total_amount: Number(document.getElementById('purTotal').value || 0),
+    supplier: document.getElementById('purSupplier').value,
+    invoice_no: document.getElementById('purInvoice').value,
+    payment_type: document.getElementById('purPayType').value
+  };
+  const res = await api('saveStockPurchase', { data: payload });
+  if(res.ok) {
+    toast('✅ Stock purchase saved!');
+    loadStock();
+  } else {
+    toast(res.error || 'Failed to save purchase', true);
+  }
+}
+
+// --- TAB 6: SETTINGS & STAFF ---
+async function saveSettings() {
+  const name = document.getElementById('setBunkName').value;
+  const pRate = document.getElementById('setPRate').value;
+  const dRate = document.getElementById('setDRate').value;
+  const cRate = document.getElementById('setCRate').value;
+
+  await api('saveSetting', { key: 'bunk_name', value: name });
+  await api('saveSetting', { key: 'pRate', value: pRate });
+  await api('saveSetting', { key: 'dRate', value: dRate });
+  await api('saveSetting', { key: 'cRate', value: cRate });
+
+  toast('✅ Settings & Fuel Rates saved!');
+  loadStaffAndSettings();
+}
+
+async function saveNewStaff() {
+  const sid = document.getElementById('staffId').value.trim().toUpperCase();
+  const name = document.getElementById('staffName').value.trim();
+  const role = document.getElementById('staffRole').value;
+  const pin = document.getElementById('staffPin').value.trim();
+
+  if(!sid || !name) { toast('Please enter Staff ID and Name', true); return; }
+
+  const res = await api('saveStaff', { staff: { staff_id: sid, staff_name: name, role, pin: pin || '1234', status: 'Active' } });
+  if(res.ok) {
+    toast('✅ Staff member saved!');
+    document.getElementById('staffId').value = '';
+    document.getElementById('staffName').value = '';
+    document.getElementById('staffPin').value = '';
+    loadStaffAndSettings();
+  } else {
+    toast(res.error || 'Failed to save staff', true);
+  }
+}
+
+// --- TAB 7: BACKUP & RESTORE ---
+async function quickBackup() {
+  const res = await api('backupDb');
+  if(res.ok) {
+    toast('✅ Database snapshot created: ' + res.filename);
+    loadBackups();
+  } else {
+    toast('Backup error: ' + (res.error || 'Failed'), true);
+  }
+}
+
+async function loadBackups() {
+  const r = await api('listBackups');
+  if(!r.ok) return;
+  const list = r.backups || [];
+  const tbody = document.getElementById('backupListBody');
+  if(!list.length) {
+    tbody.innerHTML = '<tr><td colspan="3" style="text-align:center;padding:14px;color:var(--t3)">No backups yet. Click "Create Instant Backup Snapshot" above!</td></tr>';
+    return;
+  }
+  tbody.innerHTML = list.map(b => `
+    <tr>
+      <td><b>${b}</b></td>
+      <td><code>fuel_bunk_offline/backups/${b}</code></td>
+      <td>
+        <button class="btn btn-dan btn-sm" onclick="restoreBackup('${b}')">Restore From This Backup</button>
+      </td>
+    </tr>
+  `).join('');
+}
+
+async function restoreBackup(filename) {
+  if(!confirm('CAUTION: Restoring will overwrite the current database with this backup! Are you sure?')) return;
+  const res = await api('restoreDb', { filename });
+  if(res.ok) {
+    toast('✅ Database restored successfully!');
+    loadDashboard();
+    loadShiftsList();
+  } else {
+    toast(res.error || 'Restore failed', true);
+  }
+}
+</script>
+
+</body>
+</html>
